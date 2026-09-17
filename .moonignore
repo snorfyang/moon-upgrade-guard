@@ -1,0 +1,8 @@
+# Publish only the current public module surface.
+/*
+!/*.mbt
+!/moon.mod
+!/moon.pkg
+!/README.md
+!/LICENSE
+!/pkg.generated.mbti

@@ -1,0 +1,10 @@
+// MoonUpgradeGuard core package.
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
+}
+
+import {
+  "moonbitlang/core/encoding/utf8",
+} for "test"

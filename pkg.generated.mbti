@@ -1,0 +1,228 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "snorfyang/moonupgradeguard"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn blocks_upgrade(Array[Diagnostic]) -> Bool
+
+pub fn compare_abi(Abi, Abi) -> Array[Diagnostic]
+
+pub fn compare_storage(StorageLayout, StorageLayout) -> Array[Diagnostic]
+
+pub fn extract_artifact(String, select? : String) -> (Artifact?, Array[Diagnostic])
+
+pub fn hex_encode(Bytes) -> String
+
+pub fn keccak_256(Bytes) -> Bytes
+
+pub fn normalize_layout(RawStorageLayout) -> (StorageLayout, Array[Diagnostic])
+
+pub fn render_json(Array[Diagnostic]) -> String
+
+pub fn render_text(Array[Diagnostic]) -> String
+
+pub let version : String
+
+// Errors
+
+// Types and methods
+pub(all) struct Abi {
+  functions : Array[AbiFunction]
+  events : Array[AbiEvent]
+  errors : Array[AbiError]
+} derive(Eq, @debug.Debug)
+pub fn Abi::empty() -> Self
+
+pub(all) enum AbiEntryKind {
+  Function
+  Fallback
+  Receive
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AbiError {
+  name : String
+  signature : String
+  selector : String
+  inputs : Array[AbiParam]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AbiEvent {
+  name : String
+  signature : String
+  topic : String
+  inputs : Array[AbiParam]
+  anonymous : Bool
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AbiFunction {
+  kind : AbiEntryKind
+  name : String
+  signature : String
+  selector : String
+  inputs : Array[AbiParam]
+  outputs : Array[AbiParam]
+  mutability : Mutability
+} derive(Eq, @debug.Debug)
+
+pub(all) struct AbiParam {
+  name : String
+  type_name : String
+  indexed : Bool
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Artifact {
+  kind : ArtifactKind
+  source : String?
+  contract : String?
+  layout : RawStorageLayout
+  abi : Abi?
+} derive(Eq, @debug.Debug)
+
+pub(all) enum ArtifactKind {
+  Layout
+  FlatArtifact
+  StandardJson
+  BuildInfo
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Diagnostic {
+  code : DiagnosticCode
+  severity : Severity
+  location : Location
+  message : String
+  old_value : String?
+  new_value : String?
+} derive(Eq, @debug.Debug)
+pub fn Diagnostic::new(DiagnosticCode, Location, String) -> Self
+pub fn Diagnostic::with_values(Self, old_value? : String, new_value? : String) -> Self
+pub impl Compare for Diagnostic
+
+pub(all) enum DiagnosticCode {
+  StorageEntryFieldMissing
+  StorageEntrySlotInvalid
+  StorageEntryOffsetInvalid
+  StorageEntryTypeMissing
+  StorageTypeIdMissing
+  StorageTypeIdDuplicate
+  StorageTypeFieldMissing
+  StorageTypeEncodingUnsupported
+  StorageTypeSizeInvalid
+  StorageTypeReferenceMissing
+  StorageTypeArrayLengthInvalid
+  ArtifactJsonInvalid
+  ArtifactShapeUnsupported
+  ArtifactShapeAmbiguous
+  ArtifactFieldInvalid
+  ArtifactLayoutMissing
+  ArtifactContractAmbiguous
+  ArtifactContractMissing
+  ArtifactTransientStoragePresent
+  StorageEntryRemoved
+  StorageEntryAdded
+  StorageEntrySlotChanged
+  StorageEntryOffsetChanged
+  StorageEntryLabelChanged
+  StorageEntryTypeChanged
+  AbiFunctionRemoved
+  AbiFunctionAdded
+  AbiFunctionMutabilityChanged
+  AbiFunctionMutabilityIncompatible
+  AbiFunctionOutputsChanged
+  AbiEventRemoved
+  AbiEventAdded
+  AbiEventIndexedChanged
+  AbiEventAnonymousChanged
+  AbiErrorRemoved
+  AbiErrorAdded
+  AbiSignatureCollision
+} derive(Eq, @debug.Debug)
+pub fn DiagnosticCode::name(Self) -> String
+pub fn DiagnosticCode::severity(Self) -> Severity
+
+pub(all) struct Location {
+  contract : String?
+  path : String
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Mutability {
+  Pure
+  View
+  NonPayable
+  Payable
+} derive(Eq, @debug.Debug)
+pub fn Mutability::name(Self) -> String
+
+pub(all) struct RawStorageEntry {
+  label : String?
+  contract : String?
+  slot : String?
+  offset : Int?
+  type_id : String?
+} derive(Eq, @debug.Debug)
+
+pub(all) struct RawStorageLayout {
+  storage : Array[RawStorageEntry]
+  types : Array[RawStorageType]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct RawStorageType {
+  id : String?
+  encoding : String?
+  label : String?
+  number_of_bytes : String?
+  base : String?
+  key : String?
+  value : String?
+  members : Array[RawStorageEntry]?
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Severity {
+  Info
+  Warning
+  Error
+} derive(Eq, @debug.Debug)
+pub fn Severity::name(Self) -> String
+
+pub struct Slot {
+  // private fields
+} derive(Eq, @debug.Debug)
+pub fn Slot::parse(String) -> Self?
+pub fn Slot::to_string(Self) -> String
+pub impl Compare for Slot
+
+pub(all) struct StorageEntry {
+  label : String
+  contract : String?
+  slot : Slot
+  offset : Int
+  type_id : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct StorageLayout {
+  entries : Array[StorageEntry]
+  types : Array[TypeEntry]
+} derive(Eq, @debug.Debug)
+pub fn StorageLayout::find_type(Self, String) -> TypeEntry?
+
+pub(all) struct TypeEntry {
+  id : String
+  label : String
+  byte_size : Int
+  shape : TypeShape
+} derive(Eq, @debug.Debug)
+
+pub(all) enum TypeShape {
+  Value
+  StaticArray(String, String)
+  DynamicArray(String)
+  Mapping(String, String)
+  Bytes
+  Struct(Array[StorageEntry])
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
