@@ -27,21 +27,21 @@ test "arguments select a command and output format" {
 
 ///|
 test "unchanged standalone layouts pass check" {
-  let result = analyze_text(Check, empty_layout, empty_layout, Text)
+  let result = analyze_text(Check, empty_layout, empty_layout, Text, None)
   assert_eq(result.exit_code, 0)
   assert_eq(result.output, "")
 }
 
 ///|
 test "invalid input uses exit code two" {
-  let result = analyze_text(Check, "not json", empty_layout, Text)
+  let result = analyze_text(Check, "not json", empty_layout, Text, None)
   assert_eq(result.exit_code, 2)
   assert_true(result.output.contains("artifact.json.invalid"))
 }
 
 ///|
 test "abi command requires both artifacts to carry an ABI" {
-  let result = analyze_text(Abi, empty_layout, layout_with_abi, Json)
+  let result = analyze_text(Abi, empty_layout, layout_with_abi, Json, None)
   assert_eq(result.exit_code, 2)
   assert_true(result.output.contains("artifact.abi.missing"))
 }
@@ -52,7 +52,7 @@ test "storage incompatibility uses exit code one" {
     #|{"storage":[{"contract":"A","label":"x","offset":0,"slot":"0","type":"t_uint256"}],"types":{"t_uint256":{"encoding":"inplace","label":"uint256","numberOfBytes":"32"}}}
   let new =
     #|{"storage":[],"types":{}}
-  let result = analyze_text(Storage, old, new, Text)
+  let result = analyze_text(Storage, old, new, Text, None)
   assert_eq(result.exit_code, 1)
   assert_true(result.output.contains("storage.entry.removed"))
 }
@@ -67,4 +67,46 @@ test "the output format is read before the arguments are validated" {
     ]),
   )
   assert_true(!wants_json(["moonupgradeguard"]))
+}
+
+///|
+test "options may appear in any order and the selector is optional" {
+  let parsed = parse_args([
+    "moonupgradeguard", "check", "old.json", "new.json", "--contract", "Token",
+  ])
+  match parsed {
+    Ok(options) => assert_eq(options.contract, Some("Token"))
+    Err(message) => fail(message)
+  }
+  let both = parse_args([
+    "moonupgradeguard", "check", "old.json", "new.json", "--contract", "src/Token.sol:Token",
+    "--format", "json",
+  ])
+  match both {
+    Ok(options) => {
+      assert_eq(options.contract, Some("src/Token.sol:Token"))
+      assert_true(options.format is Json)
+    }
+    Err(message) => fail(message)
+  }
+  let reordered = parse_args([
+    "moonupgradeguard", "storage", "old.json", "new.json", "--format", "text", "--contract",
+    "Token",
+  ])
+  match reordered {
+    Ok(options) => assert_eq(options.contract, Some("Token"))
+    Err(message) => fail(message)
+  }
+  assert_true(
+    parse_args([
+      "moonupgradeguard", "check", "old.json", "new.json", "--contract",
+    ])
+    is Err(_),
+  )
+  assert_true(
+    parse_args([
+      "moonupgradeguard", "check", "old.json", "new.json", "--verbose",
+    ])
+    is Err(_),
+  )
 }

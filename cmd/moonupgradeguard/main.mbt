@@ -22,6 +22,7 @@ priv struct Options {
   old_path : String
   new_path : String
   format : OutputFormat
+  contract : String?
 }
 
 ///|
@@ -33,6 +34,7 @@ priv struct CliResult {
 ///|
 let usage =
   #|usage: moonupgradeguard <check|storage|abi> OLD NEW [--format text|json]
+  #|       [--contract NAME|SOURCE:NAME]
 
 ///|
 async fn main {
@@ -58,7 +60,13 @@ async fn main {
   }
   let old_text = read_input(options.old_path, json)
   let new_text = read_input(options.new_path, json)
-  let result = analyze_text(options.command, old_text, new_text, options.format)
+  let result = analyze_text(
+    options.command,
+    old_text,
+    new_text,
+    options.format,
+    options.contract,
+  )
   if !result.output.is_empty() {
     emit(result.output)
   }
@@ -76,7 +84,7 @@ fn emit(value : String) -> Unit {
 
 ///|
 fn parse_args(args : Array[String]) -> Result[Options, String] {
-  if args.length() != 4 && args.length() != 6 {
+  if args.length() < 4 {
     return Err("expected a command and two artifact paths")
   }
   let command = match args[1] {
@@ -85,19 +93,33 @@ fn parse_args(args : Array[String]) -> Result[Options, String] {
     "abi" => Abi
     other => return Err("unknown command \"\{other}\"")
   }
-  let format = if args.length() == 4 {
-    Text
-  } else {
-    if args[4] != "--format" {
-      return Err("expected --format text|json")
-    }
-    match args[5] {
-      "text" => Text
-      "json" => Json
-      other => return Err("unknown format \"\{other}\"")
+  let mut format = Text
+  let mut contract : String? = None
+  let mut i = 4
+  while i < args.length() {
+    match args[i] {
+      "--format" => {
+        if i + 1 >= args.length() {
+          return Err("--format needs text or json")
+        }
+        format = match args[i + 1] {
+          "text" => Text
+          "json" => Json
+          other => return Err("unknown format \"\{other}\"")
+        }
+        i += 2
+      }
+      "--contract" => {
+        if i + 1 >= args.length() {
+          return Err("--contract needs a contract name or source:contract")
+        }
+        contract = Some(args[i + 1])
+        i += 2
+      }
+      other => return Err("unknown option \"\{other}\"")
     }
   }
-  Ok({ command, old_path: args[2], new_path: args[3], format, })
+  Ok({ command, old_path: args[2], new_path: args[3], format, contract, })
 }
 
 ///|
@@ -156,15 +178,31 @@ async fn read_input(path : String, json : Bool) -> String {
 }
 
 ///|
+/// Extracts an artifact, selecting a contract when the caller named one.
+///
+/// Wrappers that hold several contracts need the selector; the library reports
+/// an ambiguity rather than guessing when it is missing.
+fn extract(
+  text : String,
+  contract : String?,
+) -> (@guard.Artifact?, Array[@guard.Diagnostic]) {
+  match contract {
+    Some(name) => @guard.extract_artifact(text, select=name)
+    None => @guard.extract_artifact(text)
+  }
+}
+
+///|
 fn analyze_text(
   command : Command,
   old_text : String,
   new_text : String,
   format : OutputFormat,
+  contract : String?,
 ) -> CliResult {
   let diagnostics : Array[@guard.Diagnostic] = []
-  let (old_artifact, old_extract) = @guard.extract_artifact(old_text)
-  let (new_artifact, new_extract) = @guard.extract_artifact(new_text)
+  let (old_artifact, old_extract) = extract(old_text, contract)
+  let (new_artifact, new_extract) = extract(new_text, contract)
   append_diagnostics(diagnostics, old_extract)
   append_diagnostics(diagnostics, new_extract)
   if has_errors(diagnostics) || old_artifact is None || new_artifact is None {

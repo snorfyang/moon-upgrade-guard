@@ -26,6 +26,7 @@ specification; no third-party artifact or fixture was copied.
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
+| `contract-selector/` | a build info document holding two contracts: `Alpha` is compatible while `Beta` moves a variable, so `--contract` decides the verdict | 2 without a selector, 0 for `Alpha`, 1 for `Beta` |
 | `namespaced-storage/` | `old.json` carries an ERC-7201 `@custom:storage-location` annotation, whose namespace members are not in the compiler layout | 2 |
 | `schema-solc-0.5-to-0.8/` | the same contract compiled by solc 0.5.17 and solc 0.8.28, including the legacy ABI fields 0.5 emits | 0 |
 | `schema-solc-0.6-to-0.8/` | the same contract compiled by solc 0.6.12 and solc 0.8.28 | 0 |
@@ -74,6 +75,10 @@ contract Token {
 All three releases emit the same layout for it, which is why the two
 cross-version pairs are expected to be compatible. The source is part of this
 repository; the fixtures are its compiler output.
+
+A wrapper that holds several contracts needs `--contract NAME` or
+`--contract SOURCE:NAME`; without one it is reported as ambiguous rather than
+guessed at.
 
 ERC-7201 namespaced storage is refused rather than assumed compatible. A
 namespace is reached through a slot its annotation derives, and the compiler

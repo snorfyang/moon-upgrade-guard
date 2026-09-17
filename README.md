@@ -49,10 +49,15 @@ JSON validity, and that repeated runs produce identical bytes.
 ## CLI
 
 ```bash
-moonupgradeguard check OLD NEW [--format text|json]
-moonupgradeguard storage OLD NEW [--format text|json]
-moonupgradeguard abi OLD NEW [--format text|json]
+moonupgradeguard check OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
+moonupgradeguard storage OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
+moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 ```
+
+`--contract` selects a contract from an artifact that holds several, by name or
+as `source:contract`; options may appear in any order. The
+`fixtures/contract-selector` pair shows both forms, and shows that the selector
+decides the verdict.
 
 `check` always compares storage and also compares ABI when both artifacts carry
 one. If exactly one artifact has an ABI, it reports invalid input instead of
@@ -92,10 +97,10 @@ and `payable` ABI fields are ignored, while an ABI from before `stateMutability`
 existed is refused, because `constant` cannot distinguish `pure` from `view`.
 
 Wrappers that can hold several contracts, such as Standard JSON output and build
-info, need a selector. The library API takes one (`select`, either a contract
-name or `source:contract`); without it, or when the selector matches nothing,
-extraction reports a diagnostic instead of guessing. The CLI has no selector
-flag yet, so a multi-contract document is reported as invalid input.
+info, need a selector: `--contract NAME` or `--contract SOURCE:NAME` on the
+command line, or `select` in the library API, which takes the same two forms.
+Without it, or when the selector matches nothing, extraction reports a
+diagnostic instead of guessing.
 
 Two facts are worth knowing when choosing an input:
 
@@ -205,8 +210,6 @@ ABI findings:
 - Transient storage layouts are detected but not compared.
 - Constructors are not compared: their inputs affect deployment, not the
   interface an existing proxy exposes.
-- The CLI has no `--contract` selector, so a multi-contract Standard JSON or
-  build info document exits with invalid input. The library can select one.
 - When both artifacts are invalid, their findings share one sorted list and a
   location does not say which artifact it came from. Compare the artifacts one
   at a time to see which is at fault; tagging every finding with its source

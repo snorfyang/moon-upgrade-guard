@@ -46,10 +46,14 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 ## 命令行
 
 ```bash
-moonupgradeguard check OLD NEW [--format text|json]
-moonupgradeguard storage OLD NEW [--format text|json]
-moonupgradeguard abi OLD NEW [--format text|json]
+moonupgradeguard check OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
+moonupgradeguard storage OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
+moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 ```
+
+`--contract` 用于从包含多个合约的产物中选择一个，可以写合约名，也可以写
+`source:contract`；选项可以按任意顺序出现。`fixtures/contract-selector` 这一对
+样例展示了两种写法，也展示了选择哪个合约会直接决定结论。
 
 `check` 始终比较存储；当两边产物都带有 ABI 时也一并比较 ABI。如果只有一边带有
 ABI，它会报告输入无效，而不是静默跳过该比较。`storage` 接受独立的
@@ -83,9 +87,9 @@ stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、
 无法区分 `pure` 与 `view`。
 
 可能包含多个合约的外层结构（例如 Standard JSON 输出和 build info）需要指定选择
-器。库 API 支持该参数（`select`，可以是合约名或 `source:contract`）；未提供
-或选择器匹配不到任何合约时，提取层会给出诊断而不是猜测。命令行目前还没有选择器
-参数，因此多合约文档会被报告为输入无效。
+器：命令行上的 `--contract NAME` 或 `--contract SOURCE:NAME`，或库 API 中的
+`select`（两者形式相同）。未提供或选择器匹配不到任何合约时，提取层会给出诊断而
+不是猜测。
 
 选择输入时有两件事值得注意：
 
@@ -182,8 +186,6 @@ ABI 相关诊断：
   任何命名空间的痕迹，因此请传入完整产物。
 - transient storage 布局会被检测但不参与比较。
 - constructor 不参与比较：它的入参影响部署，而不是已部署代理对外暴露的接口。
-- 命令行还没有 `--contract` 选择器，因此多合约的 Standard JSON 或 build info
-  文档会以输入无效退出。库本身可以选择其中一个合约。
 - 当两边产物都无效时，它们的诊断项共享同一个已排序列表，而位置不会标明来自哪一
   边。请分别比较两个产物以确认问题出在哪边；为每个诊断项标注来源会改变诊断契约，
   因此留待一次专门的变更。

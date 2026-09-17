@@ -42,7 +42,7 @@ fail() {
   echo "e2e: FAIL $*" >&2
 }
 
-# case | command | format | expected exit | diagnostic code that must appear
+# case | command | format | expected exit | diagnostic code | extra arguments
 cases="
 compatible|check|text|0|
 compatible|check|json|0|
@@ -59,6 +59,11 @@ abi-event-indexed|abi|text|1|abi.event.indexed.changed
 invalid-json|check|json|2|artifact.json.invalid
 unsupported-artifact|check|text|2|artifact.layout.missing
 ambiguous-build-info|check|text|2|artifact.contract.ambiguous
+contract-selector|check|text|2|artifact.contract.ambiguous|
+contract-selector|check|text|0||--contract Alpha
+contract-selector|check|text|1|storage.entry.slot.changed|--contract Beta
+contract-selector|check|json|1|storage.entry.slot.changed|--contract contracts/Beta.sol:Beta
+contract-selector|check|text|2|artifact.contract.missing|--contract Nope
 namespaced-storage|check|text|2|artifact.namespaced-storage.unsupported
 schema-solc-0.5-to-0.8|check|json|0|
 schema-solc-0.6-to-0.8|check|text|0|
@@ -67,15 +72,18 @@ missing-file|check|text|2|
 missing-file|check|json|2|cli.input.unreadable
 "
 
-while IFS='|' read -r case command format expected code; do
+while IFS='|' read -r case command format expected code extra; do
   [[ -n "$case" ]] || continue
   old="fixtures/$case/old.json"
   new="fixtures/$case/new.json"
   output="$tmp/$case.$command.$format.out"
   checks=$((checks + 1))
 
+  # `$extra` is deliberately unquoted so that a column can hold several
+  # arguments, such as `--contract NAME`.
+  # shellcheck disable=SC2086
   set +e
-  "$binary" "$command" "$old" "$new" --format "$format" >"$output"
+  "$binary" "$command" "$old" "$new" --format "$format" $extra >"$output"
   status=$?
   set -e
 
@@ -94,7 +102,8 @@ while IFS='|' read -r case command format expected code; do
 
   # The same input twice must produce the same bytes.
   set +e
-  "$binary" "$command" "$old" "$new" --format "$format" >"$tmp/repeat.out"
+  # shellcheck disable=SC2086
+  "$binary" "$command" "$old" "$new" --format "$format" $extra >"$tmp/repeat.out"
   set -e
   if ! cmp -s "$output" "$tmp/repeat.out"; then
     fail "$case $command $format: repeated run differs"
@@ -141,6 +150,7 @@ expect_exit "--help" 0 --help
 expect_exit "no arguments" 2
 expect_exit "unknown command" 2 check-fixtures
 expect_exit "unknown format" 2 check fixtures/compatible/old.json fixtures/compatible/new.json --format yaml
+expect_exit "--contract without a value" 2 check fixtures/compatible/old.json fixtures/compatible/new.json --contract
 
 if [[ "$failures" -ne 0 ]]; then
   echo "e2e: $checks checks, $failures failed" >&2
