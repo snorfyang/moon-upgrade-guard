@@ -691,3 +691,43 @@ test "a transient variable that moves is reported in its own namespace" {
   )
   assert_true(@moonupgradeguard.blocks_upgrade(diff))
 }
+
+///|
+test "a gap consumed whole by a same-size variable is information" {
+  let types = [
+    uint256_type(),
+    gap_type("t_array(t_uint256)3_storage", 3),
+    {
+      ..raw_type(
+        "t_struct(Reserve)7_storage", "inplace", "struct Token.Reserve", "96",
+      ),
+      members: Some([
+        raw_entry("a", "0", 0, "t_uint256"),
+        raw_entry("b", "1", 0, "t_uint256"),
+        raw_entry("c", "2", 0, "t_uint256"),
+      ]),
+    },
+  ]
+  let old = raw_layout(
+    [
+      raw_entry("__gap", "2", 0, "t_array(t_uint256)3_storage"),
+      raw_entry("tail", "5", 0, "t_uint256"),
+    ],
+    types,
+  )
+  let new = raw_layout(
+    [
+      raw_entry("reserve", "2", 0, "t_struct(Reserve)7_storage"),
+      raw_entry("tail", "5", 0, "t_uint256"),
+    ],
+    types,
+  )
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|info[storage.gap.changed] fileA:A storage[0]: storage gap "__gap" was consumed by "reserve", which ends at the same position (old: __gap, new: reserve)
+      #|
+    ),
+  )
+  assert_true(!@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}

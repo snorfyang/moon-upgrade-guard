@@ -25,6 +25,7 @@ specification; no third-party artifact or fixture was copied.
 | `transient-moved/` | a transient variable moves between slots | 1 |
 | `transient-append/` | the new version adds a transient variable | 0 |
 | `transient-removed/` | the new artifact reports no transient layout, so the old transient variable disappears | 1 |
+| `storage-gap-finished/` | the `__gap` is replaced wholesale by a struct that ends where the gap ended | 0 |
 | `storage-gap-unsafe/` | the same variable is added while the gap keeps its size, so the gap and the variable behind it move | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |

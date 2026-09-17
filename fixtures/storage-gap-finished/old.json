@@ -1,0 +1,149 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "totalSupply",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "transfer",
+      "inputs": [
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "Transfer",
+      "inputs": [
+        {
+          "name": "from",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "to",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "value",
+          "type": "uint256",
+          "indexed": false
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "Unauthorized",
+      "inputs": [
+        {
+          "name": "caller",
+          "type": "address"
+        }
+      ]
+    }
+  ],
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 3,
+        "contract": "contracts/Token.sol:Token",
+        "label": "totalSupply",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 4,
+        "contract": "contracts/Token.sol:Token",
+        "label": "owner",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 7,
+        "contract": "contracts/Token.sol:Token",
+        "label": "__gap",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_array(t_uint256)3_storage"
+      },
+      {
+        "astId": 12,
+        "contract": "contracts/Token.sol:Token",
+        "label": "tail",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_uint256"
+      }
+    ],
+    "types": {
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_uint256)3_storage": {
+        "base": "t_uint256",
+        "encoding": "inplace",
+        "label": "uint256[3]",
+        "numberOfBytes": "96"
+      },
+      "t_struct(Reserve)7_storage": {
+        "encoding": "inplace",
+        "label": "struct Token.Reserve",
+        "members": [
+          {
+            "astId": 8,
+            "contract": "contracts/Token.sol:Token",
+            "label": "a",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 9,
+            "contract": "contracts/Token.sol:Token",
+            "label": "b",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 10,
+            "contract": "contracts/Token.sol:Token",
+            "label": "c",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "96"
+      }
+    }
+  }
+}

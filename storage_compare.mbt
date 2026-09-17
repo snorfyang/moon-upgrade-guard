@@ -40,9 +40,10 @@
 /// array, the element type has to stay the same, and a gap whose end moved is
 /// still a move.
 ///
-/// A gap replaced wholesale by a differently typed variable is reported as a
-/// removal plus an addition, which is the conservative reading; replacing it
-/// with a variable of the same position and type is a rename.
+/// A gap can also be consumed whole: a differently typed variable that ends
+/// where the gap ended takes its place, which the reference implementation
+/// calls finishing the gap. The bytes were unused and nothing behind the gap
+/// moves, so this is accepted and reported as information.
 ///
 /// Namespaced layouts, such as ERC-7201, are not modelled yet.
 
@@ -155,6 +156,43 @@ fn compare_section(
           StorageEntryLabelChanged,
           entry_location(old_entry, i, section),
           "variable \"\{old_entry.label}\" was renamed to \"\{new_entry.label}\" without moving or changing type",
+        ).with_values(old_value=old_entry.label, new_value=new_entry.label),
+      )
+    }
+  }
+  // A gap whose label is gone may have been consumed whole, which is what the
+  // reference calls finishing the gap. The bytes were unused, so the only thing
+  // that has to hold is that the new occupant ends where the gap ended, which
+  // keeps everything declared after the gap in place.
+  for i in 0..<old.entries.length() {
+    if old_matched[i] || !is_storage_gap(old, old.entries[i]) {
+      continue
+    }
+    let old_entry = old.entries[i]
+    guard entry_begin(old_entry) is Some(old_begin) else { continue }
+    guard entry_end(old, old_entry) is Some(old_end) else { continue }
+    let mut found = -1
+    for j in 0..<new.entries.length() {
+      if new_matched[j] {
+        continue
+      }
+      let new_entry = new.entries[j]
+      guard entry_begin(new_entry) is Some(new_begin) else { continue }
+      guard entry_end(new, new_entry) is Some(new_end) else { continue }
+      if new_begin >= old_begin && new_end == old_end {
+        found = j
+        break
+      }
+    }
+    if found >= 0 {
+      old_matched[i] = true
+      new_matched[found] = true
+      let new_entry = new.entries[found]
+      diagnostics.push(
+        Diagnostic::new(
+          StorageGapChanged,
+          entry_location(old_entry, i, section),
+          "storage gap \"\{old_entry.label}\" was consumed by \"\{new_entry.label}\", which ends at the same position",
         ).with_values(old_value=old_entry.label, new_value=new_entry.label),
       )
     }

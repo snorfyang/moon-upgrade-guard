@@ -43,6 +43,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - schema-solc-0.5-to-0.8: engine exit 0 | reference pass | agree
 - schema-solc-0.6-to-0.8: engine exit 0 | reference pass | agree
 - schema-unsupported: engine exit 2 | reference rename | n/a
+- storage-gap-finished: engine exit 0 | reference pass | agree
 - storage-gap-shrink: engine exit 0 | reference pass | agree
 - storage-gap-unsafe: engine exit 1 | reference layoutchange | agree
 - storage-moved: engine exit 1 | reference delete, insert, layoutchange | agree
@@ -54,7 +55,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 12 pairs, 1 divergences
+compared 13 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -65,6 +66,10 @@ compared 12 pairs, 1 divergences
   shrinks while still ending where it ended. Both tools pass it. The reference
   decides this with `endMatchesGap`, and the engine uses the same test, which is
   why the two agree here rather than by accident.
+- **Finishing a gap.** `storage-gap-finished` replaces a `__gap` wholesale with a
+  struct that ends where the gap ended. Both tools accept it, again because the
+  rule is the same one: a gap covers unused bytes, so only its end has to be
+  preserved.
 - **Appends.** `append` adds a variable, a function, and an event: both tools
   pass, because an addition that moves nothing is safe.
 - **Moves, removals, and type changes.** `storage-moved`, `storage-removed`, and

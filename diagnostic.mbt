@@ -94,7 +94,8 @@ pub(all) enum DiagnosticCode {
   StorageEntryLabelChanged
   /// A storage variable kept its position but changed semantic type.
   StorageEntryTypeChanged
-  /// A storage gap was resized or moved while keeping its end position.
+  /// A storage gap was resized, moved, or consumed while keeping its end
+  /// position.
   StorageGapChanged
   /// The artifact mentions ERC-7201 namespaced storage, which cannot be
   /// located from compiler output.

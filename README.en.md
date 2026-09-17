@@ -185,9 +185,9 @@ Regular and transient storage follow the same rules. A transient finding names
 address spaces apart.
 
 Storage gaps use the `__gap` array convention: the bytes a gap covers are
-unused, so a later version may spend them on new variables as long as the gap
-still ends at the byte it ended at before, which keeps everything declared after
-it in place. The name alone never skips a comparison: the type has to be an
+unused, so a later version may spend them on new variables, or replace the gap
+wholesale, as long as whatever takes its place ends at the byte the gap ended
+at. That is what keeps everything declared after the gap in place. The name alone never skips a comparison: the type has to be an
 array, the element type has to stay the same, and a gap whose end moved is
 reported as a move.
 
@@ -207,9 +207,6 @@ ABI findings:
 
 ## Limitations
 
-- A storage gap replaced wholesale by a differently typed variable is reported
-  as a removal plus an addition, rather than as the safe change it can be. A gap
-  that simply shrinks, or one that new variables spend, is handled.
 - ERC-7201 namespaced storage is not analysed, and an artifact that mentions it
   is refused with an error rather than reported compatible. A namespace is
   reached through a slot that its own annotation derives, so the compiler's
