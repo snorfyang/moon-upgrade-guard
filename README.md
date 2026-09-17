@@ -12,6 +12,21 @@ MoonUpgradeGuard 是一个用 MoonBit 编写的 EVM 智能合约升级兼容性�
 核心库、存储与 ABI 比较引擎以及 native 命令行均已实现并有测试覆盖。哪些内容
 是有意暂不支持的，见[已知限制](#已知限制)。
 
+## 工作原理
+
+```mermaid
+flowchart LR
+  old["旧产物<br/>Standard JSON · Foundry · Hardhat build info"] --> oldStage["提取，然后规范化<br/>无损 slot 与语义类型"]
+  new["新产物<br/>同样的产物形态"] --> newStage["提取，然后规范化<br/>无损 slot 与语义类型"]
+  oldStage --> compare["比较<br/>常规存储 · transient storage · ABI"]
+  newStage --> compare
+  compare --> report["诊断<br/>稳定诊断码，排序后的文本或 JSON"]
+  report --> exit["退出码<br/>0 兼容 · 1 不兼容 · 2 输入不受支持"]
+```
+
+这条流水线不需要网络、不需要 Solidity 源码，也不需要链：产物是唯一的输入。比较核心
+接收的是普通的值，因此同一份代码不通过命令行也可以直接作为库使用。
+
 ## 环境要求
 
 - [MoonBit](https://www.moonbitlang.com/) 工具链，包含构建命令行所需的
@@ -164,6 +179,21 @@ $ echo $?
   依然兼容，但新名字可能承载了新的含义。
 - `Info`：只出现在新布局中的变量（因此追加是兼容的），以及在原位调整大小的存储
   gap。
+
+下面这个互换的例子说明，为什么一个字节都没丢的“移动”仍然是错误：
+
+```mermaid
+flowchart TB
+  subgraph oldLayout["旧布局"]
+    o0["slot 0 — totalSupply"]
+    o1["slot 1 — owner"]
+  end
+  subgraph newLayout["新布局"]
+    n0["slot 0 — owner"]
+    n1["slot 1 — totalSupply"]
+  end
+  o1 -. "移动：错误" .-> n0
+```
 
 常规存储与 transient storage 遵循同一套规则。transient storage 的诊断项使用
 `transientStorage[...]` 而非 `storage[...]` 作为位置，因此报告能区分这两个地址

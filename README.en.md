@@ -15,6 +15,22 @@ The core library, the storage and ABI comparison engines, and a native CLI are
 implemented and covered by tests. See [Limitations](#limitations) for what is
 deliberately not covered yet.
 
+## How it works
+
+```mermaid
+flowchart LR
+  old["OLD artifact<br/>Standard JSON · Foundry · Hardhat build info"] --> oldStage["extraction, then normalization<br/>lossless slots and semantic types"]
+  new["NEW artifact<br/>the same artifact shapes"] --> newStage["extraction, then normalization<br/>lossless slots and semantic types"]
+  oldStage --> compare["comparison<br/>regular storage · transient storage · ABI"]
+  newStage --> compare
+  compare --> report["diagnostics<br/>stable codes, sorted text or JSON"]
+  report --> exit["exit code<br/>0 compatible · 1 incompatible · 2 unsupported input"]
+```
+
+Nothing in that pipeline needs the network, the Solidity source, or a chain: the
+artifacts are the only input. The comparison core takes plain values, which is why
+the same code is usable as a library without the CLI.
+
 ## Requirements
 
 - The [MoonBit](https://www.moonbitlang.com/) toolchain, including the native
@@ -182,6 +198,21 @@ Storage findings:
   name may carry a new meaning.
 - `Info`: a variable that appears only in the new layout, so appending is
   compatible, and a storage gap that was resized in place.
+
+A swap shows why a move is an error even though no byte is lost:
+
+```mermaid
+flowchart TB
+  subgraph oldLayout["old layout"]
+    o0["slot 0 — totalSupply"]
+    o1["slot 1 — owner"]
+  end
+  subgraph newLayout["new layout"]
+    n0["slot 0 — owner"]
+    n1["slot 1 — totalSupply"]
+  end
+  o1 -. "moved: error" .-> n0
+```
 
 Regular and transient storage follow the same rules. A transient finding names
 `transientStorage[...]` rather than `storage[...]`, so a report tells the two
