@@ -42,6 +42,8 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 `./scripts/e2e.sh` 会构建可执行文件，并把 `fixtures/` 中的每一对样例当作真实
 进程跑一遍，校验退出码、应出现的诊断码、JSON 合法性，以及重复运行是否产生完全
 一致的字节。
+测试还会针对生成的布局检查若干不变量：同一布局与自身比较不会阻断，追加变量不会
+阻断，产物内部条目的顺序也不会改变报告内容。
 
 ## 命令行
 

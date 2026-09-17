@@ -45,6 +45,9 @@ native --release`. Run it directly, or through `moon run cmd/moonupgradeguard
 `./scripts/e2e.sh` builds the executable and runs every pair in `fixtures/`
 through it as a real process, checking exit codes, expected diagnostic codes,
 JSON validity, and that repeated runs produce identical bytes.
+The test suite also checks invariants over generated layouts: comparing a
+layout with itself never blocks, appending a variable never blocks, and the
+order of the entries inside an artifact does not change what is reported.
 
 ## CLI
 
