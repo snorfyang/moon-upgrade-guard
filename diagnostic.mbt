@@ -102,6 +102,10 @@ pub(all) enum DiagnosticCode {
   /// The artifact mentions ERC-7201 namespaced storage, which cannot be
   /// located from compiler output.
   ArtifactNamespacedStorageUnsupported
+  /// The command line names something the CLI does not support.
+  CliArgumentInvalid
+  /// The CLI could not read an input file.
+  CliInputUnreadable
   /// A function signature of the old ABI is absent from the new ABI.
   AbiFunctionRemoved
   /// A function signature appears only in the new ABI.
@@ -162,6 +166,8 @@ pub fn DiagnosticCode::name(self : DiagnosticCode) -> String {
     StorageGapChanged => "storage.gap.changed"
     ArtifactNamespacedStorageUnsupported =>
       "artifact.namespaced-storage.unsupported"
+    CliArgumentInvalid => "cli.argument.invalid"
+    CliInputUnreadable => "cli.input.unreadable"
     AbiFunctionRemoved => "abi.function.removed"
     AbiFunctionAdded => "abi.function.added"
     AbiFunctionMutabilityChanged => "abi.function.mutability.changed"
@@ -213,6 +219,8 @@ pub fn DiagnosticCode::severity(self : DiagnosticCode) -> Severity {
     StorageEntryTypeChanged => Error
     StorageGapChanged => Info
     ArtifactNamespacedStorageUnsupported => Error
+    CliArgumentInvalid => Error
+    CliInputUnreadable => Error
     AbiFunctionRemoved => Error
     AbiFunctionAdded => Info
     AbiFunctionMutabilityChanged => Warning

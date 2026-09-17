@@ -56,3 +56,15 @@ test "storage incompatibility uses exit code one" {
   assert_eq(result.exit_code, 1)
   assert_true(result.output.contains("storage.entry.removed"))
 }
+
+///|
+test "the output format is read before the arguments are validated" {
+  assert_true(wants_json(["moonupgradeguard", "bad", "--format", "json"]))
+  assert_true(!wants_json(["moonupgradeguard", "check", "a.json", "b.json"]))
+  assert_true(
+    !wants_json([
+      "moonupgradeguard", "check", "a.json", "b.json", "--format", "text",
+    ]),
+  )
+  assert_true(!wants_json(["moonupgradeguard"]))
+}

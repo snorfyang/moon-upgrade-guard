@@ -129,6 +129,8 @@ pub(all) enum DiagnosticCode {
   StorageEntryTypeChanged
   StorageGapChanged
   ArtifactNamespacedStorageUnsupported
+  CliArgumentInvalid
+  CliInputUnreadable
   AbiFunctionRemoved
   AbiFunctionAdded
   AbiFunctionMutabilityChanged

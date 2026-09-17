@@ -67,6 +67,13 @@ Diagnostics are sorted, so the same input always produces the same bytes. In
 stable `code`, a `severity`, a `location`, a `message`, and the compared
 `oldValue`/`newValue` where they apply.
 
+With `--format json`, stdout is a JSON array on every exit code, including `2`:
+a failure that never reached the analysis reports itself as a finding with a
+`cli.*` code, so a JSON reader never has to parse prose. Locations are relative
+to the value the reporting layer analysed — extraction reports paths inside the
+artifact, the storage engine reports paths inside `storageLayout`, and the CLI
+reports the file path when it cannot read one.
+
 ## Inputs
 
 Extraction recognizes the artifact shapes that the compilers actually write:
@@ -198,6 +205,10 @@ ABI findings:
   interface an existing proxy exposes.
 - The CLI has no `--contract` selector, so a multi-contract Standard JSON or
   build info document exits with invalid input. The library can select one.
+- When both artifacts are invalid, their findings share one sorted list and a
+  location does not say which artifact it came from. Compare the artifacts one
+  at a time to see which is at fault; tagging every finding with its source
+  would change the diagnostic contract, so it is left to a deliberate change.
 - ABI compatibility here is caller compatibility. It is not Solidity source
   compatibility, and it says nothing about whether the new code behaves the
   same way.

@@ -64,6 +64,7 @@ schema-solc-0.5-to-0.8|check|json|0|
 schema-solc-0.6-to-0.8|check|text|0|
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 missing-file|check|text|2|
+missing-file|check|json|2|cli.input.unreadable
 "
 
 while IFS='|' read -r case command format expected code; do
@@ -118,6 +119,23 @@ expect_exit() {
     fail "$description: exit $status, expected $expected"
   fi
 }
+
+# An operational failure answers in the requested format, so a JSON reader
+# never has to parse prose.
+checks=$((checks + 1))
+set +e
+"$binary" unknown-command fixtures/compatible/old.json fixtures/compatible/new.json --format json >"$tmp/args.json"
+status=$?
+set -e
+if [[ "$status" != "2" ]]; then
+  fail "argument failure: exit $status, expected 2"
+fi
+if ! python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$tmp/args.json"; then
+  fail "argument failure: stdout is not valid JSON"
+fi
+if ! grep -q -- "cli.argument.invalid" "$tmp/args.json"; then
+  fail "argument failure: output does not mention cli.argument.invalid"
+fi
 
 expect_exit "--help" 0 --help
 expect_exit "no arguments" 2

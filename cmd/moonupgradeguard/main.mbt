@@ -42,17 +42,22 @@ async fn main {
     process_exit(0)
     return
   }
+  // The format is read before the arguments are validated, so that a failure
+  // can still answer in the format the caller asked for.
+  let json = wants_json(args)
   let options = match parse_args(args) {
     Ok(options) => options
-    Err(message) => {
-      println(message)
-      emit(usage)
-      process_exit(2)
-      return
-    }
+    Err(message) =>
+      fail_operational(
+        @guard.DiagnosticCode::CliArgumentInvalid,
+        { contract: None, path: "$", },
+        message,
+        json,
+        true,
+      )
   }
-  let old_text = read_input(options.old_path)
-  let new_text = read_input(options.new_path)
+  let old_text = read_input(options.old_path, json)
+  let new_text = read_input(options.new_path, json)
   let result = analyze_text(options.command, old_text, new_text, options.format)
   if !result.output.is_empty() {
     emit(result.output)
@@ -72,37 +77,81 @@ fn emit(value : String) -> Unit {
 ///|
 fn parse_args(args : Array[String]) -> Result[Options, String] {
   if args.length() != 4 && args.length() != 6 {
-    return Err("moonupgradeguard: expected a command and two artifact paths")
+    return Err("expected a command and two artifact paths")
   }
   let command = match args[1] {
     "check" => Check
     "storage" => Storage
     "abi" => Abi
-    other => return Err("moonupgradeguard: unknown command \"\{other}\"")
+    other => return Err("unknown command \"\{other}\"")
   }
   let format = if args.length() == 4 {
     Text
   } else {
     if args[4] != "--format" {
-      return Err("moonupgradeguard: expected --format text|json")
+      return Err("expected --format text|json")
     }
     match args[5] {
       "text" => Text
       "json" => Json
-      other => return Err("moonupgradeguard: unknown format \"\{other}\"")
+      other => return Err("unknown format \"\{other}\"")
     }
   }
   Ok({ command, old_path: args[2], new_path: args[3], format, })
 }
 
 ///|
-async fn read_input(path : String) -> String {
-  @fs.read_file(path).text() catch {
-    error => {
-      println("moonupgradeguard: cannot read \"\{path}\": \{error}")
-      process_exit(2)
-      abort("unreachable")
+/// Whether the arguments ask for JSON output.
+fn wants_json(args : Array[String]) -> Bool {
+  if args.length() < 2 {
+    return false
+  }
+  for i in 0..<(args.length() - 1) {
+    if args[i] == "--format" && args[i + 1] == "json" {
+      return true
     }
+  }
+  false
+}
+
+///|
+/// Reports an operational failure and exits.
+///
+/// With `--format json`, stdout is a JSON array of findings on every exit code,
+/// so a failure that never reached the analysis reports itself as a finding
+/// rather than as prose that a JSON reader cannot parse. In text mode the
+/// finding is followed by the usage line when the command line was at fault.
+fn[T] fail_operational(
+  code : @guard.DiagnosticCode,
+  location : @guard.Location,
+  message : String,
+  json : Bool,
+  show_usage : Bool,
+) -> T {
+  let diagnostic = @guard.Diagnostic::new(code, location, message)
+  if json {
+    emit(@guard.render_json([diagnostic]))
+  } else {
+    emit(@guard.render_text([diagnostic]))
+    if show_usage {
+      emit(usage)
+    }
+  }
+  process_exit(2)
+  abort("unreachable")
+}
+
+///|
+async fn read_input(path : String, json : Bool) -> String {
+  @fs.read_file(path).text() catch {
+    error =>
+      fail_operational(
+        @guard.DiagnosticCode::CliInputUnreadable,
+        { contract: None, path, },
+        "cannot read \"\{path}\": \{error}",
+        json,
+        false,
+      )
   }
 }
 
