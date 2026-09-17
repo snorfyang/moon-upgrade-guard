@@ -60,6 +60,9 @@ invalid-json|check|json|2|artifact.json.invalid
 unsupported-artifact|check|text|2|artifact.layout.missing
 ambiguous-build-info|check|text|2|artifact.contract.ambiguous
 namespaced-storage|check|text|2|artifact.namespaced-storage.unsupported
+schema-solc-0.5-to-0.8|check|json|0|
+schema-solc-0.6-to-0.8|check|text|0|
+schema-unsupported|check|text|2|storage.type.encoding.unsupported
 missing-file|check|text|2|
 "
 

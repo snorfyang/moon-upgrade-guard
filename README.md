@@ -78,6 +78,10 @@ Extraction recognizes the artifact shapes that the compilers actually write:
 - a build info document, `output.contracts.<source>.<contract>`, as Hardhat
   writes.
 
+Layouts produced by solc 0.5 through 0.8 are covered: the 0.5-era `constant`
+and `payable` ABI fields are ignored, while an ABI from before `stateMutability`
+existed is refused, because `constant` cannot distinguish `pure` from `view`.
+
 Wrappers that can hold several contracts, such as Standard JSON output and build
 info, need a selector. The library API takes one (`select`, either a contract
 name or `source:contract`); without it, or when the selector matches nothing,

@@ -27,8 +27,53 @@ specification; no third-party artifact or fixture was copied.
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
 | `namespaced-storage/` | `old.json` carries an ERC-7201 `@custom:storage-location` annotation, whose namespace members are not in the compiler layout | 2 |
+| `schema-solc-0.5-to-0.8/` | the same contract compiled by solc 0.5.17 and solc 0.8.28, including the legacy ABI fields 0.5 emits | 0 |
+| `schema-solc-0.6-to-0.8/` | the same contract compiled by solc 0.6.12 and solc 0.8.28 | 0 |
+| `schema-unsupported/` | the type table uses an `encoding` this version does not know | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
+
+## Compiler schema matrix
+
+The `schema-*` pairs check the field shapes that different compilers emit:
+
+- solc 0.5.17 writes `constant` and `payable` beside `stateMutability` in ABI
+  entries. Those extra fields are ignored, so a 0.5 artifact decodes like any
+  other.
+- solc 0.6.12 and 0.8.28 write `stateMutability` only.
+- An ABI from before `stateMutability` existed (0.4 era) cannot be decoded
+  exactly, because `constant` does not distinguish `pure` from `view`. Such an
+  entry is refused with an error instead of being guessed at.
+- An unknown `encoding` in the type table is refused, because it could change
+  how the bytes are read.
+
+The generated fixtures come from this contract, compiled by the three releases
+named above with `outputSelection` set to `abi` and `storageLayout`:
+
+```solidity
+pragma solidity ^VERSION;
+
+contract Token {
+    uint256 public totalSupply;
+    address public owner;
+    mapping(address => uint256) public balanceOf;
+    uint8 private flags;
+    uint8 private nextFlags;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    function transfer(address to, uint256 value) public returns (bool) {
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+}
+```
+
+All three releases emit the same layout for it, which is why the two
+cross-version pairs are expected to be compatible. The source is part of this
+repository; the fixtures are its compiler output.
 
 ERC-7201 namespaced storage is refused rather than assumed compatible. A
 namespace is reached through a slot its annotation derives, and the compiler
