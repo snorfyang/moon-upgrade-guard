@@ -24,6 +24,12 @@ jobs:
       - name: toolchain
         run: moon version --all
 
+      # The registry index does not ship with the toolchain, and the module
+      # depends on `moonbitlang/async`, so it has to be fetched before any
+      # command that resolves the dependency graph.
+      - name: package registry index
+        run: moon update
+
       - name: formatting
         run: moon fmt --check
 
