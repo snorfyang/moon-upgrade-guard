@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # The module only promises the native target, so CI only checks native.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: toolchain
+        run: moon version --all
+
+      - name: formatting
+        run: moon fmt --check
+
+      - name: type check
+        run: moon check --deny-warn
+
+      - name: tests
+        run: moon test --deny-warn
+
+      - name: generate interfaces
+        run: moon info
+
+      - name: interfaces are committed
+        run: git diff --exit-code
+
+      - name: whitespace
+        run: git diff --check
+
+      # Builds the native executable and checks the CLI's exit codes, JSON
+      # output, and byte-identical reruns against `fixtures/`.
+      - name: cli end to end
+        run: ./scripts/e2e.sh
