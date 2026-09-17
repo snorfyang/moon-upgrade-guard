@@ -1,0 +1,70 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "fee",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "setFee",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "uint128"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 2,
+        "contract": "contracts/Token.sol:Token",
+        "label": "config",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_struct(Config)5_storage"
+      }
+    ],
+    "types": {
+      "t_uint128": {
+        "encoding": "inplace",
+        "label": "uint128",
+        "numberOfBytes": "16"
+      },
+      "t_struct(Config)5_storage": {
+        "encoding": "inplace",
+        "label": "struct Token.Config",
+        "members": [
+          {
+            "astId": 1,
+            "contract": "contracts/Token.sol:Token",
+            "label": "fee",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint128"
+          },
+          {
+            "astId": 6,
+            "contract": "contracts/Token.sol:Token",
+            "label": "maxFee",
+            "offset": 16,
+            "slot": "0",
+            "type": "t_uint128"
+          }
+        ],
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
