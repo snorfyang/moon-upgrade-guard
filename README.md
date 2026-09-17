@@ -182,7 +182,13 @@ ABI findings:
 - A storage gap replaced wholesale by a differently typed variable is reported
   as a removal plus an addition, rather than as the safe change it can be. A gap
   that simply shrinks, or one that new variables spend, is handled.
-- ERC-7201 namespaced layouts are not modelled.
+- ERC-7201 namespaced storage is not analysed, and an artifact that mentions it
+  is refused with an error rather than reported compatible. A namespace is
+  reached through a slot that its own annotation derives, so the compiler's
+  `storageLayout` — which lists state variables — does not contain its members,
+  and checking them would need the abstract syntax tree plus a recompilation
+  that this tool deliberately does not perform. Extracting a layout on its own
+  leaves no trace of a namespace at all, so pass a full artifact.
 - Transient storage layouts are detected but not compared.
 - Constructors are not compared: their inputs affect deployment, not the
   interface an existing proxy exposes.

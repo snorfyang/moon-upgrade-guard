@@ -66,6 +66,21 @@ pub fn extract_artifact(
   select? : String,
 ) -> (Artifact?, Array[Diagnostic]) {
   let diagnostics : Array[Diagnostic] = []
+  // ERC-7201 namespaced storage is invisible in `storageLayout`: the compiler
+  // lists state variables, and a namespace is reached through a slot that its
+  // own annotation derives. Since namespace members are not in the layout, a
+  // verdict for such an artifact would not have been checked, so the artifact
+  // is refused instead. The marker is the annotation id itself, which appears
+  // in the AST that artifacts carry.
+  if text.contains("erc7201") {
+    diagnostics.push(
+      Diagnostic::new(
+        ArtifactNamespacedStorageUnsupported,
+        artifact_root(),
+        "artifact mentions ERC-7201 namespaced storage, which this version cannot locate; the compiler storageLayout does not list namespace members, so their compatibility is unknown",
+      ),
+    )
+  }
   let parsed = @json.parse(text) catch {
     err => {
       diagnostics.push(

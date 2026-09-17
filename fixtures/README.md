@@ -26,8 +26,14 @@ specification; no third-party artifact or fixture was copied.
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
+| `namespaced-storage/` | `old.json` carries an ERC-7201 `@custom:storage-location` annotation, whose namespace members are not in the compiler layout | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
+
+ERC-7201 namespaced storage is refused rather than assumed compatible. A
+namespace is reached through a slot its annotation derives, and the compiler
+lists only state variables in `storageLayout`, so a namespace's members are not
+in the input and their compatibility is unknown.
 
 A storage gap is the `__gap` array convention: the bytes it covers are
 unused, so a later version may take them, as long as the gap still ends where it

@@ -59,6 +59,7 @@ abi-event-indexed|abi|text|1|abi.event.indexed.changed
 invalid-json|check|json|2|artifact.json.invalid
 unsupported-artifact|check|text|2|artifact.layout.missing
 ambiguous-build-info|check|text|2|artifact.contract.ambiguous
+namespaced-storage|check|text|2|artifact.namespaced-storage.unsupported
 missing-file|check|text|2|
 "
 

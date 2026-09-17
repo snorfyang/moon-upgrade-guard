@@ -99,6 +99,9 @@ pub(all) enum DiagnosticCode {
   StorageEntryTypeChanged
   /// A storage gap was resized or moved while keeping its end position.
   StorageGapChanged
+  /// The artifact mentions ERC-7201 namespaced storage, which cannot be
+  /// located from compiler output.
+  ArtifactNamespacedStorageUnsupported
   /// A function signature of the old ABI is absent from the new ABI.
   AbiFunctionRemoved
   /// A function signature appears only in the new ABI.
@@ -157,6 +160,8 @@ pub fn DiagnosticCode::name(self : DiagnosticCode) -> String {
     StorageEntryLabelChanged => "storage.entry.label.changed"
     StorageEntryTypeChanged => "storage.entry.type.changed"
     StorageGapChanged => "storage.gap.changed"
+    ArtifactNamespacedStorageUnsupported =>
+      "artifact.namespaced-storage.unsupported"
     AbiFunctionRemoved => "abi.function.removed"
     AbiFunctionAdded => "abi.function.added"
     AbiFunctionMutabilityChanged => "abi.function.mutability.changed"
@@ -207,6 +212,7 @@ pub fn DiagnosticCode::severity(self : DiagnosticCode) -> Severity {
     StorageEntryLabelChanged => Warning
     StorageEntryTypeChanged => Error
     StorageGapChanged => Info
+    ArtifactNamespacedStorageUnsupported => Error
     AbiFunctionRemoved => Error
     AbiFunctionAdded => Info
     AbiFunctionMutabilityChanged => Warning

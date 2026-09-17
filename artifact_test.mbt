@@ -378,3 +378,25 @@ test "transient storage is reported as informational" {
     ),
   )
 }
+
+///|
+test "ERC-7201 namespaced storage is refused, not assumed compatible" {
+  let text =
+    #|{"abi":[],"storageLayout":{"storage":[],"types":{}},"ast":{"documentation":"@custom:storage-location erc7201:example.main"}}
+  let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
+  // The layout itself is fine; the finding is what stops a verdict.
+  assert_true(artifact is Some(_))
+  assert_eq(diagnostics.length(), 1)
+  assert_eq(
+    diagnostics[0].code,
+    @moonupgradeguard.DiagnosticCode::ArtifactNamespacedStorageUnsupported,
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(diagnostics))
+  inspect(
+    @moonupgradeguard.render_text(diagnostics),
+    content=(
+      #|error[artifact.namespaced-storage.unsupported] $: artifact mentions ERC-7201 namespaced storage, which this version cannot locate; the compiler storageLayout does not list namespace members, so their compatibility is unknown
+      #|
+    ),
+  )
+}
