@@ -166,6 +166,9 @@ $ echo $?
 之后的变量保持在原位的原因。仅凭名字永远不会跳过比较：类型必须是数组，元素类型
 必须保持不变，而结束位置发生变化的 gap 仍会被报告为移动。
 
+重命名策略是本工具与 OpenZeppelin Upgrades Core 默认行为唯一不同之处，相关差分
+结果记录在 [`docs/oz-differential.md`](docs/oz-differential.md)。
+
 ABI 相关诊断：
 
 - `Error`：function、event 或自定义错误的签名消失；返回类型列表发生变化，因为

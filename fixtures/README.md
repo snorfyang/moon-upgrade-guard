@@ -18,6 +18,7 @@ specification; no third-party artifact or fixture was copied.
 | `compatible/` | the same contract recompiled: only compiler-generated `astId` values and the order of the type table differ | 0 |
 | `append/` | a storage variable, a function, and an event are added | 0 |
 | `storage-removed/` | the `owner` variable is gone | 1 |
+| `storage-renamed/` | `owner` is renamed to `admin` at the same position with the same type | 0 |
 | `storage-moved/` | `totalSupply` and `owner` swap slots | 1 |
 | `struct-change/` | the `Config` struct gains a member | 1 |
 | `storage-gap-shrink/` | a base contract spends one slot of its `__gap` on a new variable, so the gap shrinks but still ends where it ended | 0 |
@@ -75,6 +76,12 @@ contract Token {
 All three releases emit the same layout for it, which is why the two
 cross-version pairs are expected to be compatible. The source is part of this
 repository; the fixtures are its compiler output.
+
+A renamed variable is the one place where this tool is deliberately more
+permissive than OpenZeppelin Upgrades Core, which treats a rename as unsafe
+unless `unsafeAllowRenames` is set: the bytes stay in place, so
+`storage-renamed/` reports a warning and exits `0`. See
+`docs/oz-differential.md`.
 
 A wrapper that holds several contracts needs `--contract NAME` or
 `--contract SOURCE:NAME`; without one it is reported as ambiguous rather than

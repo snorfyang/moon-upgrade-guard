@@ -47,6 +47,7 @@ cases="
 compatible|check|text|0|
 compatible|check|json|0|
 append|check|text|0|storage.entry.added
+storage-renamed|check|text|0|storage.entry.label.changed
 storage-removed|storage|text|1|storage.entry.removed
 storage-removed|abi|text|0|
 storage-moved|storage|text|1|storage.entry.slot.changed

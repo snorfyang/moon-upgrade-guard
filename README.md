@@ -185,6 +185,10 @@ it in place. The name alone never skips a comparison: the type has to be an
 array, the element type has to stay the same, and a gap whose end moved is
 reported as a move.
 
+The rename policy, and the one place where this tool differs from OpenZeppelin
+Upgrades Core by default, is recorded with the rest of the differential results
+in [`docs/oz-differential.md`](docs/oz-differential.md).
+
 ABI findings:
 
 - `Error`: a signature that disappeared from functions, events, or custom
