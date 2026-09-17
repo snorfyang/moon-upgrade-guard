@@ -1,30 +1,27 @@
-**English** | [简体中文](README.zh-CN.md)
+[English](README.en.md) | **简体中文**
 
 # MoonUpgradeGuard
 
-MoonUpgradeGuard is a MoonBit-native compatibility checker for upgrades of
-EVM smart contracts. It compares Solidity compiler artifacts from two contract
-versions and reports storage-layout and ABI changes that may make a proxy
-upgrade unsafe.
+MoonUpgradeGuard 是一个用 MoonBit 编写的 EVM 智能合约升级兼容性检查器。
+它比较两个合约版本的 Solidity 编译产物，报告可能让代理（proxy）升级变得
+不安全的存储布局（storage layout）与 ABI 变更。
 
-It runs fully offline, never compiles Solidity source, and never touches a
-chain, a wallet, or a key. Its inputs are existing compiler artifacts, and its
-output is deterministic text or JSON with CI-friendly exit codes.
+它完全离线运行，不编译 Solidity 源码，也不接触链、钱包或私钥。输入是已有的
+编译产物，输出是确定性的文本或 JSON，并带有对 CI 友好的退出码。
 
-The core library, the storage and ABI comparison engines, and a native CLI are
-implemented and covered by tests. See [Limitations](#limitations) for what is
-deliberately not covered yet.
+核心库、存储与 ABI 比较引擎以及 native 命令行均已实现并有测试覆盖。哪些内容
+是有意暂不支持的，见[已知限制](#已知限制)。
 
-## Requirements
+## 环境要求
 
-- The [MoonBit](https://www.moonbitlang.com/) toolchain, including the native
-  backend that the CLI is built with.
-- Python 3 for `scripts/e2e.sh`, which uses it only to validate JSON output.
+- [MoonBit](https://www.moonbitlang.com/) 工具链，包含构建命令行所需的
+  native 后端。
+- Python 3，仅用于 `scripts/e2e.sh` 校验 JSON 输出。
 
-The analysis itself makes no network calls. A cold module cache is populated
-from the MoonBit registry before the first build, as with any MoonBit project.
+分析本身不发起任何网络请求。与任何 MoonBit 项目一样，首次构建前需要从 MoonBit
+注册表填充模块缓存。
 
-## Build and test
+## 构建与测试
 
 ```bash
 moon check --deny-warn
@@ -32,21 +29,21 @@ moon test --deny-warn
 moon build --target native
 ```
 
-The native executable is written to
+native 可执行文件输出到：
 
 ```text
 _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 ```
 
-and to the matching `_build/native/release/...` path for `moon build --target
-native --release`. Run it directly, or through `moon run cmd/moonupgradeguard
---` while working in the repository.
+使用 `moon build --target native --release` 时输出到对应的
+`_build/native/release/...` 路径。可以直接运行该文件，也可以在仓库内通过
+`moon run cmd/moonupgradeguard --` 运行。
 
-`./scripts/e2e.sh` builds the executable and runs every pair in `fixtures/`
-through it as a real process, checking exit codes, expected diagnostic codes,
-JSON validity, and that repeated runs produce identical bytes.
+`./scripts/e2e.sh` 会构建可执行文件，并把 `fixtures/` 中的每一对样例当作真实
+进程跑一遍，校验退出码、应出现的诊断码、JSON 合法性，以及重复运行是否产生完全
+一致的字节。
 
-## CLI
+## 命令行
 
 ```bash
 moonupgradeguard check OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
@@ -54,68 +51,58 @@ moonupgradeguard storage OLD NEW [--format text|json] [--contract NAME|SOURCE:NA
 moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 ```
 
-`--contract` selects a contract from an artifact that holds several, by name or
-as `source:contract`; options may appear in any order. The
-`fixtures/contract-selector` pair shows both forms, and shows that the selector
-decides the verdict.
+`--contract` 用于从包含多个合约的产物中选择一个，可以写合约名，也可以写
+`source:contract`；选项可以按任意顺序出现。`fixtures/contract-selector` 这一对
+样例展示了两种写法，也展示了选择哪个合约会直接决定结论。
 
-`check` always compares storage and also compares ABI when both artifacts carry
-one. If exactly one artifact has an ABI, it reports invalid input instead of
-silently skipping that comparison. `storage` accepts standalone layouts, while
-`abi` requires an ABI on both sides.
+`check` 始终比较存储；当两边产物都带有 ABI 时也一并比较 ABI。如果只有一边带有
+ABI，它会报告输入无效，而不是静默跳过该比较。`storage` 接受独立的
+`storageLayout`，`abi` 则要求两边都带 ABI。
 
-Exit code `0` means no blocking incompatibility was found, `1` means the
-comparison found an incompatible change, and `2` means the command or input was
-invalid. A successful report is a preflight result, not proof that an upgrade
-is safe in every respect.
+退出码 `0` 表示未发现阻断性不兼容，`1` 表示比较发现不兼容变更，`2` 表示命令或
+输入无效。通过的检查结果是升级前的预检结论，并不证明升级在所有方面都安全。
 
-Diagnostics are sorted, so the same input always produces the same bytes. In
-`--format json` the report is an array of findings on stdout, each with a
-stable `code`, a `severity`, a `location`, a `message`, and the compared
-`oldValue`/`newValue` where they apply.
+诊断经过排序，因此相同输入总是产生完全相同的字节。使用 `--format json` 时，
+stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、`severity`、
+`location`、`message`，以及在适用时给出被比较的 `oldValue`/`newValue`。
 
-With `--format json`, stdout is a JSON array on every exit code, including `2`:
-a failure that never reached the analysis reports itself as a finding with a
-`cli.*` code, so a JSON reader never has to parse prose. Locations are relative
-to the value the reporting layer analysed — extraction reports paths inside the
-artifact, the storage engine reports paths inside `storageLayout`, and the CLI
-reports the file path when it cannot read one.
+使用 `--format json` 时，任何退出码下 stdout 都是 JSON 数组，包括 `2`：尚未
+进入分析阶段的失败会以带有 `cli.*` 诊断码的诊断项形式报告自身，因此 JSON 读取方
+永远不必解析普通文本。位置（location）相对于产生它的层所分析的值——提取层报告
+产物内部的路径，存储引擎报告 `storageLayout` 内部的路径，命令行则在无法读取文件
+时报告该文件路径。
 
-## Inputs
+## 输入
 
-Extraction recognizes the artifact shapes that the compilers actually write:
+提取层识别编译器实际写出的产物形态：
 
-- a raw `storageLayout` object, as printed by `forge inspect` or written by
-  layout tooling;
-- a flat artifact with `storageLayout` at the top level, as Foundry writes;
-- solc Standard JSON output, `contracts.<source>.<contract>`;
-- a build info document, `output.contracts.<source>.<contract>`, as Hardhat
-  writes.
+- 原始的 `storageLayout` 对象，例如 `forge inspect` 打印或布局工具写出的形式；
+- 顶层带 `storageLayout` 的扁平产物，即 Foundry 写出的形式；
+- solc Standard JSON 输出，`contracts.<source>.<contract>`；
+- build info 文档，`output.contracts.<source>.<contract>`，即 Hardhat 写出的
+  形式。
 
-Layouts produced by solc 0.5 through 0.8 are covered: the 0.5-era `constant`
-and `payable` ABI fields are ignored, while an ABI from before `stateMutability`
-existed is refused, because `constant` cannot distinguish `pure` from `view`.
+已覆盖 solc 0.5 至 0.8 产出的布局：0.5 时代的 `constant`、`payable` 等 ABI
+字段会被忽略，而在 `stateMutability` 出现之前的 ABI 会被拒绝，因为 `constant`
+无法区分 `pure` 与 `view`。
 
-Wrappers that can hold several contracts, such as Standard JSON output and build
-info, need a selector: `--contract NAME` or `--contract SOURCE:NAME` on the
-command line, or `select` in the library API, which takes the same two forms.
-Without it, or when the selector matches nothing, extraction reports a
-diagnostic instead of guessing.
+可能包含多个合约的外层结构（例如 Standard JSON 输出和 build info）需要指定选择
+器：命令行上的 `--contract NAME` 或 `--contract SOURCE:NAME`，或库 API 中的
+`select`（两者形式相同）。未提供或选择器匹配不到任何合约时，提取层会给出诊断而
+不是猜测。
 
-Two facts are worth knowing when choosing an input:
+选择输入时有两件事值得注意：
 
-- A Hardhat per-contract artifact does not embed a storage layout, and
-  Hardhat's default compiler settings do not request one. Extract from a build
-  info file compiled with `storageLayout` in `outputSelection`, or from a
-  standalone layout file.
-- Transient storage layouts are detected but not compared. The presence of
-  transient storage variables is reported as an informational finding rather
-  than ignored.
+- Hardhat 的单合约产物不内嵌存储布局，Hardhat 的默认编译设置也不会请求它。请从
+  在 `outputSelection` 中包含 `storageLayout` 的 build info 文件提取，或使用
+  独立的布局文件。
+- transient storage 布局会被检测但不参与比较。存在 transient storage 变量时，
+  会以信息级诊断项报告，而不是被忽略。
 
-## Examples
+## 示例
 
-The `fixtures/` directory holds self-contained artifact pairs for each rule. A
-storage change that moves existing variables is reported and fails the check:
+`fixtures/` 目录为每条规则提供了自包含的产物对。存储变更导致已有变量移动时会被
+报告，并让检查失败：
 
 ```console
 $ moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
@@ -125,7 +112,7 @@ $ echo $?
 1
 ```
 
-The same finding is available as JSON:
+同一个诊断也可以输出为 JSON：
 
 ```console
 $ moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
@@ -142,13 +129,12 @@ $ echo $?
 1
 ```
 
-An upgrade that only appends storage and adds functions prints informational
-findings and still exits `0`; the compatible pair prints nothing at all.
+只追加存储项并新增函数的升级会输出信息级诊断项，但仍然以 `0` 退出；完全兼容的
+样例对则不输出任何内容。
 
-## Use in CI
+## 在 CI 中使用
 
-Exit codes are the contract, so a check can gate a deployment pipeline
-directly:
+退出码就是契约，因此可以直接用它来卡住部署流水线：
 
 ```yaml
 - name: upgrade compatibility
@@ -158,79 +144,66 @@ directly:
       check build/old.json build/new.json --format json
 ```
 
-A step that exits `1` fails the job, which is the intended behavior. Treat
-`2` as a separate failure class: it means the tool could not analyze the input,
-so a pipeline should fail loudly and fix the artifact rather than retrying.
+以 `1` 退出的步骤会让任务失败，这正是预期行为。请把 `2` 当作另一类失败：它表示
+工具无法分析该输入，流水线应当明确失败并修复产物，而不是重试。
 
-## Compatibility model
+## 兼容性模型
 
-Only `Error` findings block an upgrade. `Warning` findings leave the layout or
-interface compatible but need review, and `Info` findings are additive.
+只有 `Error` 级诊断会阻断升级。`Warning` 级表示布局或接口仍兼容但需要人工确认，
+`Info` 级表示新增。
 
-Storage findings:
+存储相关诊断：
 
-- `Error`: a variable that disappeared, a variable that moved slot or byte
-  offset, and a variable whose semantic type changed, including nested struct,
-  array, and mapping changes.
-- `Warning`: a variable renamed at the same position with the same type. The
-  bytes stay where they were, so the layout is still compatible, but the new
-  name may carry a new meaning.
-- `Info`: a variable that appears only in the new layout, so appending is
-  compatible, and a storage gap that was resized in place.
+- `Error`：变量消失；变量移动了 slot 或字节 offset；变量的语义类型发生变化，
+  包括嵌套的 struct、数组和 mapping 变化。
+- `Warning`：变量在同一位置、类型不变的情况下被重命名。字节仍在原处，因此布局
+  依然兼容，但新名字可能承载了新的含义。
+- `Info`：只出现在新布局中的变量（因此追加是兼容的），以及在原位调整大小的存储
+  gap。
 
-Storage gaps use the `__gap` array convention: the bytes a gap covers are
-unused, so a later version may spend them on new variables as long as the gap
-still ends at the byte it ended at before, which keeps everything declared after
-it in place. The name alone never skips a comparison: the type has to be an
-array, the element type has to stay the same, and a gap whose end moved is
-reported as a move.
+存储 gap 使用 `__gap` 数组约定：gap 覆盖的字节是未使用的，因此后续版本可以把
+它们用于新变量，前提是该 gap 仍然结束在它原先结束的那个字节——这正是让声明在它
+之后的变量保持在原位的原因。仅凭名字永远不会跳过比较：类型必须是数组，元素类型
+必须保持不变，而结束位置发生变化的 gap 仍会被报告为移动。
 
-The rename policy, and the one place where this tool differs from OpenZeppelin
-Upgrades Core by default, is recorded with the rest of the differential results
-in [`docs/oz-differential.md`](docs/oz-differential.md).
+重命名策略是本工具与 OpenZeppelin Upgrades Core 默认行为唯一不同之处，相关差分
+结果记录在 [`docs/oz-differential.md`](docs/oz-differential.md)。
 
-ABI findings:
+ABI 相关诊断：
 
-- `Error`: a signature that disappeared from functions, events, or custom
-  errors; a changed output list, because callers decode return data
-  positionally; a changed indexed layout or anonymity on an event; and a
-  selector or topic that now belongs to a different signature.
-- `Warning`: a changed state mutability, because the selector and calldata are
-  unchanged while the call's contract changed.
-- `Info`: a new function, event, or error.
+- `Error`：function、event 或自定义错误的签名消失；返回类型列表发生变化，因为
+  调用方按位置解码返回数据；event 的 indexed 布局或匿名性发生变化；某个 selector
+  或 topic 现在属于另一个签名。
+- `Warning`：状态可变性（state mutability）变化，因为 selector 与 calldata 未
+  变，而调用契约变了。
+- `Info`：新增 function、event 或自定义错误。
 
-## Limitations
+## 已知限制
 
-- A storage gap replaced wholesale by a differently typed variable is reported
-  as a removal plus an addition, rather than as the safe change it can be. A gap
-  that simply shrinks, or one that new variables spend, is handled.
-- ERC-7201 namespaced storage is not analysed, and an artifact that mentions it
-  is refused with an error rather than reported compatible. A namespace is
-  reached through a slot that its own annotation derives, so the compiler's
-  `storageLayout` — which lists state variables — does not contain its members,
-  and checking them would need the abstract syntax tree plus a recompilation
-  that this tool deliberately does not perform. Extracting a layout on its own
-  leaves no trace of a namespace at all, so pass a full artifact.
-- Transient storage layouts are detected but not compared.
-- Constructors are not compared: their inputs affect deployment, not the
-  interface an existing proxy exposes.
-- When both artifacts are invalid, their findings share one sorted list and a
-  location does not say which artifact it came from. Compare the artifacts one
-  at a time to see which is at fault; tagging every finding with its source
-  would change the diagnostic contract, so it is left to a deliberate change.
-- ABI compatibility here is caller compatibility. It is not Solidity source
-  compatibility, and it says nothing about whether the new code behaves the
-  same way.
-- A passing report is a preflight check, not an audit.
+- 若存储 gap 被整体替换为另一个不同类型的变量，会被报告为删除加新增，而不是它
+  本可以是的那种安全变更。单纯缩小 gap，或由新变量占用 gap 空间，都已支持。
+- ERC-7201 命名空间存储（namespaced storage）不参与分析，提到它的产物会被报错
+  拒绝，而不是报告为兼容。命名空间通过其注释自行推导出的 slot 访问，而编译器
+  `storageLayout` 只列出状态变量，因此其中不包含命名空间成员；要检查这些成员，
+  需要抽象语法树，外加一次本工具有意不执行的重新编译。单独提取布局文件也不会留下
+  任何命名空间的痕迹，因此请传入完整产物。
+- transient storage 布局会被检测但不参与比较。
+- constructor 不参与比较：它的入参影响部署，而不是已部署代理对外暴露的接口。
+- 当两边产物都无效时，它们的诊断项共享同一个已排序列表，而位置不会标明来自哪一
+  边。请分别比较两个产物以确认问题出在哪边；为每个诊断项标注来源会改变诊断契约，
+  因此留待一次专门的变更。
+- 这里的 ABI 兼容性指的是调用方兼容性，既不等同于 Solidity 源码兼容性，也不说明
+  新代码的行为是否一致。
+- 通过的检查结果是升级前预检，而不是审计。
 
-## Non-goals
+## 非目标
 
-- Compiling Solidity source code.
-- Deploying or upgrading contracts.
-- Managing wallets, private keys, or RPC endpoints.
-- Replacing professional smart-contract audits.
-- Proving business-logic equivalence between contract versions.
+- 编译 Solidity 源码。
+- 部署或升级合约。
+- 管理钱包、私钥或 RPC 端点。
+- 替代专业智能合约审计。
+- 证明合约版本之间的业务逻辑等价。
 
-## License
+## 许可证
 
-Apache License 2.0.
+Apache License 2.0。
