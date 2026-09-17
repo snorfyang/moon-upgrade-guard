@@ -5,50 +5,51 @@ EVM smart contracts. It compares Solidity compiler artifacts from two contract
 versions and reports storage-layout and ABI changes that may make a proxy
 upgrade unsafe.
 
-The project is at an early stage. Its intended inputs are Solidity Standard
-JSON output and common Foundry or Hardhat artifacts. The first release will
-focus on deterministic, offline analysis with stable text and JSON diagnostics.
+It runs fully offline, never compiles Solidity source, and never touches a
+chain, a wallet, or a key. Its inputs are existing compiler artifacts, and its
+output is deterministic text or JSON with CI-friendly exit codes.
 
-## Planned scope
+The core library, the storage and ABI comparison engines, and a native CLI are
+implemented and covered by tests. See [Limitations](#limitations) for what is
+deliberately not covered yet.
 
-- Parse and normalize Solidity `storageLayout` data.
-- Compare storage slots, byte offsets, encodings, and recursive types.
-- Identify removed, reordered, inserted, or type-changed state variables.
-- Compare public ABI functions, events, and custom errors.
-- Provide library APIs and a native CLI suitable for CI.
-- Include reproducible safe and unsafe upgrade fixtures.
+## Requirements
 
-## Non-goals
+- The [MoonBit](https://www.moonbitlang.com/) toolchain, including the native
+  backend that the CLI is built with.
+- Python 3 for `scripts/e2e.sh`, which uses it only to validate JSON output.
 
-- Compiling Solidity source code.
-- Deploying or upgrading contracts.
-- Managing wallets, private keys, or RPC endpoints.
-- Replacing professional smart-contract audits.
-- Proving business-logic equivalence between contract versions.
+The analysis itself makes no network calls. A cold module cache is populated
+from the MoonBit registry before the first build, as with any MoonBit project.
 
-## Status
+## Build and test
 
-The package currently provides:
+```bash
+moon check --deny-warn
+moon test --deny-warn
+moon build --target native
+```
 
-- a stable diagnostic model with deterministic text and JSON rendering;
-- normalization of Solidity `storageLayout` data into a backend-independent
-  storage model with lossless slot numbers;
-- artifact extraction from a raw `storageLayout` object, a flat artifact such
-  as Foundry writes, solc Standard JSON output, and Hardhat build info;
-- storage-layout comparison across slots, offsets, fixed and dynamic arrays,
-  mappings, structs, and recursive type graphs;
-- ABI comparison for functions, events, custom errors, selectors, and topics.
-- a native CLI with deterministic text or JSON output and CI-friendly exit
-  codes.
+The native executable is written to
+
+```text
+_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
+```
+
+and to the matching `_build/native/release/...` path for `moon build --target
+native --release`. Run it directly, or through `moon run cmd/moonupgradeguard
+--` while working in the repository.
+
+`./scripts/e2e.sh` builds the executable and runs every pair in `fixtures/`
+through it as a real process, checking exit codes, expected diagnostic codes,
+JSON validity, and that repeated runs produce identical bytes.
 
 ## CLI
 
-Run the CLI from the repository:
-
 ```bash
-moon run cmd/moonupgradeguard -- check old.json new.json
-moon run cmd/moonupgradeguard -- storage old.json new.json
-moon run cmd/moonupgradeguard -- abi old.json new.json --format json
+moonupgradeguard check OLD NEW [--format text|json]
+moonupgradeguard storage OLD NEW [--format text|json]
+moonupgradeguard abi OLD NEW [--format text|json]
 ```
 
 `check` always compares storage and also compares ABI when both artifacts carry
@@ -61,6 +62,28 @@ comparison found an incompatible change, and `2` means the command or input was
 invalid. A successful report is a preflight result, not proof that an upgrade
 is safe in every respect.
 
+Diagnostics are sorted, so the same input always produces the same bytes. In
+`--format json` the report is an array of findings on stdout, each with a
+stable `code`, a `severity`, a `location`, a `message`, and the compared
+`oldValue`/`newValue` where they apply.
+
+## Inputs
+
+Extraction recognizes the artifact shapes that the compilers actually write:
+
+- a raw `storageLayout` object, as printed by `forge inspect` or written by
+  layout tooling;
+- a flat artifact with `storageLayout` at the top level, as Foundry writes;
+- solc Standard JSON output, `contracts.<source>.<contract>`;
+- a build info document, `output.contracts.<source>.<contract>`, as Hardhat
+  writes.
+
+Wrappers that can hold several contracts, such as Standard JSON output and build
+info, need a selector. The library API takes one (`select`, either a contract
+name or `source:contract`); without it, or when the selector matches nothing,
+extraction reports a diagnostic instead of guessing. The CLI has no selector
+flag yet, so a multi-contract document is reported as invalid input.
+
 Two facts are worth knowing when choosing an input:
 
 - A Hardhat per-contract artifact does not embed a storage layout, and
@@ -70,6 +93,105 @@ Two facts are worth knowing when choosing an input:
 - Transient storage layouts are detected but not compared. The presence of
   transient storage variables is reported as an informational finding rather
   than ignored.
+
+## Examples
+
+The `fixtures/` directory holds self-contained artifact pairs for each rule. A
+storage change that moves existing variables is reported and fails the check:
+
+```console
+$ moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
+error[storage.entry.slot.changed] contracts/Token.sol:Token storage[0]: variable "totalSupply" moved from slot 0 to slot 1 (old: 0, new: 1)
+error[storage.entry.slot.changed] contracts/Token.sol:Token storage[1]: variable "owner" moved from slot 1 to slot 0 (old: 1, new: 0)
+$ echo $?
+1
+```
+
+The same finding is available as JSON:
+
+```console
+$ moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
+[
+  {
+    "code": "abi.function.removed",
+    "severity": "error",
+    "location": {"path": "abi.functions"},
+    "message": "function \"transfer(address,uint256)\" is missing from the new ABI",
+    "oldValue": "transfer(address,uint256)"
+  }
+]
+$ echo $?
+1
+```
+
+An upgrade that only appends storage and adds functions prints informational
+findings and still exits `0`; the compatible pair prints nothing at all.
+
+## Use in CI
+
+Exit codes are the contract, so a check can gate a deployment pipeline
+directly:
+
+```yaml
+- name: upgrade compatibility
+  run: |
+    moon build --target native
+    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe \
+      check build/old.json build/new.json --format json
+```
+
+A step that exits `1` fails the job, which is the intended behavior. Treat
+`2` as a separate failure class: it means the tool could not analyze the input,
+so a pipeline should fail loudly and fix the artifact rather than retrying.
+
+## Compatibility model
+
+Only `Error` findings block an upgrade. `Warning` findings leave the layout or
+interface compatible but need review, and `Info` findings are additive.
+
+Storage findings:
+
+- `Error`: a variable that disappeared, a variable that moved slot or byte
+  offset, and a variable whose semantic type changed, including nested struct,
+  array, and mapping changes.
+- `Warning`: a variable renamed at the same position with the same type. The
+  bytes stay where they were, so the layout is still compatible, but the new
+  name may carry a new meaning.
+- `Info`: a variable that appears only in the new layout, so appending is
+  compatible.
+
+ABI findings:
+
+- `Error`: a signature that disappeared from functions, events, or custom
+  errors; a changed output list, because callers decode return data
+  positionally; a changed indexed layout or anonymity on an event; and a
+  selector or topic that now belongs to a different signature.
+- `Warning`: a changed state mutability, because the selector and calldata are
+  unchanged while the call's contract changed.
+- `Info`: a new function, event, or error.
+
+## Limitations
+
+- Storage gaps such as `__gap` arrays are compared like any other variable, so
+  shrinking a gap is reported as a move. Gap-aware validation is a follow-up.
+- ERC-7201 namespaced layouts are not modelled.
+- Transient storage layouts are detected but not compared.
+- Constructors are not compared: their inputs affect deployment, not the
+  interface an existing proxy exposes.
+- The CLI has no `--contract` selector, so a multi-contract Standard JSON or
+  build info document exits with invalid input. The library can select one.
+- ABI compatibility here is caller compatibility. It is not Solidity source
+  compatibility, and it says nothing about whether the new code behaves the
+  same way.
+- A passing report is a preflight check, not an audit.
+
+## Non-goals
+
+- Compiling Solidity source code.
+- Deploying or upgrading contracts.
+- Managing wallets, private keys, or RPC endpoints.
+- Replacing professional smart-contract audits.
+- Proving business-logic equivalence between contract versions.
 
 ## License
 
