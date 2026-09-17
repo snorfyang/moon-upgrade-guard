@@ -1,3 +1,5 @@
+**English** | [简体中文](README.zh-CN.md)
+
 # MoonUpgradeGuard
 
 MoonUpgradeGuard is a MoonBit-native compatibility checker for upgrades of
