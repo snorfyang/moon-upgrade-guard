@@ -51,6 +51,8 @@ storage-removed|storage|text|1|storage.entry.removed
 storage-removed|abi|text|0|
 storage-moved|storage|text|1|storage.entry.slot.changed
 struct-change|storage|text|1|storage.entry.type.changed
+storage-gap-shrink|check|text|0|storage.gap.changed
+storage-gap-unsafe|storage|text|1|storage.entry.slot.changed
 abi-function-removed|abi|json|1|abi.function.removed
 abi-function-removed|storage|text|0|
 abi-event-indexed|abi|text|1|abi.event.indexed.changed

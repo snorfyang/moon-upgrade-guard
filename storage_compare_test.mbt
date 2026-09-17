@@ -539,3 +539,132 @@ test "a nested member type change names the member that changed" {
   )
   assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
 }
+
+///|
+/// A fixed-size `uint256` array type with `length` slots.
+fn gap_type(id : String, length : Int) -> @moonupgradeguard.RawStorageType {
+  {
+    ..raw_type(id, "inplace", "uint256[\{length}]", (length * 32).to_string()),
+    base: Some("t_uint256"),
+  }
+}
+
+///|
+test "a storage gap that shrinks and is refilled is compatible" {
+  let old = raw_layout(
+    [
+      raw_entry("a", "0", 0, "t_uint256"),
+      raw_entry("__gap", "1", 0, "t_array(t_uint256)3_storage"),
+      raw_entry("tail", "4", 0, "t_uint256"),
+    ],
+    [uint256_type(), gap_type("t_array(t_uint256)3_storage", 3)],
+  )
+  let new = raw_layout(
+    [
+      raw_entry("a", "0", 0, "t_uint256"),
+      raw_entry("b", "1", 0, "t_uint256"),
+      raw_entry("__gap", "2", 0, "t_array(t_uint256)2_storage"),
+      raw_entry("tail", "4", 0, "t_uint256"),
+    ],
+    [uint256_type(), gap_type("t_array(t_uint256)2_storage", 2)],
+  )
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|info[storage.entry.added] fileA:A storage[1]: variable "b" was added at slot 1, offset 0 (new: b)
+      #|info[storage.gap.changed] fileA:A storage[1]: storage gap "__gap" changed from "uint256[3]" to "uint256[2]", ending at the same position (old: uint256[3], new: uint256[2])
+      #|
+    ),
+  )
+  assert_true(!@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}
+
+///|
+test "a gap whose end moved is a type change, not a resize" {
+  let old = raw_layout([raw_entry("__gap", "1", 0, "t_gap_3")], [
+    uint256_type(),
+    gap_type("t_gap_3", 3),
+  ])
+  // Same slot, two slots shorter: the freed bytes are not trailing, so the gap
+  // no longer ends where it did and the safe rule does not apply.
+  let new = raw_layout([raw_entry("__gap", "1", 0, "t_gap_2")], [
+    uint256_type(),
+    gap_type("t_gap_2", 2),
+  ])
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|error[storage.entry.type.changed] fileA:A storage[0]: storage type of "__gap" changed from "uint256[3]" to "uint256[2]" (old: uint256[3], new: uint256[2])
+      #|
+    ),
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}
+
+///|
+test "a mapping named __gap is compared like any other variable" {
+  let old = raw_layout([raw_entry("__gap", "0", 0, "t_mapping")], [
+    uint256_type(),
+    {
+      ..raw_type("t_mapping", "mapping", "mapping(uint256 => uint256)", "32"),
+      key: Some("t_uint256"),
+      value: Some("t_uint256"),
+    },
+  ])
+  let new = raw_layout([raw_entry("__gap", "1", 0, "t_mapping")], [
+    uint256_type(),
+    {
+      ..raw_type("t_mapping", "mapping", "mapping(uint256 => uint256)", "32"),
+      key: Some("t_uint256"),
+      value: Some("t_uint256"),
+    },
+  ])
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|error[storage.entry.slot.changed] fileA:A storage[0]: variable "__gap" moved from slot 0 to slot 1 (old: 0, new: 1)
+      #|
+    ),
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}
+
+///|
+test "a gap with a different element type is not accepted" {
+  let old = raw_layout([raw_entry("__gap", "1", 0, "t_gap_u256")], [
+    uint256_type(),
+    gap_type("t_gap_u256", 4),
+  ])
+  let new = raw_layout([raw_entry("__gap", "1", 0, "t_gap_bytes32")], [
+    raw_type("t_bytes32", "inplace", "bytes32", "32"),
+    {
+      ..raw_type("t_gap_bytes32", "inplace", "bytes32[4]", "128"),
+      base: Some("t_bytes32"),
+    },
+  ])
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|error[storage.entry.type.changed] fileA:A storage[0]: storage type of "__gap" changed from "uint256[4]" to "bytes32[4]" (old: uint256[4], new: bytes32[4])
+      #|
+    ),
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}
+
+///|
+test "a gap that disappears is a removal" {
+  let old = raw_layout([raw_entry("__gap", "0", 0, "t_gap_2")], [
+    uint256_type(),
+    gap_type("t_gap_2", 2),
+  ])
+  let new = raw_layout([], [])
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|error[storage.entry.removed] fileA:A storage[0]: variable "__gap" at slot 0 is missing from the new layout (old: __gap)
+      #|
+    ),
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}

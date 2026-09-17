@@ -30,9 +30,21 @@
 ///   variable between base and derived contracts without moving it in storage
 ///   is not reported.
 ///
-/// Storage gaps are compared like any other array variable, so shrinking a gap
-/// is reported as a move. Gap-aware and namespaced layouts are a follow-up, not
-/// part of this engine.
+/// Storage gaps are handled explicitly. A gap is an array variable named
+/// `__gap` or `__gap_<n>`, the convention OpenZeppelin-style contracts use to
+/// reserve room for variables that later versions add. The bytes a gap covers
+/// are unused, so a gap may lose bytes at its front, and a new variable may
+/// take them, as long as one thing stays true: the gap still ends at the byte
+/// it ended at before. That is what keeps every variable declared after the gap
+/// in place. The name alone never skips a comparison: the type has to be an
+/// array, the element type has to stay the same, and a gap whose end moved is
+/// still a move.
+///
+/// A gap replaced wholesale by a differently typed variable is reported as a
+/// removal plus an addition, which is the conservative reading; replacing it
+/// with a variable of the same position and type is a rename.
+///
+/// Namespaced layouts, such as ERC-7201, are not modelled yet.
 
 ///|
 /// How two semantic types relate.
@@ -156,6 +168,12 @@ fn compare_matched(
   diagnostics : Array[Diagnostic],
 ) -> Unit {
   let location = entry_location(old_entry, old_index)
+  if gap_change_accepted(old, old_entry, new, new_entry) {
+    // A gap covers unused bytes, so it may be resized in place as long as it
+    // still ends where it ended before. Everything after it keeps its place.
+    report_gap_change(old, old_entry, new, new_entry, location, diagnostics)
+    return
+  }
   if old_entry.slot != new_entry.slot {
     diagnostics.push(
       Diagnostic::new(
@@ -431,4 +449,134 @@ fn describe_type(layout : StorageLayout, id : String, depth : Int) -> String {
         }
       }
   }
+}
+
+///|
+/// The largest byte position the engine indexes.
+///
+/// A position is the slot times 32 plus the offset, and slots can in principle
+/// be as large as `2^256`. A layout whose position does not fit is never
+/// treated as a gap, so the gap rule can only abstain, never guess.
+let max_byte_position = 2147483647
+
+///|
+/// Whether a variable is a storage gap.
+///
+/// The convention is `__gap` or `__gap_<n>`. The name alone is not enough: the
+/// type has to be an array, so a mapping that happens to be called `__gap` is
+/// compared like any other variable.
+fn is_storage_gap(layout : StorageLayout, entry : StorageEntry) -> Bool {
+  if entry.label != "__gap" && !entry.label.has_prefix("__gap_") {
+    return false
+  }
+  match layout.find_type(entry.type_id) {
+    Some(type_entry) =>
+      match type_entry.shape {
+        StaticArray(_) => true
+        DynamicArray(_) => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
+/// The first byte a variable occupies, or `None` when the position is too large
+/// to index.
+fn entry_begin(entry : StorageEntry) -> Int? {
+  match parse_decimal_int(entry.slot.to_string()) {
+    Some(slot) =>
+      if slot > (max_byte_position - entry.offset) / 32 {
+        None
+      } else {
+        Some(slot * 32 + entry.offset)
+      }
+    None => None
+  }
+}
+
+///|
+/// The byte just past a variable, or `None` when it cannot be computed.
+fn entry_end(layout : StorageLayout, entry : StorageEntry) -> Int? {
+  match (entry_begin(entry), layout.find_type(entry.type_id)) {
+    (Some(begin), Some(type_entry)) =>
+      if begin > max_byte_position - type_entry.byte_size {
+        None
+      } else {
+        Some(begin + type_entry.byte_size)
+      }
+    _ => None
+  }
+}
+
+///|
+/// Label of a variable's type, falling back to the raw type id.
+fn type_label(layout : StorageLayout, entry : StorageEntry) -> String {
+  match layout.find_type(entry.type_id) {
+    Some(type_entry) => type_entry.label
+    None => entry.type_id
+  }
+}
+
+///|
+/// Whether an old gap may be treated as resized in place.
+///
+/// True when the old variable is a gap, the new one is an array with the same
+/// element type, and both end at the same byte. Anything else, including a
+/// changed element type or a gap whose end moved, falls back to the ordinary
+/// rules.
+fn gap_change_accepted(
+  old : StorageLayout,
+  old_entry : StorageEntry,
+  new : StorageLayout,
+  new_entry : StorageEntry,
+) -> Bool {
+  if !is_storage_gap(old, old_entry) {
+    return false
+  }
+  let same_element = match
+    (old.find_type(old_entry.type_id), new.find_type(new_entry.type_id)) {
+    (Some(old_type), Some(new_type)) =>
+      match (old_type.shape, new_type.shape) {
+        (StaticArray(old_base, _), StaticArray(new_base, _)) =>
+          compare_type(old, old_base, new, new_base, []) == Same
+        (DynamicArray(old_base), DynamicArray(new_base)) =>
+          compare_type(old, old_base, new, new_base, []) == Same
+        _ => false
+      }
+    _ => false
+  }
+  if !same_element {
+    return false
+  }
+  match (entry_end(old, old_entry), entry_end(new, new_entry)) {
+    (Some(old_end), Some(new_end)) => old_end == new_end
+    _ => false
+  }
+}
+
+///|
+/// Reports how a gap changed, when it changed at all.
+fn report_gap_change(
+  old : StorageLayout,
+  old_entry : StorageEntry,
+  new : StorageLayout,
+  new_entry : StorageEntry,
+  location : Location,
+  diagnostics : Array[Diagnostic],
+) -> Unit {
+  let old_label = type_label(old, old_entry)
+  let new_label = type_label(new, new_entry)
+  if old_entry.slot == new_entry.slot &&
+    old_entry.offset == new_entry.offset &&
+    old_label == new_label {
+    return
+  }
+  diagnostics.push(
+    Diagnostic::new(
+      StorageGapChanged,
+      location,
+      "storage gap \"\{old_entry.label}\" changed from \"\{old_label}\" to \"\{new_label}\", ending at the same position",
+    ).with_values(old_value=old_label, new_value=new_label),
+  )
 }

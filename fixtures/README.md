@@ -20,12 +20,19 @@ specification; no third-party artifact or fixture was copied.
 | `storage-removed/` | the `owner` variable is gone | 1 |
 | `storage-moved/` | `totalSupply` and `owner` swap slots | 1 |
 | `struct-change/` | the `Config` struct gains a member | 1 |
+| `storage-gap-shrink/` | a base contract spends one slot of its `__gap` on a new variable, so the gap shrinks but still ends where it ended | 0 |
+| `storage-gap-unsafe/` | the same variable is added while the gap keeps its size, so the gap and the variable behind it move | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
+
+A storage gap is the `__gap` array convention: the bytes it covers are
+unused, so a later version may take them, as long as the gap still ends where it
+ended before — that is what keeps the variables declared after it in place. The
+two `storage-gap-*` pairs are the safe and the unsafe version of that change.
 
 The subcommands are independent, which two of the pairs show directly:
 

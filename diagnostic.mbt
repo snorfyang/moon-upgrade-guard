@@ -97,6 +97,8 @@ pub(all) enum DiagnosticCode {
   StorageEntryLabelChanged
   /// A storage variable kept its position but changed semantic type.
   StorageEntryTypeChanged
+  /// A storage gap was resized or moved while keeping its end position.
+  StorageGapChanged
   /// A function signature of the old ABI is absent from the new ABI.
   AbiFunctionRemoved
   /// A function signature appears only in the new ABI.
@@ -154,6 +156,7 @@ pub fn DiagnosticCode::name(self : DiagnosticCode) -> String {
     StorageEntryOffsetChanged => "storage.entry.offset.changed"
     StorageEntryLabelChanged => "storage.entry.label.changed"
     StorageEntryTypeChanged => "storage.entry.type.changed"
+    StorageGapChanged => "storage.gap.changed"
     AbiFunctionRemoved => "abi.function.removed"
     AbiFunctionAdded => "abi.function.added"
     AbiFunctionMutabilityChanged => "abi.function.mutability.changed"
@@ -203,6 +206,7 @@ pub fn DiagnosticCode::severity(self : DiagnosticCode) -> Severity {
     StorageEntryOffsetChanged => Error
     StorageEntryLabelChanged => Warning
     StorageEntryTypeChanged => Error
+    StorageGapChanged => Info
     AbiFunctionRemoved => Error
     AbiFunctionAdded => Info
     AbiFunctionMutabilityChanged => Warning

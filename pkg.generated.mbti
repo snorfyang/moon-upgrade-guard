@@ -127,6 +127,7 @@ pub(all) enum DiagnosticCode {
   StorageEntryOffsetChanged
   StorageEntryLabelChanged
   StorageEntryTypeChanged
+  StorageGapChanged
   AbiFunctionRemoved
   AbiFunctionAdded
   AbiFunctionMutabilityChanged

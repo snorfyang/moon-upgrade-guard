@@ -158,7 +158,14 @@ Storage findings:
   bytes stay where they were, so the layout is still compatible, but the new
   name may carry a new meaning.
 - `Info`: a variable that appears only in the new layout, so appending is
-  compatible.
+  compatible, and a storage gap that was resized in place.
+
+Storage gaps use the `__gap` array convention: the bytes a gap covers are
+unused, so a later version may spend them on new variables as long as the gap
+still ends at the byte it ended at before, which keeps everything declared after
+it in place. The name alone never skips a comparison: the type has to be an
+array, the element type has to stay the same, and a gap whose end moved is
+reported as a move.
 
 ABI findings:
 
@@ -172,8 +179,9 @@ ABI findings:
 
 ## Limitations
 
-- Storage gaps such as `__gap` arrays are compared like any other variable, so
-  shrinking a gap is reported as a move. Gap-aware validation is a follow-up.
+- A storage gap replaced wholesale by a differently typed variable is reported
+  as a removal plus an addition, rather than as the safe change it can be. A gap
+  that simply shrinks, or one that new variables spend, is handled.
 - ERC-7201 namespaced layouts are not modelled.
 - Transient storage layouts are detected but not compared.
 - Constructors are not compared: their inputs affect deployment, not the
