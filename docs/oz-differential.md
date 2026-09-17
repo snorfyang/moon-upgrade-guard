@@ -49,6 +49,9 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - storage-removed: engine exit 1 | reference delete | agree
 - storage-renamed: engine exit 0 | reference rename | DIFFER
 - struct-change: engine exit 1 | reference typechange | agree
+- transient-append: engine exit 0 | reference skip (transient layout) | n/a
+- transient-moved: engine exit 1 | reference skip (transient layout) | n/a
+- transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
 compared 12 pairs, 1 divergences
@@ -100,6 +103,9 @@ users, so it is left as an explicit decision rather than a silent one.
   read; the reference does not validate the field and reports an unrelated
   rename. Refusing is the deliberate choice: an unknown shape that can affect
   compatibility must not be reported as compatible.
+- Pairs that carry a transient storage layout are skipped: this harness gives
+  the reference the regular layout, so its verdict says nothing about the
+  transient namespace, which this engine compares separately.
 - `namespaced-storage` is refused by the engine (exit `2`). The reference passes
   it here only because the fixture carries a single documentation string rather
   than a real compilation AST; its namespace support reads the AST, which this

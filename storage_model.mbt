@@ -142,6 +142,13 @@ pub(all) struct StorageLayout {
 } derive(Eq, @debug.Debug)
 
 ///|
+/// A layout with no variables and no types, as a contract that declares no
+/// transient storage has.
+pub fn StorageLayout::empty() -> StorageLayout {
+  { entries: [], types: [], }
+}
+
+///|
 /// Finds the normalized type with compiler id `id`.
 pub fn StorageLayout::find_type(
   self : StorageLayout,

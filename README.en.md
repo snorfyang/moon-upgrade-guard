@@ -108,9 +108,11 @@ Two facts are worth knowing when choosing an input:
   Hardhat's default compiler settings do not request one. Extract from a build
   info file compiled with `storageLayout` in `outputSelection`, or from a
   standalone layout file.
-- Transient storage layouts are detected but not compared. The presence of
-  transient storage variables is reported as an informational finding rather
-  than ignored.
+- Transient storage layouts are compared when the artifact carries one: Foundry
+  writes it, and a compiler run needs `transientStorageLayout` in
+  `outputSelection`. An artifact that reports none is read as having no
+  transient variables, so comparing it against one that does reports a
+  removal.
 
 ## Examples
 
@@ -178,6 +180,10 @@ Storage findings:
 - `Info`: a variable that appears only in the new layout, so appending is
   compatible, and a storage gap that was resized in place.
 
+Regular and transient storage follow the same rules. A transient finding names
+`transientStorage[...]` rather than `storage[...]`, so a report tells the two
+address spaces apart.
+
 Storage gaps use the `__gap` array convention: the bytes a gap covers are
 unused, so a later version may spend them on new variables as long as the gap
 still ends at the byte it ended at before, which keeps everything declared after
@@ -211,7 +217,6 @@ ABI findings:
   and checking them would need the abstract syntax tree plus a recompilation
   that this tool deliberately does not perform. Extracting a layout on its own
   leaves no trace of a namespace at all, so pass a full artifact.
-- Transient storage layouts are detected but not compared.
 - Constructors are not compared: their inputs affect deployment, not the
   interface an existing proxy exposes.
 - When both artifacts are invalid, their findings share one sorted list and a

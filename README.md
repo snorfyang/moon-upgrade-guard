@@ -96,8 +96,10 @@ stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、
 - Hardhat 的单合约产物不内嵌存储布局，Hardhat 的默认编译设置也不会请求它。请从
   在 `outputSelection` 中包含 `storageLayout` 的 build info 文件提取，或使用
   独立的布局文件。
-- transient storage 布局会被检测但不参与比较。存在 transient storage 变量时，
-  会以信息级诊断项报告，而不是被忽略。
+- 当产物带有 transient storage 布局时，它会被比较：Foundry 会写出该布局，用
+  solc 时需要在 `outputSelection` 中包含 `transientStorageLayout`。没有报告该
+  布局的产物会被视为没有 transient storage 变量，因此与带有该布局的产物比较时
+  会报告为删除。
 
 ## 示例
 
@@ -161,6 +163,10 @@ $ echo $?
 - `Info`：只出现在新布局中的变量（因此追加是兼容的），以及在原位调整大小的存储
   gap。
 
+常规存储与 transient storage 遵循同一套规则。transient storage 的诊断项使用
+`transientStorage[...]` 而非 `storage[...]` 作为位置，因此报告能区分这两个地址
+空间。
+
 存储 gap 使用 `__gap` 数组约定：gap 覆盖的字节是未使用的，因此后续版本可以把
 它们用于新变量，前提是该 gap 仍然结束在它原先结束的那个字节——这正是让声明在它
 之后的变量保持在原位的原因。仅凭名字永远不会跳过比较：类型必须是数组，元素类型
@@ -187,7 +193,6 @@ ABI 相关诊断：
   `storageLayout` 只列出状态变量，因此其中不包含命名空间成员；要检查这些成员，
   需要抽象语法树，外加一次本工具有意不执行的重新编译。单独提取布局文件也不会留下
   任何命名空间的痕迹，因此请传入完整产物。
-- transient storage 布局会被检测但不参与比较。
 - constructor 不参与比较：它的入参影响部署，而不是已部署代理对外暴露的接口。
 - 当两边产物都无效时，它们的诊断项共享同一个已排序列表，而位置不会标明来自哪一
   边。请分别比较两个产物以确认问题出在哪边；为每个诊断项标注来源会改变诊断契约，

@@ -80,9 +80,6 @@ pub(all) enum DiagnosticCode {
   ArtifactContractAmbiguous
   /// No contract in the artifact matches the requested selector.
   ArtifactContractMissing
-  /// The contract has transient storage variables, which this version does
-  /// not compare.
-  ArtifactTransientStoragePresent
   /// An operation that compares ABI data received an artifact without an ABI.
   ArtifactAbiMissing
   /// A storage variable of the old layout is absent from the new layout.
@@ -155,7 +152,6 @@ pub fn DiagnosticCode::name(self : DiagnosticCode) -> String {
     ArtifactLayoutMissing => "artifact.layout.missing"
     ArtifactContractAmbiguous => "artifact.contract.ambiguous"
     ArtifactContractMissing => "artifact.contract.missing"
-    ArtifactTransientStoragePresent => "artifact.transient-storage.present"
     ArtifactAbiMissing => "artifact.abi.missing"
     StorageEntryRemoved => "storage.entry.removed"
     StorageEntryAdded => "storage.entry.added"
@@ -209,7 +205,6 @@ pub fn DiagnosticCode::severity(self : DiagnosticCode) -> Severity {
     ArtifactLayoutMissing => Error
     ArtifactContractAmbiguous => Error
     ArtifactContractMissing => Error
-    ArtifactTransientStoragePresent => Info
     ArtifactAbiMissing => Error
     StorageEntryRemoved => Error
     StorageEntryAdded => Info

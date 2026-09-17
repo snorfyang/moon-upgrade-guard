@@ -12,13 +12,15 @@ pub fn compare_abi(Abi, Abi) -> Array[Diagnostic]
 
 pub fn compare_storage(StorageLayout, StorageLayout) -> Array[Diagnostic]
 
+pub fn compare_transient(StorageLayout, StorageLayout) -> Array[Diagnostic]
+
 pub fn extract_artifact(String, select? : String) -> (Artifact?, Array[Diagnostic])
 
 pub fn hex_encode(Bytes) -> String
 
 pub fn keccak_256(Bytes) -> Bytes
 
-pub fn normalize_layout(RawStorageLayout) -> (StorageLayout, Array[Diagnostic])
+pub fn normalize_layout(RawStorageLayout, prefix? : String) -> (StorageLayout, Array[Diagnostic])
 
 pub fn render_json(Array[Diagnostic]) -> String
 
@@ -79,6 +81,7 @@ pub(all) struct Artifact {
   contract : String?
   layout : RawStorageLayout
   abi : Abi?
+  transient : RawStorageLayout?
 } derive(Eq, @debug.Debug)
 
 pub(all) enum ArtifactKind {
@@ -119,7 +122,6 @@ pub(all) enum DiagnosticCode {
   ArtifactLayoutMissing
   ArtifactContractAmbiguous
   ArtifactContractMissing
-  ArtifactTransientStoragePresent
   ArtifactAbiMissing
   StorageEntryRemoved
   StorageEntryAdded
@@ -210,6 +212,7 @@ pub(all) struct StorageLayout {
   entries : Array[StorageEntry]
   types : Array[TypeEntry]
 } derive(Eq, @debug.Debug)
+pub fn StorageLayout::empty() -> Self
 pub fn StorageLayout::find_type(Self, String) -> TypeEntry?
 
 pub(all) struct TypeEntry {

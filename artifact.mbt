@@ -48,6 +48,10 @@ pub(all) struct Artifact {
   /// artifact has no ABI to compare, which is the normal case for a layout
   /// extracted on its own.
   abi : Abi?
+  /// The raw `transientStorageLayout` object, when the artifact carries one.
+  /// `None` means the artifact reports no transient layout, which Foundry does
+  /// by omitting an empty one.
+  transient : RawStorageLayout?
 } derive(Eq, @debug.Debug)
 
 ///|
@@ -176,6 +180,7 @@ fn extract_from_root(
       contract: None,
       layout,
       abi: None,
+      transient: None,
     })
   }
   if has_flat {
@@ -268,13 +273,15 @@ fn extract_flat(
     is Some(layout) else {
     return None
   }
-  warn_transient(fields, "$.transientStorageLayout", diagnostics)
   Some({
     kind: FlatArtifact,
     source: get_string(fields, "sourceName"),
     contract: get_string(fields, "contractName"),
     layout,
     abi: decode_abi_field(fields, "$.abi", diagnostics),
+    transient: decode_transient_field(
+      fields, "$.transientStorageLayout", diagnostics,
+    ),
   })
 }
 
@@ -324,22 +331,18 @@ fn extract_contracts(
     is Some(layout) else {
     return None
   }
-  warn_transient(
-    candidate.fields,
-    path +
+  let contract_path = path +
     quoted(candidate.source) +
-    quoted(candidate.contract) +
-    ".transientStorageLayout",
-    diagnostics,
-  )
+    quoted(candidate.contract)
   Some({
     kind,
     source: Some(candidate.source),
     contract: Some(candidate.contract),
     layout,
-    abi: decode_abi_field(
+    abi: decode_abi_field(candidate.fields, contract_path + ".abi", diagnostics),
+    transient: decode_transient_field(
       candidate.fields,
-      path + quoted(candidate.source) + quoted(candidate.contract) + ".abi",
+      contract_path + ".transientStorageLayout",
       diagnostics,
     ),
   })
@@ -494,27 +497,20 @@ fn candidate_list(candidates : Array[LayoutCandidate], path : String) -> String 
 }
 
 ///|
-/// Reports that the selected contract has transient storage variables, which
-/// this version detects but does not compare.
-fn warn_transient(
+/// Decodes the `transientStorageLayout` field of a contract object, when it has
+/// one.
+///
+/// An artifact that omits the field reports no transient layout: Foundry omits
+/// an empty one, and a compiler run that was not asked for
+/// `transientStorageLayout` reports nothing either.
+fn decode_transient_field(
   fields : Map[String, Json],
   path : String,
   diagnostics : Array[Diagnostic],
-) -> Unit {
+) -> RawStorageLayout? {
   match fields.get("transientStorageLayout") {
-    Some(Object(transient)) =>
-      match transient.get("storage") {
-        Some(Array(entries)) if entries.length() > 0 =>
-          diagnostics.push(
-            Diagnostic::new(
-              ArtifactTransientStoragePresent,
-              { contract: None, path, },
-              "contract has transient storage variables; this version compares regular storage only",
-            ),
-          )
-        _ => ()
-      }
-    _ => ()
+    None | Some(Null) => None
+    Some(layout_json) => decode_layout(layout_json, path, diagnostics)
   }
 }
 

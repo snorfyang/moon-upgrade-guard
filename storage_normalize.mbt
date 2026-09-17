@@ -23,14 +23,16 @@ let max_slot_offset = 31
 /// the returned layout.
 pub fn normalize_layout(
   raw : RawStorageLayout,
+  prefix? : String = "",
 ) -> (StorageLayout, Array[Diagnostic]) {
   let diagnostics : Array[Diagnostic] = []
-  let declared = collect_type_ids(raw.types, diagnostics)
-  let types = normalize_types(raw.types, declared, diagnostics)
+  let declared = collect_type_ids(raw.types, prefix, diagnostics)
+  let types = normalize_types(raw.types, declared, prefix, diagnostics)
   let retained = prune_unresolved_types(types)
   let entries = normalize_entries(
     raw.storage,
     retained.map(fn(entry) { entry.id }),
+    prefix,
     diagnostics,
   )
   diagnostics.sort()
@@ -40,8 +42,8 @@ pub fn normalize_layout(
 
 ///|
 /// Path of the type with compiler id `id` inside the `storageLayout` object.
-fn type_path(id : String) -> String {
-  "types[\"\{id}\"]"
+fn type_path(prefix : String, id : String) -> String {
+  prefix + "types[\"\{id}\"]"
 }
 
 ///|
@@ -49,6 +51,7 @@ fn type_path(id : String) -> String {
 /// without an id and repeated ids. The first definition of a repeated id wins.
 fn collect_type_ids(
   raw_types : Array[RawStorageType],
+  prefix : String,
   diagnostics : Array[Diagnostic],
 ) -> Array[String] {
   let declared : Array[String] = []
@@ -58,7 +61,7 @@ fn collect_type_ids(
         diagnostics.push(
           Diagnostic::new(
             StorageTypeIdMissing,
-            { contract: None, path: "types[\{i}].id", },
+            { contract: None, path: prefix + "types[\{i}].id", },
             "storage type is missing its id",
           ),
         )
@@ -67,7 +70,7 @@ fn collect_type_ids(
           diagnostics.push(
             Diagnostic::new(
               StorageTypeIdDuplicate,
-              { contract: None, path: type_path(id), },
+              { contract: None, path: type_path(prefix, id), },
               "storage type id \"\{id}\" is defined more than once; the first definition is used",
             ),
           )
@@ -84,6 +87,7 @@ fn collect_type_ids(
 fn normalize_types(
   raw_types : Array[RawStorageType],
   declared : Array[String],
+  prefix : String,
   diagnostics : Array[Diagnostic],
 ) -> Array[TypeEntry] {
   let types : Array[TypeEntry] = []
@@ -91,7 +95,14 @@ fn normalize_types(
   for i in 0..<raw_types.length() {
     let raw_type = raw_types[i]
     if raw_type.id is Some(id) && !normalized.contains(id) {
-      match normalize_type(raw_type, id, declared, type_path(id), diagnostics) {
+      match
+        normalize_type(
+          raw_type,
+          id,
+          declared,
+          type_path(prefix, id),
+          diagnostics,
+        ) {
         Some(entry) => {
           normalized.push(id)
           types.push(entry)
@@ -155,12 +166,18 @@ fn references_resolve(shape : TypeShape, ids : Array[String]) -> Bool {
 fn normalize_entries(
   raw_storage : Array[RawStorageEntry],
   known_ids : Array[String],
+  prefix : String,
   diagnostics : Array[Diagnostic],
 ) -> Array[StorageEntry] {
   let entries : Array[StorageEntry] = []
   for i in 0..<raw_storage.length() {
     match
-      normalize_entry(raw_storage[i], known_ids, "storage[\{i}]", diagnostics) {
+      normalize_entry(
+        raw_storage[i],
+        known_ids,
+        prefix + "storage[\{i}]",
+        diagnostics,
+      ) {
       Some(entry) => entries.push(entry)
       None => ()
     }

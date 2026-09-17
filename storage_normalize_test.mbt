@@ -618,3 +618,21 @@ test "a fixed array label must carry its element count" {
     ),
   )
 }
+
+///|
+test "a path prefix names the namespace a finding belongs to" {
+  let raw = raw_layout([raw_entry("x", "0x1f", 0, "t_uint256")], [
+    uint256_type(),
+  ])
+  let (_, diagnostics) = @moonupgradeguard.normalize_layout(
+    raw,
+    prefix="transientStorage.",
+  )
+  inspect(
+    @moonupgradeguard.render_text(diagnostics),
+    content=(
+      #|error[storage.entry.slot.invalid] fileA:A transientStorage.storage[0].slot: slot "0x1f" is not a non-negative decimal integer
+      #|
+    ),
+  )
+}

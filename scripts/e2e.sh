@@ -54,6 +54,9 @@ storage-moved|storage|text|1|storage.entry.slot.changed
 struct-change|storage|text|1|storage.entry.type.changed
 storage-gap-shrink|check|text|0|storage.gap.changed
 storage-gap-unsafe|storage|text|1|storage.entry.slot.changed
+transient-moved|storage|text|1|storage.entry.slot.changed
+transient-append|check|text|0|storage.entry.added
+transient-removed|storage|text|1|storage.entry.removed
 abi-function-removed|abi|json|1|abi.function.removed
 abi-function-removed|storage|text|0|
 abi-event-indexed|abi|text|1|abi.event.indexed.changed
@@ -114,6 +117,13 @@ done <<< "$cases"
 # A compatible pair reports nothing at all.
 if [[ -s "$tmp/compatible.check.text.out" ]]; then
   fail "compatible check printed output"
+fi
+
+# Transient findings name their own namespace, so a report tells the two
+# address spaces apart.
+checks=$((checks + 1))
+if ! grep -qF -- "transientStorage[" "$tmp/transient-moved.storage.text.out"; then
+  fail "transient-moved: the finding does not name the transient namespace"
 fi
 
 # Command line surface, checked by exit code as well.

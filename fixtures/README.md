@@ -22,6 +22,9 @@ specification; no third-party artifact or fixture was copied.
 | `storage-moved/` | `totalSupply` and `owner` swap slots | 1 |
 | `struct-change/` | the `Config` struct gains a member | 1 |
 | `storage-gap-shrink/` | a base contract spends one slot of its `__gap` on a new variable, so the gap shrinks but still ends where it ended | 0 |
+| `transient-moved/` | a transient variable moves between slots | 1 |
+| `transient-append/` | the new version adds a transient variable | 0 |
+| `transient-removed/` | the new artifact reports no transient layout, so the old transient variable disappears | 1 |
 | `storage-gap-unsafe/` | the same variable is added while the gap keeps its size, so the gap and the variable behind it move | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
@@ -76,6 +79,14 @@ contract Token {
 All three releases emit the same layout for it, which is why the two
 cross-version pairs are expected to be compatible. The source is part of this
 repository; the fixtures are its compiler output.
+
+Transient storage follows the same rules as regular storage, in its own
+namespace: a finding names `transientStorage[...]` so a report tells the two
+address spaces apart. An artifact that reports no transient layout is read as
+one with no transient variables, which is how Foundry writes an empty one; set
+against an artifact that does carry them, that reads as a removal, so a version
+compiled without the `transientStorageLayout` output selection blocks rather
+than passing quietly.
 
 A renamed variable is the one place where this tool is deliberately more
 permissive than OpenZeppelin Upgrades Core, which treats a rename as unsafe

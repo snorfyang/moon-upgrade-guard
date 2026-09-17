@@ -668,3 +668,26 @@ test "a gap that disappears is a removal" {
   )
   assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
 }
+
+///|
+test "a transient variable that moves is reported in its own namespace" {
+  let old = raw_layout([raw_entry("lock", "0", 0, "t_uint256")], [
+    uint256_type(),
+  ])
+  let new = raw_layout([raw_entry("lock", "1", 0, "t_uint256")], [
+    uint256_type(),
+  ])
+  let (old_layout, old_diagnostics) = normalize(old)
+  let (new_layout, new_diagnostics) = normalize(new)
+  assert_eq(old_diagnostics.length(), 0)
+  assert_eq(new_diagnostics.length(), 0)
+  let diff = @moonupgradeguard.compare_transient(old_layout, new_layout)
+  inspect(
+    @moonupgradeguard.render_text(diff),
+    content=(
+      #|error[storage.entry.slot.changed] fileA:A transientStorage[0]: variable "lock" moved from slot 0 to slot 1 (old: 0, new: 1)
+      #|
+    ),
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(diff))
+}

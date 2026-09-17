@@ -359,24 +359,34 @@ test "a layout without a storage array is reported" {
 }
 
 ///|
-test "transient storage is reported as informational" {
+test "a transient layout is extracted for comparison" {
   let text =
-    #|{"abi":[],"storageLayout":{"storage":[{"astId":1,"contract":"fileA:A","label":"x","offset":0,"slot":"0","type":"t_uint256"}],"types":{"t_uint256":{"encoding":"inplace","label":"uint256","numberOfBytes":"32"}}},"transientStorageLayout":{"storage":[{"astId":5,"contract":"fileA:A","label":"t","offset":0,"slot":"0","type":"t_uint256"}],"types":{"t_uint256":{"encoding":"inplace","label":"uint256","numberOfBytes":"32"}}}}
+    #|{"abi":[],"storageLayout":{"storage":[{"astId":1,"contract":"fileA:A","label":"x","offset":0,"slot":"0","type":"t_uint256"}],"types":{"t_uint256":{"encoding":"inplace","label":"uint256","numberOfBytes":"32"}}},"transientStorageLayout":{"storage":[{"astId":5,"contract":"fileA:A","label":"lock","offset":0,"slot":"0","type":"t_uint256"}],"types":{"t_uint256":{"encoding":"inplace","label":"uint256","numberOfBytes":"32"}}}}
   let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
-  assert_true(artifact is Some(_))
-  assert_eq(diagnostics.length(), 1)
-  assert_eq(
-    diagnostics[0].code,
-    @moonupgradeguard.DiagnosticCode::ArtifactTransientStoragePresent,
-  )
-  assert_eq(diagnostics[0].severity, @moonupgradeguard.Severity::Info)
-  inspect(
-    @moonupgradeguard.render_text(diagnostics),
-    content=(
-      #|info[artifact.transient-storage.present] $.transientStorageLayout: contract has transient storage variables; this version compares regular storage only
-      #|
-    ),
-  )
+  assert_eq(diagnostics.length(), 0)
+  match artifact {
+    Some(artifact) =>
+      match artifact.transient {
+        Some(transient) => {
+          assert_eq(transient.storage.length(), 1)
+          assert_eq(transient.storage[0].label, Some("lock"))
+        }
+        None => abort("the transient layout was not extracted")
+      }
+    None => abort("artifact extraction failed")
+  }
+}
+
+///|
+test "an artifact that reports no transient layout carries none" {
+  let text =
+    #|{"abi":[],"storageLayout":{"storage":[],"types":{}}}
+  let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
+  assert_eq(diagnostics.length(), 0)
+  match artifact {
+    Some(artifact) => assert_true(artifact.transient is None)
+    None => abort("artifact extraction failed")
+  }
 }
 
 ///|

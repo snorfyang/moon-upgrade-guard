@@ -73,6 +73,34 @@ pub fn compare_storage(
   old : StorageLayout,
   new : StorageLayout,
 ) -> Array[Diagnostic] {
+  compare_section(old, new, "storage")
+}
+
+///|
+/// Compares two normalized transient storage layouts.
+///
+/// Transient storage lives in its own address space, but a contract that keeps
+/// transient values across calls is affected by a reordering just as it would
+/// be by a storage reordering, so the rules are the same. Only the location
+/// differs: a finding names `transientStorage[...]` rather than `storage[...]`,
+/// which is also how a report tells the two namespaces apart.
+pub fn compare_transient(
+  old : StorageLayout,
+  new : StorageLayout,
+) -> Array[Diagnostic] {
+  compare_section(old, new, "transientStorage")
+}
+
+///|
+/// Compares two entry lists that share one set of rules.
+///
+/// `section` is the name the locations are reported under, so the same engine
+/// can compare regular storage, transient storage, or any later namespace.
+fn compare_section(
+  old : StorageLayout,
+  new : StorageLayout,
+  section : String,
+) -> Array[Diagnostic] {
   let diagnostics : Array[Diagnostic] = []
   let new_matched : Array[Bool] = Array::make(new.entries.length(), false)
   let old_matched : Array[Bool] = Array::make(old.entries.length(), false)
@@ -90,7 +118,15 @@ pub fn compare_storage(
     if found >= 0 {
       old_matched[i] = true
       new_matched[found] = true
-      compare_matched(old, new, old_entry, new.entries[found], i, diagnostics)
+      compare_matched(
+        old,
+        new,
+        old_entry,
+        new.entries[found],
+        i,
+        section,
+        diagnostics,
+      )
     }
   }
   // Then by position and type, which is what makes a rename recognizable.
@@ -117,7 +153,7 @@ pub fn compare_storage(
       diagnostics.push(
         Diagnostic::new(
           StorageEntryLabelChanged,
-          entry_location(old_entry, i),
+          entry_location(old_entry, i, section),
           "variable \"\{old_entry.label}\" was renamed to \"\{new_entry.label}\" without moving or changing type",
         ).with_values(old_value=old_entry.label, new_value=new_entry.label),
       )
@@ -129,7 +165,7 @@ pub fn compare_storage(
       diagnostics.push(
         Diagnostic::new(
           StorageEntryRemoved,
-          entry_location(old_entry, i),
+          entry_location(old_entry, i, section),
           "variable \"\{old_entry.label}\" at slot \{old_entry.slot.to_string()} is missing from the new layout",
         ).with_values(old_value=old_entry.label),
       )
@@ -141,7 +177,7 @@ pub fn compare_storage(
       diagnostics.push(
         Diagnostic::new(
           StorageEntryAdded,
-          entry_location(new_entry, j),
+          entry_location(new_entry, j, section),
           "variable \"\{new_entry.label}\" was added at slot \{new_entry.slot.to_string()}, offset \{new_entry.offset}",
         ).with_values(new_value=new_entry.label),
       )
@@ -153,8 +189,12 @@ pub fn compare_storage(
 
 ///|
 /// Location of a storage variable inside the `storageLayout` object.
-fn entry_location(entry : StorageEntry, index : Int) -> Location {
-  { contract: entry.contract, path: "storage[\{index}]", }
+fn entry_location(
+  entry : StorageEntry,
+  index : Int,
+  section : String,
+) -> Location {
+  { contract: entry.contract, path: section + "[\{index}]", }
 }
 
 ///|
@@ -165,9 +205,10 @@ fn compare_matched(
   old_entry : StorageEntry,
   new_entry : StorageEntry,
   old_index : Int,
+  section : String,
   diagnostics : Array[Diagnostic],
 ) -> Unit {
-  let location = entry_location(old_entry, old_index)
+  let location = entry_location(old_entry, old_index, section)
   if gap_change_accepted(old, old_entry, new, new_entry) {
     // A gap covers unused bytes, so it may be resized in place as long as it
     // still ends where it ended before. Everything after it keeps its place.

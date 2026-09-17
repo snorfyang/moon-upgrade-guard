@@ -193,6 +193,22 @@ fn extract(
 }
 
 ///|
+/// Normalizes a transient storage layout.
+///
+/// An artifact that reports no transient layout is treated as one with no
+/// transient variables, which is how Foundry writes an empty one. A variable
+/// that disappears because of that is reported as a removal, so the run blocks
+/// rather than passing silently.
+fn normalize_transient(
+  raw : @guard.RawStorageLayout?,
+) -> (@guard.StorageLayout, Array[@guard.Diagnostic]) {
+  match raw {
+    Some(raw) => @guard.normalize_layout(raw, prefix="transientStorage.")
+    None => (@guard.StorageLayout::empty(), [])
+  }
+}
+
+///|
 fn analyze_text(
   command : Command,
   old_text : String,
@@ -216,8 +232,16 @@ fn analyze_text(
   }
   let (old_layout, old_normalize) = @guard.normalize_layout(old_artifact.layout)
   let (new_layout, new_normalize) = @guard.normalize_layout(new_artifact.layout)
+  let (old_transient, old_transient_normalize) = normalize_transient(
+    old_artifact.transient,
+  )
+  let (new_transient, new_transient_normalize) = normalize_transient(
+    new_artifact.transient,
+  )
   append_diagnostics(diagnostics, old_normalize)
   append_diagnostics(diagnostics, new_normalize)
+  append_diagnostics(diagnostics, old_transient_normalize)
+  append_diagnostics(diagnostics, new_transient_normalize)
   if has_errors(diagnostics) {
     return finish(diagnostics, format, 2)
   }
@@ -225,6 +249,10 @@ fn analyze_text(
     append_diagnostics(
       diagnostics,
       @guard.compare_storage(old_layout, new_layout),
+    )
+    append_diagnostics(
+      diagnostics,
+      @guard.compare_transient(old_transient, new_transient),
     )
   }
   if command == Check || command == Abi {

@@ -70,6 +70,11 @@ function runReference(dir) {
   if (!oldArtifact.storageLayout || !newArtifact.storageLayout) {
     return { skipped: 'no storageLayout' };
   }
+  if (oldArtifact.transientStorageLayout || newArtifact.transientStorageLayout) {
+    // This harness hands the reference the regular layout, and transient
+    // storage is compared by this engine rather than by the reference input.
+    return { skipped: 'transient layout' };
+  }
   const report = oz.getStorageUpgradeReport(
     oldArtifact.storageLayout,
     newArtifact.storageLayout,
