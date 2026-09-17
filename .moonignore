@@ -6,3 +6,5 @@
 !/README.md
 !/LICENSE
 !/pkg.generated.mbti
+!/cmd/
+!/cmd/**

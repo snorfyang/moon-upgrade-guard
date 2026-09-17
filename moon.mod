@@ -13,3 +13,7 @@ keywords = [ "ethereum", "evm", "solidity", "upgrade", "storage-layout" ]
 preferred_target = "native"
 
 description = "EVM contract upgrade compatibility checks for MoonBit"
+
+import {
+  "moonbitlang/async@0.21.3",
+}

@@ -38,8 +38,28 @@ The package currently provides:
 - storage-layout comparison across slots, offsets, fixed and dynamic arrays,
   mappings, structs, and recursive type graphs;
 - ABI comparison for functions, events, custom errors, selectors, and topics.
+- a native CLI with deterministic text or JSON output and CI-friendly exit
+  codes.
 
-A native CLI is still to come.
+## CLI
+
+Run the CLI from the repository:
+
+```bash
+moon run cmd/moonupgradeguard -- check old.json new.json
+moon run cmd/moonupgradeguard -- storage old.json new.json
+moon run cmd/moonupgradeguard -- abi old.json new.json --format json
+```
+
+`check` always compares storage and also compares ABI when both artifacts carry
+one. If exactly one artifact has an ABI, it reports invalid input instead of
+silently skipping that comparison. `storage` accepts standalone layouts, while
+`abi` requires an ABI on both sides.
+
+Exit code `0` means no blocking incompatibility was found, `1` means the
+comparison found an incompatible change, and `2` means the command or input was
+invalid. A successful report is a preflight result, not proof that an upgrade
+is safe in every respect.
 
 Two facts are worth knowing when choosing an input:
 

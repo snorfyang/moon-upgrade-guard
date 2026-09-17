@@ -120,6 +120,7 @@ pub(all) enum DiagnosticCode {
   ArtifactContractAmbiguous
   ArtifactContractMissing
   ArtifactTransientStoragePresent
+  ArtifactAbiMissing
   StorageEntryRemoved
   StorageEntryAdded
   StorageEntrySlotChanged
