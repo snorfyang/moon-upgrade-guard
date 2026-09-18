@@ -186,6 +186,10 @@ so a pipeline should fail loudly and fix the artifact rather than retrying.
 
 ## Compatibility model
 
+Every finding carries a stable code; the [diagnostics
+reference](docs/diagnostics.md) lists all of them with their severity and
+meaning.
+
 Only `Error` findings block an upgrade. `Warning` findings leave the layout or
 interface compatible but need review, and `Info` findings are additive.
 

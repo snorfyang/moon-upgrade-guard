@@ -6,6 +6,8 @@
 !/README.md
 !/README.en.md
 !/ROADMAP.md
+!/docs/
+!/docs/**
 !/LICENSE
 !/pkg.generated.mbti
 !/cmd/

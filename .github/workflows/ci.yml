@@ -42,8 +42,14 @@ jobs:
       - name: generate interfaces
         run: moon info
 
-      - name: interfaces are committed
-        run: git diff --exit-code
+      - name: generate the diagnostics reference
+        run: python3 scripts/gen_diagnostics_doc.py
+
+      # `git diff` ignores untracked files, so a generated file that was deleted
+      # would be recreated and still look clean. Compare the whole tree instead:
+      # modifications, deletions, and new untracked files all fail.
+      - name: generated files are committed
+        run: test -z "$(git status --porcelain)"
 
       - name: whitespace
         run: git diff --check
