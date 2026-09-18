@@ -6,6 +6,8 @@ script reads them from there, so the reference cannot drift: CI regenerates the
 page and fails when the committed copy differs.
 """
 
+from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path
@@ -98,8 +100,11 @@ def main() -> None:
         'describes a command line or a file the CLI could not use. Both families',
         'carry `Error` severity, because a run that could not be completed must not',
         'look compatible. An incomplete report can still contain comparison',
-        'findings: when one artifact has no ABI, storage is compared first and the',
-        'ABI comparison then reports that it could not run.',
+        'findings: when `check` runs and one artifact has no ABI, storage is',
+        'compared first and the ABI comparison then reports that it could not run.',
+        'Normalization failures work the other way round: a variable whose slot is',
+        'not a decimal integer is reported with `storage.entry.slot.invalid`, and',
+        'the run exits `2` before any comparison happens.',
         '',
         'Locations are relative to the value the reporting layer analysed:',
         'extraction reports paths inside the artifact, the storage engine reports',
