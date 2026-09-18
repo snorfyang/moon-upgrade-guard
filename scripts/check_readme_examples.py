@@ -14,14 +14,43 @@ from __future__ import annotations
 
 import difflib
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-BINARY = '_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe'
+BINARY = ROOT / '_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe'
 READMES = ['README.md', 'README.en.md']
 BLOCK = re.compile(r'```console\n(.*?)```', re.S)
+
+# The walkthrough documents `moon run cmd/moonupgradeguard -- ...`, which a reader
+# can paste. Executing that would rebuild from source, so it is rewritten to the
+# built executable: what is validated is the binary, not a source-level run.
+CLI_PREFIX = 'moon run cmd/moonupgradeguard -- '
+
+
+def argv_for(command: str) -> list[str]:
+    if not command.startswith(CLI_PREFIX):
+        raise SystemExit(
+            f'a transcript may only invoke the CLI, found: {command!r}'
+        )
+    if not BINARY.is_file():
+        raise SystemExit(f'{BINARY.relative_to(ROOT)} is missing; build it first')
+    return [str(BINARY), *shlex.split(command[len(CLI_PREFIX):])]
+
+
+def captured_lines(stdout: str) -> list[str]:
+    """Splits captured output, dropping the one newline every line ends with.
+
+    Only the captured side is adjusted: the documented lines are compared as
+    written, so a blank line that crept into the README is a mismatch rather
+    than something both sides shrug off.
+    """
+    lines = stdout.split('\n')
+    if lines and lines[-1] == '':
+        return lines[:-1]
+    return lines
 
 
 def parse(block: str, where: str) -> list[tuple[str, list[str], int | None]]:
@@ -89,19 +118,30 @@ def main() -> None:
         raise SystemExit(1)
 
     failures = 0
+    checked = 0
     for name, steps in transcripts.items():
         for command, expected, status in steps:
+            if status is None:
+                failures += 1
+                print(
+                    f'FAIL {name}: `{command}` has no `$ echo $?` line, so its '
+                    f'exit status is undocumented',
+                    file=sys.stderr,
+                )
+                continue
+            checked += 1
             result = subprocess.run(
-                ['/bin/sh', '-c', command],
+                argv_for(command),
                 cwd=ROOT,
                 capture_output=True,
                 text=True,
             )
-            if result.stdout.strip('\n') != '\n'.join(expected).strip('\n'):
+            actual = captured_lines(result.stdout)
+            if actual != expected:
                 failures += 1
                 print(f'FAIL {name}: output of `{command}`', file=sys.stderr)
                 print(show(expected, result.stdout), file=sys.stderr)
-            if status is not None and result.returncode != status:
+            if result.returncode != status:
                 failures += 1
                 print(
                     f'FAIL {name}: `{command}` exited {result.returncode}, '
@@ -109,11 +149,13 @@ def main() -> None:
                     file=sys.stderr,
                 )
 
-    checks = sum(len(steps) for steps in transcripts.values())
     if failures:
-        print(f'{failures} of {checks} documented commands disagree', file=sys.stderr)
+        print(f'{failures} problems in {checked} documented commands', file=sys.stderr)
         raise SystemExit(1)
-    print(f'{checks} documented commands match the binary')
+    print(
+        f'{checked} documented commands ran against '
+        f'{BINARY.relative_to(ROOT)} with the documented output and exit status'
+    )
 
 
 if __name__ == '__main__':
