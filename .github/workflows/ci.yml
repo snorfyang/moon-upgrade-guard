@@ -48,6 +48,13 @@ jobs:
       - name: whitespace
         run: git diff --check
 
+      # The reference is generated from the code definitions, so a new code
+      # cannot ship undocumented.
+      - name: diagnostics reference is current
+        run: |
+          python3 scripts/gen_diagnostics_doc.py
+          git diff --exit-code -- docs/diagnostics.md
+
       # Builds the native executable and checks the CLI's exit codes, JSON
       # output, and byte-identical reruns against `fixtures/`.
       - name: cli end to end
