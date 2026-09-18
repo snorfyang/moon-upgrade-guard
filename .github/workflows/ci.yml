@@ -56,5 +56,15 @@ jobs:
 
       # Builds the native executable and checks the CLI's exit codes, JSON
       # output, and byte-identical reruns against `fixtures/`.
+      # The checks that follow run against the executable, so build it here
+      # rather than relying on a later step.
+      - name: build the CLI
+        run: moon build --target native
+
+      # Every `console` block in the READMEs is a transcript: its commands,
+      # output, and exit codes are compared against that executable.
+      - name: documented examples are current
+        run: python3 scripts/check_readme_examples.py
+
       - name: cli end to end
         run: ./scripts/e2e.sh

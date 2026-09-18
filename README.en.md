@@ -134,10 +134,43 @@ Two facts are worth knowing when choosing an input:
   transient variables, so comparing it against one that does reports a
   removal.
 
-## Examples
+## Reproducible walkthrough
 
-The `fixtures/` directory holds self-contained artifact pairs for each rule. A
-storage change that moves existing variables is reported and fails the check:
+A fresh clone, one compatible check, one incompatible check, one machine-readable
+report, and finally a single command that repeats every check. Nothing here needs
+the network apart from the first build, which populates the module cache from the
+MoonBit registry. The output and exit codes below are the ones the binary prints:
+CI runs this section line by line.
+
+```bash
+git clone https://github.com/snorfyang/moon-upgrade-guard.git
+cd moon-upgrade-guard
+moon build --target native
+```
+
+**1. Appending only: compatible.** `fixtures/compatible/` is the same contract
+recompiled, so only compiler-generated ids and the order of the type table differ.
+`fixtures/append/` adds a variable, a function, and an event at the end, so it
+prints informational findings.
+
+```console
+$ moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+$ echo $?
+0
+```
+
+```console
+$ moon run cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
+info[abi.event.added] abi.events: event "Paused(address)" was added to the new ABI (new: Paused(address))
+info[abi.function.added] abi.functions: function "pause()" was added to the new ABI (new: pause())
+info[storage.entry.added] contracts/Token.sol:Token storage[2]: variable "paused" was added at slot 2, offset 0 (new: paused)
+$ echo $?
+0
+```
+
+**2. Moving existing variables: incompatible.** `fixtures/storage-moved/` swaps the
+slots of `totalSupply` and `owner`. Not a byte is lost, but every byte now means
+something else, so the exit code is `1`.
 
 ```console
 $ moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
@@ -147,7 +180,8 @@ $ echo $?
 1
 ```
 
-The same finding is available as JSON:
+**3. Machine-readable output.** With `--format json`, stdout is a JSON array on
+every exit code, including `2`.
 
 ```console
 $ moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
@@ -164,8 +198,19 @@ $ echo $?
 1
 ```
 
-An upgrade that only appends storage and adds functions prints informational
-findings and still exits `0`; the compatible pair prints nothing at all.
+**4. Everything at once.**
+
+```bash
+./scripts/e2e.sh
+```
+
+It runs every pair in `fixtures/` through the binary as a real process and checks
+exit codes, expected diagnostic codes, JSON validity, and that repeated runs
+produce identical bytes, printing `e2e: N checks passed` at the end.
+
+Exit codes: `0` compatible, `1` a blocking incompatibility, `2` input that could
+not be analysed, where the report still explains why. The severity and meaning of
+every code is in the [diagnostics reference](docs/diagnostics.md).
 
 ## Use in CI
 
