@@ -118,10 +118,39 @@ stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、
   布局的产物会被视为没有 transient storage 变量，因此与带有该布局的产物比较时
   会报告为删除。
 
-## 示例
+## 复现走查
 
-`fixtures/` 目录为每条规则提供了自包含的产物对。存储变更导致已有变量移动时会被
-报告，并让检查失败：
+下面从零走一遍：一次兼容检查、一次不兼容检查、一次机器可读输出，最后用一条命令跑完整
+验证。命令不需要网络（首次构建会从 MoonBit 注册表填充模块缓存），本节中的输出与退出码
+与真实运行逐字一致——CI 会逐条核对。
+
+```bash
+git clone https://github.com/snorfyang/moon-upgrade-guard.git
+cd moon-upgrade-guard
+moon build --target native
+```
+
+**1. 只追加内容：兼容。** `fixtures/compatible/` 是同一个合约重新编译的结果，只有编译器
+生成的 id 与类型表顺序不同；`fixtures/append/` 在末尾追加了一个变量、一个函数和一个事
+件，因此只输出信息级诊断。
+
+```console
+$ moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+$ echo $?
+0
+```
+
+```console
+$ moon run cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
+info[abi.event.added] abi.events: event "Paused(address)" was added to the new ABI (new: Paused(address))
+info[abi.function.added] abi.functions: function "pause()" was added to the new ABI (new: pause())
+info[storage.entry.added] contracts/Token.sol:Token storage[2]: variable "paused" was added at slot 2, offset 0 (new: paused)
+$ echo $?
+0
+```
+
+**2. 移动已有变量：不兼容。** `fixtures/storage-moved/` 把 `totalSupply` 与 `owner` 交换了
+slot：一个字节都没有丢，但每个字节的含义都变了，所以退出码是 `1`。
 
 ```console
 $ moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
@@ -131,7 +160,8 @@ $ echo $?
 1
 ```
 
-同一个诊断也可以输出为 JSON：
+**3. 机器可读输出。** `--format json` 下 stdout 始终是一个 JSON 数组，即使在退出码 `2` 时
+也是如此。
 
 ```console
 $ moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
@@ -148,8 +178,17 @@ $ echo $?
 1
 ```
 
-只追加存储项并新增函数的升级会输出信息级诊断项，但仍然以 `0` 退出；完全兼容的
-样例对则不输出任何内容。
+**4. 一条命令跑完全部检查。**
+
+```bash
+./scripts/e2e.sh
+```
+
+它以真实进程运行 `fixtures/` 中的每一对样例，核对退出码、应出现的诊断码、JSON 合法性，
+以及重复运行是否产生完全一致的字节，最后打印 `e2e: N checks passed`。
+
+退出码含义：`0` 兼容，`1` 发现阻断性不兼容，`2` 输入无法分析（此时报告仍然输出，并说明
+原因）。每个诊断码的严重度与含义见[诊断码手册](docs/diagnostics.md)。
 
 ## 在 CI 中使用
 
