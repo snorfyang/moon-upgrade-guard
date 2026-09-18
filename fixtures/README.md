@@ -1,60 +1,55 @@
-# Upgrade fixtures
+**简体中文** | [English](README.en.md)
 
-Each directory holds a pair of compiler artifacts, `old.json` and `new.json`,
-that exercises one compatibility rule end to end. They are deliberately small
-flat artifacts in the shape Foundry writes: an `abi` array plus a
-`storageLayout` object. The CLI end-to-end check in `scripts/e2e.sh` runs every
-pair, and the examples in the top-level README use the first two.
+# 升级 fixture
 
-Each directory is self-contained: when one side is unchanged, it is a copy
-rather than a shared file, so a case can be read and run on its own.
+每个目录存放一对编译产物 `old.json` 与 `new.json`，端到端地演示一条兼容性规则。它们刻意做成
+Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `storageLayout` 对象。
+`scripts/e2e.sh` 中的 CLI 端到端检查会跑遍每一对，顶层 README 的示例使用其中的前两对。
 
-Provenance: every file here was written for this repository. Field shapes follow
-the Solidity compiler's `storageLayout` documentation and the ABI
-specification; no third-party artifact or fixture was copied.
+每个目录都是自包含的：当某一侧未变时，它是复制而不是共享文件，因此单独看一个目录也能读懂并运行。
 
-| directory | change | `check` exit |
+来源说明：这里的每个文件都是为本仓库编写的。字段形态遵循 Solidity 编译器的 `storageLayout`
+文档与 ABI 规范；没有复制任何第三方产物或 fixture。
+
+| 目录 | 变化 | `check` 退出码 |
 | --- | --- | --- |
-| `compatible/` | the same contract recompiled: only compiler-generated `astId` values and the order of the type table differ | 0 |
-| `append/` | a storage variable, a function, and an event are added | 0 |
-| `storage-removed/` | the `owner` variable is gone | 1 |
-| `storage-renamed/` | `owner` is renamed to `admin` at the same position with the same type | 0 |
-| `storage-moved/` | `totalSupply` and `owner` swap slots | 1 |
-| `struct-change/` | the `Config` struct gains a member | 1 |
-| `storage-gap-shrink/` | a base contract spends one slot of its `__gap` on a new variable, so the gap shrinks but still ends where it ended | 0 |
-| `transient-moved/` | a transient variable moves between slots | 1 |
-| `transient-append/` | the new version adds a transient variable | 0 |
-| `transient-removed/` | the new artifact reports no transient layout, so the old transient variable disappears | 1 |
-| `storage-gap-finished/` | the `__gap` is replaced wholesale by a struct that ends where the gap ended | 0 |
-| `storage-gap-unsafe/` | the same variable is added while the gap keeps its size, so the gap and the variable behind it move | 1 |
-| `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
-| `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
-| `invalid-json/` | `old.json` is truncated | 2 |
-| `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
-| `contract-selector/` | a build info document holding two contracts: `Alpha` is compatible while `Beta` moves a variable, so `--contract` decides the verdict | 2 without a selector, 0 for `Alpha`, 1 for `Beta` |
-| `namespaced-storage/` | `old.json` carries an ERC-7201 `@custom:storage-location` annotation, whose namespace members are not in the compiler layout | 2 |
-| `schema-solc-0.5-to-0.8/` | the same contract compiled by solc 0.5.17 and solc 0.8.28, including the legacy ABI fields 0.5 emits | 0 |
-| `schema-solc-0.6-to-0.8/` | the same contract compiled by solc 0.6.12 and solc 0.8.28 | 0 |
-| `schema-unsupported/` | the type table uses an `encoding` this version does not know | 2 |
-| `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
-| `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
+| `compatible/` | 同一个合约重新编译：只有编译器生成的 `astId` 与类型表顺序不同 | 0 |
+| `append/` | 追加一个存储变量、一个函数和一个事件 | 0 |
+| `storage-removed/` | `owner` 变量被删除 | 1 |
+| `storage-renamed/` | `owner` 在同一位置、类型不变的前提下重命名为 `admin` | 0 |
+| `storage-moved/` | `totalSupply` 与 `owner` 交换 slot | 1 |
+| `struct-change/` | `Config` struct 增加一个成员 | 1 |
+| `storage-gap-shrink/` | 基础合约把 `__gap` 的一个 slot 用于新变量，gap 缩小但结束位置不变 | 0 |
+| `transient-moved/` | transient 变量在 slot 之间移动 | 1 |
+| `transient-append/` | 新版本新增一个 transient 变量 | 0 |
+| `transient-removed/` | 新产物没有报告 transient 布局，因此旧的 transient 变量消失 | 1 |
+| `storage-gap-finished/` | `__gap` 被一个结束位置相同的 struct 整体替换 | 0 |
+| `storage-gap-unsafe/` | 加入同一个变量但 gap 保持原大小，导致 gap 与其后的变量移动 | 1 |
+| `abi-function-removed/` | `transfer(address,uint256)` 被删除，而存储未变 | 1 |
+| `abi-event-indexed/` | `Transfer` 的 `value` 参数变为 indexed | 1 |
+| `invalid-json/` | `old.json` 被截断 | 2 |
+| `unsupported-artifact/` | `old.json` 是 Hardhat 单合约产物，不含存储布局 | 2 |
+| `contract-selector/` | 一份包含两个合约的 build info：`Alpha` 兼容，而 `Beta` 移动了变量，因此由 `--contract` 决定结论 | 不传选择器为 2，`Alpha` 为 0，`Beta` 为 1 |
+| `namespaced-storage/` | `old.json` 带有 ERC-7201 `@custom:storage-location` 注释，其命名空间成员不在编译器布局中 | 2 |
+| `schema-solc-0.5-to-0.8/` | 同一份合约分别由 solc 0.5.17 与 solc 0.8.28 编译，包含 0.5 写出的旧式 ABI 字段 | 0 |
+| `schema-solc-0.6-to-0.8/` | 同一份合约分别由 solc 0.6.12 与 solc 0.8.28 编译 | 0 |
+| `schema-unsupported/` | 类型表使用了本版本不认识的 `encoding` | 2 |
+| `ambiguous-build-info/` | `old.json` 是包含两个带存储布局合约的 Hardhat build info | 2 |
+| `missing-file/` | 故意没有 `new.json`，用于覆盖不可读路径 | 2 |
 
-## Compiler schema matrix
+## 编译器 schema 矩阵
 
-The `schema-*` pairs check the field shapes that different compilers emit:
+`schema-*` 各对用于检查不同编译器写出的字段形态：
 
-- solc 0.5.17 writes `constant` and `payable` beside `stateMutability` in ABI
-  entries. Those extra fields are ignored, so a 0.5 artifact decodes like any
-  other.
-- solc 0.6.12 and 0.8.28 write `stateMutability` only.
-- An ABI from before `stateMutability` existed (0.4 era) cannot be decoded
-  exactly, because `constant` does not distinguish `pure` from `view`. Such an
-  entry is refused with an error instead of being guessed at.
-- An unknown `encoding` in the type table is refused, because it could change
-  how the bytes are read.
+- solc 0.5.17 会在 ABI 条目中把 `constant` 与 `payable` 写在 `stateMutability` 旁边。这些
+  多余字段会被忽略，因此 0.5 的产物与其它版本一样可以解码。
+- solc 0.6.12 与 0.8.28 只写 `stateMutability`。
+- 在 `stateMutability` 出现之前的 ABI（0.4 时代）无法精确解码，因为 `constant` 区分不了
+  `pure` 与 `view`。这类条目会被显式报错拒绝，而不是被猜测。
+- 类型表中不认识的 `encoding` 会被拒绝，因为它可能改变字节的读取方式。
 
-The generated fixtures come from this contract, compiled by the three releases
-named above with `outputSelection` set to `abi` and `storageLayout`:
+生成的 fixture 来自下面这份合约，由上述三个版本以 `abi` 与 `storageLayout` 作为
+`outputSelection` 编译得到：
 
 ```solidity
 pragma solidity ^VERSION;
@@ -77,60 +72,50 @@ contract Token {
 }
 ```
 
-All three releases emit the same layout for it, which is why the two
-cross-version pairs are expected to be compatible. The source is part of this
-repository; the fixtures are its compiler output.
+三个版本为它生成的布局完全相同，因此这两对跨版本样例被期望是兼容的。源码属于本仓库；fixture 是
+它的编译产物。
 
-Transient storage follows the same rules as regular storage, in its own
-namespace: a finding names `transientStorage[...]` so a report tells the two
-address spaces apart. An artifact that reports no transient layout is read as
-one with no transient variables, which is how Foundry writes an empty one; set
-against an artifact that does carry them, that reads as a removal, so a version
-compiled without the `transientStorageLayout` output selection blocks rather
-than passing quietly.
+transient storage 遵循与常规存储相同的规则，位于它自己的命名空间：诊断项使用
+`transientStorage[...]` 作为位置，因此报告能区分这两个地址空间。没有报告 transient 布局的产物
+会被视为没有 transient 变量——Foundry 写出空布局时就是这个样子；把它与带有该布局的产物相比，
+就会读成"删除"，因此用未开启 `transientStorageLayout` 输出选择的版本编译时会阻断，而不是悄悄
+通过。
 
-A renamed variable is the one place where this tool is deliberately more
-permissive than OpenZeppelin Upgrades Core, which treats a rename as unsafe
-unless `unsafeAllowRenames` is set: the bytes stay in place, so
-`storage-renamed/` reports a warning and exits `0`. See
-`docs/oz-differential.md`.
+重命名变量是本工具唯一一处刻意比 OpenZeppelin Upgrades Core 更宽松的地方：参考实现把重命名视为
+不安全（除非设置 `unsafeAllowRenames`），而这里字节留在原处，所以 `storage-renamed/` 报告警告
+并以 `0` 退出。详见[差分对比记录](../docs/oz-differential.md)。
 
-A wrapper that holds several contracts needs `--contract NAME` or
-`--contract SOURCE:NAME`; without one it is reported as ambiguous rather than
-guessed at.
+包含多个合约的外层结构需要 `--contract NAME` 或 `--contract SOURCE:NAME`；不提供时会被报告为
+歧义，而不是被猜测。
 
-ERC-7201 namespaced storage is refused rather than assumed compatible. A
-namespace is reached through a slot its annotation derives, and the compiler
-lists only state variables in `storageLayout`, so a namespace's members are not
-in the input and their compatibility is unknown.
+ERC-7201 命名空间存储会被拒绝，而不是被假定兼容。命名空间通过其注释推导出的 slot 访问，而编译器
+在 `storageLayout` 中只列出状态变量，因此命名空间的成员不在输入里，其兼容性未知。
 
-A storage gap is the `__gap` array convention: the bytes it covers are
-unused, so a later version may take them, as long as the gap still ends where it
-ended before — that is what keeps the variables declared after it in place. The
-two `storage-gap-*` pairs are the safe and the unsafe version of that change.
+存储 gap 使用 `__gap` 数组约定：它覆盖的字节是未使用的，因此后续版本可以取用，前提是 gap 仍然
+结束在它原先结束的位置——这正是让声明在它之后的变量保持在原位的原因。两对 `storage-gap-*` 就是
+该变化的安全版本与不安全版本。
 
-The subcommands are independent, which two of the pairs show directly:
+三个子命令彼此独立，其中两对样例直接演示了这一点：
 
 ```bash
 moon run cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
 moon run cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
 ```
 
-Both of those exit `0`, even though `check` on either pair exits `1`.
+两者都以 `0` 退出，尽管对这两对执行 `check` 都会以 `1` 退出。
 
-## Running a pair by hand
+## 手动运行一对样例
 
 ```bash
-# compatible: prints nothing and exits 0
+# 兼容：不输出任何内容并以 0 退出
 moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
 
-# incompatible: prints the move and exits 1
+# 不兼容：输出移动并以 1 退出
 moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
 
-# machine-readable: the diagnostics array on stdout
+# 机器可读：诊断数组写在 stdout
 moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
 ```
 
-`scripts/e2e.sh` runs all of the pairs against the built native executable and
-checks the exit codes, the expected diagnostic codes, JSON validity, and that
-two runs of the same input produce identical bytes.
+`scripts/e2e.sh` 会把每一对样例交给构建出的 native 可执行文件运行，并核对退出码、应出现的诊断码、
+JSON 合法性，以及同一输入两次运行是否产生完全一致的字节。
