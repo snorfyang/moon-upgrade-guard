@@ -95,7 +95,7 @@ A renamed variable is the one place where this tool is deliberately more
 permissive than OpenZeppelin Upgrades Core, which treats a rename as unsafe
 unless `unsafeAllowRenames` is set: the bytes stay in place, so
 `storage-renamed/` reports a warning and exits `0`. See
-`docs/oz-differential.en.md`.
+[differential record](../docs/oz-differential.en.md).
 
 A wrapper that holds several contracts needs `--contract NAME` or
 `--contract SOURCE:NAME`; without one it is reported as ambiguous rather than

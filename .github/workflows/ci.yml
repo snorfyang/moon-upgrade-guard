@@ -66,5 +66,10 @@ jobs:
       - name: documented examples are current
         run: python3 scripts/check_readme_examples.py
 
+      # Links between the language mirrors, and the shape of each pair, are easy
+      # to get wrong and impossible to notice by reading one language.
+      - name: documentation is consistent
+        run: python3 scripts/check_docs.py
+
       - name: cli end to end
         run: ./scripts/e2e.sh

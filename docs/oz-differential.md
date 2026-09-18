@@ -61,6 +61,8 @@ compared 13 pairs, 1 divergences
 - **存储 gap。** `storage-gap-shrink` 正是催生该规则的情形：基础合约把 `__gap` 的一个 slot
   用于新变量，因此 gap 缩小，但结束位置不变。两者都通过。参考实现用 `endMatchesGap` 判定，而
   引擎用的是同一个判据，所以这里的一致并非偶然。
+- **整体替换 gap。** `storage-gap-finished` 把一个 `__gap` 整体替换为结束位置相同的 struct。
+  两者都接受，原因仍是同一条判据：gap 覆盖的是未使用字节，因此只有结束位置必须保持不变。
 - **追加。** `append` 追加了一个变量、一个函数和一个事件：两者都通过，因为没有移动任何东西的
   新增是安全的。
 - **移动、删除与类型变化。** `storage-moved`、`storage-removed`、`struct-change` 在两者中都

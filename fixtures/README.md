@@ -83,7 +83,7 @@ transient storage 遵循与常规存储相同的规则，位于它自己的命�
 
 重命名变量是本工具唯一一处刻意比 OpenZeppelin Upgrades Core 更宽松的地方：参考实现把重命名视为
 不安全（除非设置 `unsafeAllowRenames`），而这里字节留在原处，所以 `storage-renamed/` 报告警告
-并以 `0` 退出。详见 `docs/oz-differential.md`。
+并以 `0` 退出。详见[差分对比记录](../docs/oz-differential.md)。
 
 包含多个合约的外层结构需要 `--contract NAME` 或 `--contract SOURCE:NAME`；不提供时会被报告为
 歧义，而不是被猜测。
