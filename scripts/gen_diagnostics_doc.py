@@ -69,6 +69,10 @@ def main() -> None:
             raise SystemExit(f'{variant} has no entry in DiagnosticCode::name')
         if variant not in severities:
             raise SystemExit(f'{variant} has no entry in DiagnosticCode::severity')
+        if not comment.strip():
+            raise SystemExit(
+                f'{variant} has no doc comment, so its meaning would be empty'
+            )
         code = names[variant].strip('"')
         severity = severities[variant]
         rows.append((code, severity, comment))
@@ -81,16 +85,19 @@ def main() -> None:
         'stable across releases, and the same string appears in the `code` field of',
         'the JSON report, so a pipeline can filter on it.',
         '',
-        'Severity decides the verdict:',
+        'Severity decides the verdict of a comparison:',
         '',
         '- `Error` blocks the upgrade, and the CLI exits `1` while the report is',
         '  written to stdout.',
         '- `Warning` and `Info` are reported without changing the verdict, so an',
         '  upgrade that only produces them still exits `0`.',
-        '- Exit code `2` is separate: it means the input could not be analysed at',
-        '  all. The `artifact.*` codes describe an artifact that could not be read,',
-        '  and the `cli.*` codes describe a command line or a file the CLI could',
-        '  not use.',
+        '',
+        'Exit code `2` is separate and does not follow from severity: it means the',
+        'input could not be analysed at all. The `artifact.*` codes describe an',
+        'artifact that could not be read, and the `cli.*` codes describe a command',
+        'line or a file the CLI could not use. Both families carry `Error`',
+        'severity, because a run that never reached a comparison must not look',
+        'compatible.',
         '',
         'Locations are relative to the value the reporting layer analysed:',
         'extraction reports paths inside the artifact, the storage engine reports',
