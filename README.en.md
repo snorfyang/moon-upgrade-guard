@@ -13,7 +13,8 @@ output is deterministic text or JSON with CI-friendly exit codes.
 
 The core library, the storage and ABI comparison engines, and a native CLI are
 implemented and covered by tests. See [Limitations](#limitations) for what is
-deliberately not covered yet.
+deliberately not covered yet, and the [roadmap](ROADMAP.md) for what is planned
+next.
 
 ## How it works
 
