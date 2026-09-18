@@ -210,7 +210,7 @@ produce identical bytes, printing `e2e: N checks passed` at the end.
 
 Exit codes: `0` compatible, `1` a blocking incompatibility, `2` input that could
 not be analysed, where the report still explains why. The severity and meaning of
-every code is in the [diagnostics reference](docs/diagnostics.md).
+every code is in the [diagnostics reference](docs/diagnostics.en.md).
 
 ## Use in CI
 
@@ -232,7 +232,7 @@ so a pipeline should fail loudly and fix the artifact rather than retrying.
 ## Compatibility model
 
 Every finding carries a stable code; the [diagnostics
-reference](docs/diagnostics.md) lists all of them with their severity and
+reference](docs/diagnostics.en.md) lists all of them with their severity and
 meaning.
 
 Only `Error` findings block an upgrade. `Warning` findings leave the layout or
@@ -277,7 +277,7 @@ reported as a move.
 
 The rename policy, and the one place where this tool differs from OpenZeppelin
 Upgrades Core by default, is recorded with the rest of the differential results
-in [`docs/oz-differential.md`](docs/oz-differential.md).
+in [`docs/oz-differential.en.md`](docs/oz-differential.en.md).
 
 ABI findings:
 
