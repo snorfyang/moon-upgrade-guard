@@ -25,6 +25,7 @@ Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `sto
 | `transient-removed/` | 新产物没有报告 transient 布局，因此旧的 transient 变量消失 | 1 |
 | `storage-gap-finished/` | `__gap` 被一个结束位置相同的 struct 整体替换 | 0 |
 | `storage-gap-unsafe/` | 加入同一个变量但 gap 保持原大小，导致 gap 与其后的变量移动 | 1 |
+| `storage-gap-dynamic/` | `__gap` 是动态数组，slot 里是长度而非保留字节，被新变量替换时不当作 gap | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` 被删除，而存储未变 | 1 |
 | `abi-fallback-kind/` | `fallback` 处理器被同签名的具名 `function fallback()` 取代 | 1 |
 | `abi-event-indexed/` | `Transfer` 的 `value` 参数变为 indexed | 1 |
@@ -92,9 +93,10 @@ transient storage 遵循与常规存储相同的规则，位于它自己的命�
 ERC-7201 命名空间存储会被拒绝，而不是被假定兼容。命名空间通过其注释推导出的 slot 访问，而编译器
 在 `storageLayout` 中只列出状态变量，因此命名空间的成员不在输入里，其兼容性未知。
 
-存储 gap 使用 `__gap` 数组约定：它覆盖的字节是未使用的，因此后续版本可以取用，前提是 gap 仍然
-结束在它原先结束的位置——这正是让声明在它之后的变量保持在原位的原因。两对 `storage-gap-*` 就是
-该变化的安全版本与不安全版本。
+存储 gap 使用 `__gap` 定长数组约定：它覆盖的字节是未使用的，因此后续版本可以取用，前提是 gap 仍然
+结束在它原先结束的位置——这正是让声明在它之后的变量保持在原位的原因。三对 `storage-gap-*` 分别是
+该变化的安全版本、不安全版本，以及动态数组命名 `__gap` 时不适用的版本：动态数组的 slot 存放的是
+长度，不是保留字节。
 
 三个子命令彼此独立，其中两对样例直接演示了这一点：
 

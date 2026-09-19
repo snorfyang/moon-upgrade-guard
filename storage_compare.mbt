@@ -30,15 +30,16 @@
 ///   variable between base and derived contracts without moving it in storage
 ///   is not reported.
 ///
-/// Storage gaps are handled explicitly. A gap is an array variable named
-/// `__gap` or `__gap_<n>`, the convention OpenZeppelin-style contracts use to
-/// reserve room for variables that later versions add. The bytes a gap covers
-/// are unused, so a gap may lose bytes at its front, and a new variable may
-/// take them, as long as one thing stays true: the gap still ends at the byte
-/// it ended at before. That is what keeps every variable declared after the gap
-/// in place. The name alone never skips a comparison: the type has to be an
-/// array, the element type has to stay the same, and a gap whose end moved is
-/// still a move.
+/// Storage gaps are handled explicitly. A gap is a fixed-size array variable
+/// named `__gap` or `__gap_<n>`, the convention OpenZeppelin-style contracts
+/// use to reserve room for variables that later versions add. The bytes a gap
+/// covers are unused, so a gap may lose bytes at its front, and a new variable
+/// may take them, as long as one thing stays true: the gap still ends at the
+/// byte it ended at before. That is what keeps every variable declared after
+/// the gap in place. The name alone never skips a comparison: the type has to
+/// be a fixed-size array, the element type has to stay the same, and a gap
+/// whose end moved is still a move. A dynamic array never qualifies, because
+/// its slot holds the array length rather than unused bytes.
 ///
 /// A gap can also be consumed whole: a differently typed variable that ends
 /// where the gap ended takes its place, which the reference implementation
@@ -542,8 +543,9 @@ let max_byte_position = 2147483647
 /// Whether a variable is a storage gap.
 ///
 /// The convention is `__gap` or `__gap_<n>`. The name alone is not enough: the
-/// type has to be an array, so a mapping that happens to be called `__gap` is
-/// compared like any other variable.
+/// type has to be a fixed-size array, so a mapping or a dynamic array that
+/// happens to be called `__gap` is compared like any other variable. A dynamic
+/// array's slot holds its length, which is live data, not reserved bytes.
 fn is_storage_gap(layout : StorageLayout, entry : StorageEntry) -> Bool {
   if entry.label != "__gap" && !entry.label.has_prefix("__gap_") {
     return false
@@ -552,7 +554,6 @@ fn is_storage_gap(layout : StorageLayout, entry : StorageEntry) -> Bool {
     Some(type_entry) =>
       match type_entry.shape {
         StaticArray(_) => true
-        DynamicArray(_) => true
         _ => false
       }
     None => false
@@ -600,10 +601,10 @@ fn type_label(layout : StorageLayout, entry : StorageEntry) -> String {
 ///|
 /// Whether an old gap may be treated as resized in place.
 ///
-/// True when the old variable is a gap, the new one is an array with the same
-/// element type, and both end at the same byte. Anything else, including a
-/// changed element type or a gap whose end moved, falls back to the ordinary
-/// rules.
+/// True when the old variable is a gap, the new one is a fixed-size array
+/// with the same element type, and both end at the same byte. Anything else,
+/// including a changed element type or a gap whose end moved, falls back to
+/// the ordinary rules.
 fn gap_change_accepted(
   old : StorageLayout,
   old_entry : StorageEntry,
@@ -618,8 +619,6 @@ fn gap_change_accepted(
     (Some(old_type), Some(new_type)) =>
       match (old_type.shape, new_type.shape) {
         (StaticArray(old_base, _), StaticArray(new_base, _)) =>
-          compare_type(old, old_base, new, new_base, []) == Same
-        (DynamicArray(old_base), DynamicArray(new_base)) =>
           compare_type(old, old_base, new, new_base, []) == Same
         _ => false
       }

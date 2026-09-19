@@ -29,6 +29,7 @@ specification; no third-party artifact or fixture was copied.
 | `transient-removed/` | the new artifact reports no transient layout, so the old transient variable disappears | 1 |
 | `storage-gap-finished/` | the `__gap` is replaced wholesale by a struct that ends where the gap ended | 0 |
 | `storage-gap-unsafe/` | the same variable is added while the gap keeps its size, so the gap and the variable behind it move | 1 |
+| `storage-gap-dynamic/` | the `__gap` is a dynamic array, whose slot holds a length rather than reserved bytes, so replacing it is not treated as a gap | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
 | `abi-fallback-kind/` | the `fallback` handler is replaced by a named `function fallback()` with the same signature | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
@@ -107,10 +108,12 @@ namespace is reached through a slot its annotation derives, and the compiler
 lists only state variables in `storageLayout`, so a namespace's members are not
 in the input and their compatibility is unknown.
 
-A storage gap is the `__gap` array convention: the bytes it covers are
-unused, so a later version may take them, as long as the gap still ends where it
-ended before — that is what keeps the variables declared after it in place. The
-two `storage-gap-*` pairs are the safe and the unsafe version of that change.
+A storage gap is the `__gap` fixed-size array convention: the bytes it covers
+are unused, so a later version may take them, as long as the gap still ends
+where it ended before — that is what keeps the variables declared after it in
+place. The three `storage-gap-*` pairs are the safe version of that change, the
+unsafe one, and the case where the convention does not apply: a dynamic array
+named `__gap` holds a length in its slot, not reserved bytes.
 
 The subcommands are independent, which two of the pairs show directly:
 

@@ -268,12 +268,13 @@ Regular and transient storage follow the same rules. A transient finding names
 `transientStorage[...]` rather than `storage[...]`, so a report tells the two
 address spaces apart.
 
-Storage gaps use the `__gap` array convention: the bytes a gap covers are
-unused, so a later version may spend them on new variables, or replace the gap
-wholesale, as long as whatever takes its place ends at the byte the gap ended
-at. That is what keeps everything declared after the gap in place. The name alone never skips a comparison: the type has to be an
-array, the element type has to stay the same, and a gap whose end moved is
-reported as a move.
+Storage gaps use the `__gap` fixed-size array convention: the bytes a gap
+covers are unused, so a later version may spend them on new variables, or
+replace the gap wholesale, as long as whatever takes its place ends at the byte
+the gap ended at. That is what keeps everything declared after the gap in place.
+The name alone never skips a comparison: the type has to be a fixed-size array
+(a dynamic array's slot holds its length, not reserved bytes), the element type
+has to stay the same, and a gap whose end moved is reported as a move.
 
 The rename policy, and the one place where this tool differs from OpenZeppelin
 Upgrades Core by default, is recorded with the rest of the differential results
