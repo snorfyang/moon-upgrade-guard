@@ -283,8 +283,11 @@ ABI findings:
 
 - `Error`: a signature that disappeared from functions, events, or custom
   errors; a changed output list, because callers decode return data
-  positionally; a changed indexed layout or anonymity on an event; and a
-  selector or topic that now belongs to a different signature.
+  positionally; a changed indexed layout or anonymity on an event; a
+  selector or topic that now belongs to a different signature; and a
+  `fallback`/`receive` handler replaced by a named function of the same
+  signature (or the reverse), because the two are reached differently: one
+  answers otherwise-unmatched calldata and the other is selector-dispatched.
 - `Warning`: a changed state mutability, because the selector and calldata are
   unchanged while the call's contract changed.
 - `Info`: a new function, event, or error.

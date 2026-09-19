@@ -386,6 +386,62 @@ test "an error removal is an error and an addition is information" {
 }
 
 ///|
+test "a named function does not replace a fallback handler" {
+  let old = abi_of([abi_fallback()], [], [])
+  let new = abi_of(
+    [abi_function("fallback()", @moonupgradeguard.Mutability::Payable)],
+    [],
+    [],
+  )
+  inspect(
+    abi_report(old, new),
+    content=(
+      #|info[abi.function.added] abi.functions: function "fallback()" was added to the new ABI (new: fallback())
+      #|error[abi.function.removed] abi.functions: fallback "fallback()" is missing from the new ABI (old: fallback())
+      #|
+    ),
+  )
+  assert_true(
+    @moonupgradeguard.blocks_upgrade(@moonupgradeguard.compare_abi(old, new)),
+  )
+}
+
+///|
+test "a named function does not replace a receive handler" {
+  let old = abi_of(
+    [
+      {
+        kind: @moonupgradeguard.AbiEntryKind::Receive,
+        name: "",
+        signature: "receive()",
+        selector: "",
+        inputs: [],
+        outputs: [],
+        mutability: @moonupgradeguard.Mutability::Payable,
+      },
+    ],
+    [],
+    [],
+  )
+  let new = abi_of(
+    [abi_function("receive()", @moonupgradeguard.Mutability::Payable)],
+    [],
+    [],
+  )
+  inspect(
+    abi_report(old, new),
+    content=(
+      #|info[abi.function.added] abi.functions: function "receive()" was added to the new ABI (new: receive())
+      #|error[abi.function.removed] abi.functions: receive "receive()" is missing from the new ABI (old: receive())
+      #|
+    ),
+  )
+  assert_true(
+    @moonupgradeguard.blocks_upgrade(@moonupgradeguard.compare_abi(old, new)),
+  )
+}
+
+///|
 test "a removed fallback is an error" {
   let old = abi_of([abi_fallback()], [], [])
   let new = abi_of([], [], [])

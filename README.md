@@ -251,7 +251,8 @@ ABI 相关诊断：
 
 - `Error`：function、event 或自定义错误的签名消失；返回类型列表发生变化，因为
   调用方按位置解码返回数据；event 的 indexed 布局或匿名性发生变化；某个 selector
-  或 topic 现在属于另一个签名。
+  或 topic 现在属于另一个签名；`fallback`/`receive` 处理器被同签名的具名函数取代
+  （或反之），因为两者到达方式不同：一个应答未被匹配的 calldata，另一个按 selector 分发。
 - `Warning`：状态可变性（state mutability）变化，因为 selector 与 calldata 未
   变，而调用契约变了。
 - `Info`：新增 function、event 或自定义错误。
