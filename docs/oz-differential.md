@@ -29,6 +29,7 @@ reference: @openzeppelin/upgrades-core 1.46.0
 engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 
 - abi-event-indexed: engine exit 0 | reference pass | agree
+- abi-fallback-kind: engine exit 0 | reference pass | agree
 - abi-function-removed: engine exit 0 | reference pass | agree
 - ambiguous-build-info: engine exit 2 | reference skip (no storageLayout) | n/a
 - append: engine exit 0 | reference pass | agree
@@ -53,7 +54,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 14 pairs, 1 divergences
+compared 15 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
