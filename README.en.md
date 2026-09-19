@@ -84,6 +84,11 @@ one. If exactly one artifact has an ABI, it reports invalid input instead of
 silently skipping that comparison. `storage` accepts standalone layouts, while
 `abi` requires an ABI on both sides.
 
+Numbers in an artifact must be integer literals. Every producer this tool
+supports (solc Standard JSON, Foundry, Hardhat) writes integers only; a number
+with a fraction point or an exponent is refused as unusable schema data rather
+than rounded to the integer it happens to convert to.
+
 Exit code `0` means no blocking incompatibility was found, `1` means the
 comparison found an incompatible change, and `2` means the command or input was
 invalid. A successful report is a preflight result, not proof that an upgrade

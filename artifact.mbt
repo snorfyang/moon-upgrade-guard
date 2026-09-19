@@ -94,12 +94,105 @@ pub fn extract_artifact(
           "artifact is not valid JSON: \{err}",
         ),
       )
+      diagnostics.sort()
       return (None, diagnostics)
     }
+  }
+  // Numbers must be validated on their lexical form. The parser keeps only a
+  // correctly rounded Double, so a fraction such as 3.0000000000000000000001
+  // is indistinguishable from 3 by the time a field is read, and a comparison
+  // built on rounded values could pass silently. Every producer this tool
+  // supports writes integer numbers only, so a number token that is not an
+  // integer literal is unusable schema data and refuses the artifact.
+  let non_integer = scan_non_integer_numbers(text)
+  if non_integer.length() > 0 {
+    for violation in non_integer {
+      let (offset, lexeme) = violation
+      diagnostics.push(
+        Diagnostic::new(
+          ArtifactFieldInvalid,
+          artifact_root(),
+          "number literal \"\{lexeme}\" at offset \{offset} is not an integer; artifact numbers must be integer literals",
+        ),
+      )
+    }
+    diagnostics.sort()
+    return (None, diagnostics)
   }
   let artifact = extract_from_root(parsed, select, diagnostics)
   diagnostics.sort()
   (artifact, diagnostics)
+}
+
+///|
+/// Collects every JSON number token that is not an integer literal.
+///
+/// Runs on text that has already parsed as JSON, so every number token starts
+/// at a `-` or a digit outside a string, and its characters are exactly
+/// digits, sign, fraction point, and exponent markers. Tokens inside strings
+/// are skipped, including escaped quotes. The result holds the offset of each
+/// violation in the text and its literal, in document order.
+fn scan_non_integer_numbers(text : String) -> Array[(Int, String)] {
+  let violations : Array[(Int, String)] = []
+  let length = text.length()
+  let mut in_string = false
+  let mut escaped = false
+  let mut i = 0
+  while i < length {
+    let c = text[i]
+    if in_string {
+      if escaped {
+        escaped = false
+      } else if c == '\\' {
+        escaped = true
+      } else if c == '"' {
+        in_string = false
+      }
+      i += 1
+      continue
+    }
+    if c == '"' {
+      in_string = true
+      i += 1
+      continue
+    }
+    if c == '-' || (c >= '0' && c <= '9') {
+      let start = i
+      while i < length {
+        let d = text[i]
+        if d == '.' ||
+          d == 'e' ||
+          d == 'E' ||
+          d == '+' ||
+          d == '-' ||
+          (d >= '0' && d <= '9') {
+          i += 1
+        } else {
+          break
+        }
+      }
+      if !is_integer_literal(text[start:i]) {
+        violations.push((start, text[start:i].to_owned()))
+      }
+      continue
+    }
+    i += 1
+  }
+  violations
+}
+
+///|
+/// Whether a scanned number token is a plain integer literal: an optional
+/// sign followed by digits only, with no fraction point or exponent. JSON
+/// forbids leading zeros, and the text has already parsed, so shape is the
+/// only thing left to check.
+fn is_integer_literal(token : StringView) -> Bool {
+  let body = if token.length() > 0 && token[0] == '-' {
+    token[1:]
+  } else {
+    token
+  }
+  body.length() > 0 && body.iter().all(fn(c) { c >= '0' && c <= '9' })
 }
 
 ///|
@@ -685,6 +778,11 @@ fn check_string(
 
 ///|
 /// Checks that a field is absent, `null`, or an integer-valued JSON number.
+///
+/// The artifact-level scan has already established that every number token in
+/// the text is an integer literal, so the `Double` the parser hands over is
+/// exact for any machine-sized value; this check only rejects literals whose
+/// value exceeds the range every supported target can hold.
 fn check_integer(
   fields : Map[String, Json],
   name : String,
@@ -733,8 +831,14 @@ fn get_integer(fields : Map[String, Json], name : String) -> Int? {
 }
 
 ///|
-/// Converts an integral JSON number to an `Int`, or `None` when it is
-/// fractional or outside the range every supported target can hold.
+/// Converts an integral JSON number to an `Int`, or `None` when it is outside
+/// the range every supported target can hold.
+///
+/// Callers reach this only after the artifact-level scan has proven the token
+/// was an integer literal. A literal within ±(2^53 - 1) converts through
+/// `Double` without loss; anything larger rounds to a value beyond the machine
+/// range and is rejected here, so a fractional literal can never slip through
+/// as a rounded integer.
 fn json_integer(value : Double) -> Int? {
   if value < -2147483648.0 || value > 2147483647.0 {
     None

@@ -73,6 +73,8 @@ namespaced-storage|check|text|2|artifact.namespaced-storage.unsupported
 schema-solc-0.5-to-0.8|check|json|0|
 schema-solc-0.6-to-0.8|check|text|0|
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
+fractional-offset|check|text|2|artifact.field.invalid
+fractional-offset|check|json|2|artifact.field.invalid
 missing-file|check|text|2|
 missing-file|check|json|2|cli.input.unreadable
 "

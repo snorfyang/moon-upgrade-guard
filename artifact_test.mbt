@@ -252,6 +252,55 @@ test "compiler output without a storage layout says which setting is missing" {
 }
 
 ///|
+test "a fractional offset is refused rather than rounded" {
+  inspect(
+    failure(
+      "{\"storage\":[{\"label\":\"x\",\"contract\":\"c\",\"slot\":\"0\",\"offset\":3.0000000000000000000000000000000000001,\"type\":\"t\"}],\"types\":{}}",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $: number literal "3.0000000000000000000000000000000000001" at offset 60 is not an integer; artifact numbers must be integer literals
+      #|
+    ),
+  )
+}
+
+///|
+test "an exponent number is refused" {
+  inspect(
+    failure(
+      "{\"storage\":[{\"label\":\"x\",\"contract\":\"c\",\"slot\":\"0\",\"offset\":3e0,\"type\":\"t\"}],\"types\":{}}",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $: number literal "3e0" at offset 60 is not an integer; artifact numbers must be integer literals
+      #|
+    ),
+  )
+}
+
+///|
+test "an oversized integer literal is range-checked, not misread" {
+  inspect(
+    failure(
+      "{\"storage\":[{\"label\":\"x\",\"contract\":\"c\",\"slot\":\"0\",\"offset\":12345678901234567890,\"type\":\"t\"}],\"types\":{}}",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $.storage[0].offset: expected an integer that fits in a machine integer
+      #|
+    ),
+  )
+}
+
+///|
+test "number-like text inside strings is not a number" {
+  // A version-like label and an escaped quote around a decimal in a string
+  // must not be mistaken for number tokens.
+  let artifact = extracted(
+    "{\"storage\":[{\"label\":\"v1.5e2 \\\"0.5\",\"contract\":\"c\",\"slot\":\"0\",\"offset\":3,\"type\":\"t\"}],\"types\":{}}",
+  )
+  assert_eq(artifact.layout.storage[0].offset, Some(3))
+}
+
+///|
 test "invalid JSON is reported" {
   inspect(
     failure("{\"storage\": ["),
