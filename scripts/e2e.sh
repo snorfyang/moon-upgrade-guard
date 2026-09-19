@@ -60,6 +60,8 @@ transient-moved|storage|text|1|storage.entry.slot.changed
 transient-append|check|text|0|storage.entry.added
 transient-removed|storage|text|1|storage.entry.removed
 abi-function-removed|abi|json|1|abi.function.removed
+abi-fallback-kind|abi|text|1|abi.function.removed
+abi-fallback-kind|storage|text|0|
 abi-function-removed|storage|text|0|
 abi-event-indexed|abi|text|1|abi.event.indexed.changed
 invalid-json|check|json|2|artifact.json.invalid

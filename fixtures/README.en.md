@@ -31,6 +31,7 @@ specification; no third-party artifact or fixture was copied.
 | `storage-gap-unsafe/` | the same variable is added while the gap keeps its size, so the gap and the variable behind it move | 1 |
 | `storage-gap-dynamic/` | the `__gap` is a dynamic array, whose slot holds a length rather than reserved bytes, so replacing it is not treated as a gap | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
+| `abi-fallback-kind/` | the `fallback` handler is replaced by a named `function fallback()` with the same signature | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |

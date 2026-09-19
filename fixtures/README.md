@@ -27,6 +27,7 @@ Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `sto
 | `storage-gap-unsafe/` | 加入同一个变量但 gap 保持原大小，导致 gap 与其后的变量移动 | 1 |
 | `storage-gap-dynamic/` | `__gap` 是动态数组，slot 里是长度而非保留字节，被新变量替换时不当作 gap | 1 |
 | `abi-function-removed/` | `transfer(address,uint256)` 被删除，而存储未变 | 1 |
+| `abi-fallback-kind/` | `fallback` 处理器被同签名的具名 `function fallback()` 取代 | 1 |
 | `abi-event-indexed/` | `Transfer` 的 `value` 参数变为 indexed | 1 |
 | `invalid-json/` | `old.json` 被截断 | 2 |
 | `unsupported-artifact/` | `old.json` 是 Hardhat 单合约产物，不含存储布局 | 2 |
