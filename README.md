@@ -76,6 +76,10 @@ moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 ABI，它会报告输入无效，而不是静默跳过该比较。`storage` 接受独立的
 `storageLayout`，`abi` 则要求两边都带 ABI。
 
+产物中的数字必须是整数字面量。支持的所有产出工具（solc Standard JSON、Foundry、
+Hardhat）只写整数；带小数点或指数的数字会被当作不可用的 schema 数据拒绝，而不是
+四舍五入后当作整数使用。
+
 退出码 `0` 表示未发现阻断性不兼容，`1` 表示比较发现不兼容变更，`2` 表示命令或
 输入无效。通过的检查结果是升级前的预检结论，并不证明升级在所有方面都安全。
 

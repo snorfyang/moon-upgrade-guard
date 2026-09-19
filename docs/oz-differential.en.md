@@ -40,6 +40,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - append: engine exit 0 | reference pass | agree
 - compatible: engine exit 0 | reference pass | agree
 - contract-selector: engine exit 2 | reference skip (no storageLayout) | n/a
+- fractional-offset: engine exit 2 | reference pass | n/a
 - invalid-json: engine exit 2 | reference skip (error: Expected ',' or '}' after property value in JSON at position 50 (line 4 column 1)) | n/a
 - missing-file: no pair
 - namespaced-storage: engine exit 2 | reference pass | n/a

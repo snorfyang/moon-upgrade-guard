@@ -40,6 +40,7 @@ specification; no third-party artifact or fixture was copied.
 | `schema-solc-0.5-to-0.8/` | the same contract compiled by solc 0.5.17 and solc 0.8.28, including the legacy ABI fields 0.5 emits | 0 |
 | `schema-solc-0.6-to-0.8/` | the same contract compiled by solc 0.6.12 and solc 0.8.28 | 0 |
 | `schema-unsupported/` | the type table uses an `encoding` this version does not know | 2 |
+| `fractional-offset/` | both sides carry an `offset` written as a fraction that rounds to an integer, refused as unusable schema data | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
 

@@ -36,6 +36,7 @@ Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `sto
 | `schema-solc-0.5-to-0.8/` | 同一份合约分别由 solc 0.5.17 与 solc 0.8.28 编译，包含 0.5 写出的旧式 ABI 字段 | 0 |
 | `schema-solc-0.6-to-0.8/` | 同一份合约分别由 solc 0.6.12 与 solc 0.8.28 编译 | 0 |
 | `schema-unsupported/` | 类型表使用了本版本不认识的 `encoding` | 2 |
+| `fractional-offset/` | 两边的 `offset` 都是四舍五入后为整数的小数，被当作不可用 schema 数据拒绝 | 2 |
 | `ambiguous-build-info/` | `old.json` 是包含两个带存储布局合约的 Hardhat build info | 2 |
 | `missing-file/` | 故意没有 `new.json`，用于覆盖不可读路径 | 2 |
 
