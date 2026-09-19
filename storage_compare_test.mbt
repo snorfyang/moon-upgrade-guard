@@ -630,6 +630,32 @@ test "a mapping named __gap is compared like any other variable" {
 }
 
 ///|
+test "a dynamic array named __gap is compared like any other variable" {
+  // A dynamic array's slot holds its length, so consuming it as if it were
+  // reserved bytes would overwrite live data. The replacement must block.
+  let old = raw_layout([raw_entry("__gap", "0", 0, "t_array_dyn")], [
+    uint256_type(),
+    {
+      ..raw_type("t_array_dyn", "dynamic_array", "uint256[]", "32"),
+      base: Some("t_uint256"),
+    },
+  ])
+  let new = raw_layout([raw_entry("x", "0", 31, "t_uint8")], [
+    uint256_type(),
+    raw_type("t_uint8", "inplace", "uint8", "1"),
+  ])
+  inspect(
+    storage_report(old, new),
+    content=(
+      #|info[storage.entry.added] fileA:A storage[0]: variable "x" was added at slot 0, offset 31 (new: x)
+      #|error[storage.entry.removed] fileA:A storage[0]: variable "__gap" at slot 0 is missing from the new layout (old: __gap)
+      #|
+    ),
+  )
+  assert_true(@moonupgradeguard.blocks_upgrade(storage_diff(old, new)))
+}
+
+///|
 test "a gap with a different element type is not accepted" {
   let old = raw_layout([raw_entry("__gap", "1", 0, "t_gap_u256")], [
     uint256_type(),
