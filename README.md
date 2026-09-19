@@ -281,4 +281,4 @@ ABI 相关诊断：
 
 ## 许可证
 
-Apache License 2.0。
+Apache License 2.0。规则依据的规范、依赖许可证与 fixture 来源见[参考与许可](docs/references.md)。

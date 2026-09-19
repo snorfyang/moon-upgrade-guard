@@ -319,4 +319,6 @@ ABI findings:
 
 ## License
 
-Apache License 2.0.
+Apache License 2.0. The specifications behind the rules, the dependency
+licences, and the provenance of every fixture are recorded in
+[references and licensing](docs/references.en.md).
