@@ -1,0 +1,57 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "value",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    }
+  ],
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 2,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "value",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 7,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "__gap",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_array$_t_uint256_$_storage"
+      },
+      {
+        "astId": 9,
+        "contract": "contracts/Vault.sol:Vault",
+        "label": "tail",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_uint256"
+      }
+    ],
+    "types": {
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_array$_t_uint256_$_storage": {
+        "base": "t_uint256",
+        "encoding": "dynamic_array",
+        "label": "uint256[]",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
