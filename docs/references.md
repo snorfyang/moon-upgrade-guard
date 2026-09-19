@@ -20,9 +20,14 @@
   [EIP-1153](https://eips.ethereum.org/EIPS/eip-1153)，布局来自编译器输出的
   `transientStorageLayout`。
 - **命名空间与非结构化 slot**：[ERC-7201](https://eips.ethereum.org/EIPS/eip-7201) 的命名空间与
-  [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967) 这类由汇编写入的 slot 不在编译器
-  `storageLayout` 的可见范围内。本工具因此拒绝提到命名空间的产物，并把该限制写进文档，而不是把它
-  当成兼容。
+  [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967) 这类由汇编写入的 slot 都不在编译器
+  `storageLayout` 的可见范围内，但两者在本工具中的可检测性不同。ERC-7201 要求源码携带
+  `erc7201` 标注，该标注会留在带 AST 的产物文本里；本工具扫描这一标记，对携带它的产物报
+  `artifact.namespaced-storage.unsupported`（Error，会阻断升级），而不是判定兼容。该检查只看得见产物
+  文本：裸 `storageLayout` 对象或不带 AST 的平铺产物不携带标记，因此连这一检查也不会触发。
+  EIP-1967 与一切由汇编写入的 slot 不会在编译产物中留下可检测标记，因此**不可检测、不参与
+  验证**——省略了这类 slot 的产物可能被判定为兼容，确认它们是使用者的责任。两者的共同前提是：
+  产物文本里看不见的存储，本工具无法验证。
 - **Keccak-256**：实现遵循 Keccak 规范（Keccak-f[1600]，Ethereum 使用的 `0x01` 填充，而非 SHA-3
   的 `0x06`）。测试固定公开已知答案，包括空输入、`abc`、填充边界长度，以及公开的四字节 selector
   碰撞对。
@@ -38,7 +43,8 @@
 
 - **OpenZeppelin Upgrades Core**：MIT；仅由 `scripts/oz-differential.mjs` 调用，用于行为对比。
 - **solc**：GPL-3.0；本仓库只使用它的输出来生成 `schema-solc-*` fixture，不重新分发 solc 本身。
-- **pycryptodome**：用于生成 Keccak 测试中的参考摘要；不重新分发。
+- **pycryptodome**：BSD-2-Clause / Apache-2.0 双许可；用于生成 Keccak 测试中的参考摘要，
+  不重新分发。
 
 ## fixture 的来源与许可
 

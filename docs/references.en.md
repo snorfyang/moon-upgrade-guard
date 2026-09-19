@@ -27,9 +27,18 @@ where a file in this repository came from and under which licence it is used.
   layout comes from the compiler's `transientStorageLayout` output.
 - **Namespaces and unstructured slots**: [ERC-7201](https://eips.ethereum.org/EIPS/eip-7201)
   namespaces and assembly-assigned slots such as [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967)
-  are not visible in the compiler's `storageLayout`. The tool therefore refuses an
-  artifact that mentions a namespace and records the limitation, rather than
-  reporting it compatible.
+  are both outside what the compiler's `storageLayout` can see, but they differ in
+  detectability here. ERC-7201 requires an `erc7201` annotation in the source, and an
+  artifact that carries the AST keeps that marker in its text; the tool scans for it
+  and reports `artifact.namespaced-storage.unsupported` — an Error that blocks the
+  upgrade — on an artifact that carries it, instead of reporting compatible. The scan
+  only sees artifact text: a bare `storageLayout` object or a flattened artifact
+  without the AST carries no marker, so this check does not fire there either.
+  EIP-1967, like every slot written by assembly, leaves no detectable marker in
+  compiler output, so it is **undetectable and not validated** — an artifact that
+  omits such slots can be reported compatible, and confirming them is the reader's
+  responsibility. The shared principle is that storage invisible in the artifact
+  cannot be verified here.
 - **Keccak-256**: the implementation follows the Keccak specification
   (Keccak-f[1600] with the `0x01` padding Ethereum uses, not the `0x06` padding of
   SHA-3). Tests pin published known-answer values, including the empty input,
@@ -50,8 +59,8 @@ Tools used for development only, not part of the product:
   `scripts/oz-differential.mjs` for behavioural comparison.
 - **solc**: GPL-3.0; only its output is used, to generate the `schema-solc-*`
   fixtures, and solc itself is not redistributed.
-- **pycryptodome**: used to produce the reference digests in the Keccak tests, and
-  not redistributed.
+- **pycryptodome**: BSD-2-Clause / Apache-2.0 dual licence; used to produce the
+  reference digests in the Keccak tests, and not redistributed.
 
 ## Where the fixtures come from
 
