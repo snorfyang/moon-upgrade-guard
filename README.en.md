@@ -273,12 +273,13 @@ Regular and transient storage follow the same rules. A transient finding names
 `transientStorage[...]` rather than `storage[...]`, so a report tells the two
 address spaces apart.
 
-Storage gaps use the `__gap` array convention: the bytes a gap covers are
-unused, so a later version may spend them on new variables, or replace the gap
-wholesale, as long as whatever takes its place ends at the byte the gap ended
-at. That is what keeps everything declared after the gap in place. The name alone never skips a comparison: the type has to be an
-array, the element type has to stay the same, and a gap whose end moved is
-reported as a move.
+Storage gaps use the `__gap` fixed-size array convention: the bytes a gap
+covers are unused, so a later version may spend them on new variables, or
+replace the gap wholesale, as long as whatever takes its place ends at the byte
+the gap ended at. That is what keeps everything declared after the gap in place.
+The name alone never skips a comparison: the type has to be a fixed-size array
+(a dynamic array's slot holds its length, not reserved bytes), the element type
+has to stay the same, and a gap whose end moved is reported as a move.
 
 The rename policy, and the one place where this tool differs from OpenZeppelin
 Upgrades Core by default, is recorded with the rest of the differential results
@@ -288,8 +289,11 @@ ABI findings:
 
 - `Error`: a signature that disappeared from functions, events, or custom
   errors; a changed output list, because callers decode return data
-  positionally; a changed indexed layout or anonymity on an event; and a
-  selector or topic that now belongs to a different signature.
+  positionally; a changed indexed layout or anonymity on an event; a
+  selector or topic that now belongs to a different signature; and a
+  `fallback`/`receive` handler replaced by a named function of the same
+  signature (or the reverse), because the two are reached differently: one
+  answers otherwise-unmatched calldata and the other is selector-dispatched.
 - `Warning`: a changed state mutability, because the selector and calldata are
   unchanged while the call's contract changed.
 - `Info`: a new function, event, or error.

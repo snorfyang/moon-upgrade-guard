@@ -22,7 +22,11 @@
 ///
 /// Constructors are not compared: their inputs affect deployment, not the
 /// interface an existing proxy exposes. A fallback or receive entry is compared
-/// like a function without parameters, so removing one is an error.
+/// like a function without parameters, so removing one is an error, but it
+/// matches within its own kind: a fallback handler and a named function
+/// `fallback()` share a signature, and neither can stand in for the other,
+/// because one answers otherwise-unmatched calldata and the other is
+/// selector-dispatched.
 ///
 /// One invariant comes from the compiler rather than from this engine: a
 /// selector is unique within one ABI, because the compiler rejects two
@@ -103,8 +107,12 @@ fn compare_functions(
   new : Array[AbiFunction],
   diagnostics : Array[Diagnostic],
 ) -> Unit {
+  // Matching pairs an old entry with a new one only when both the kind and the
+  // canonical signature agree. The signature alone is not enough: a fallback
+  // handler and a named function `fallback()` hash to the same string, but a
+  // caller reaches them through different dispatch.
   let (removed, added, matched) = match_signatures(old, new, fn(entry) {
-    entry.signature
+    entry_noun(entry.kind) + ":" + entry.signature
   })
   for entry in removed {
     diagnostics.push(

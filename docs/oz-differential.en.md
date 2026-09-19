@@ -34,6 +34,7 @@ reference: @openzeppelin/upgrades-core 1.46.0
 engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 
 - abi-event-indexed: engine exit 0 | reference pass | agree
+- abi-fallback-kind: engine exit 0 | reference pass | agree
 - abi-function-removed: engine exit 0 | reference pass | agree
 - ambiguous-build-info: engine exit 2 | reference skip (no storageLayout) | n/a
 - append: engine exit 0 | reference pass | agree
@@ -45,6 +46,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - schema-solc-0.5-to-0.8: engine exit 0 | reference pass | agree
 - schema-solc-0.6-to-0.8: engine exit 0 | reference pass | agree
 - schema-unsupported: engine exit 2 | reference rename | n/a
+- storage-gap-dynamic: engine exit 1 | reference replace | agree
 - storage-gap-finished: engine exit 0 | reference pass | agree
 - storage-gap-shrink: engine exit 0 | reference pass | agree
 - storage-gap-unsafe: engine exit 1 | reference layoutchange | agree
@@ -57,7 +59,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 13 pairs, 1 divergences
+compared 15 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -68,6 +70,12 @@ compared 13 pairs, 1 divergences
   shrinks while still ending where it ended. Both tools pass it. The reference
   decides this with `endMatchesGap`, and the engine uses the same test, which is
   why the two agree here rather than by accident.
+- **A dynamic array is not a gap.** `storage-gap-dynamic` replaces a dynamic
+  array named `__gap` with a new variable: the reference reports `replace`
+  (the name and the type both change in one position, and a dynamic array's
+  slot is not a gap it recognizes), and both block. The engine compares the
+  dynamic array as an ordinary variable and reaches the same verdict more
+  directly: that slot holds an array length, not reserved bytes.
 - **Finishing a gap.** `storage-gap-finished` replaces a `__gap` wholesale with a
   struct that ends where the gap ended. Both tools accept it, again because the
   rule is the same one: a gap covers unused bytes, so only its end has to be

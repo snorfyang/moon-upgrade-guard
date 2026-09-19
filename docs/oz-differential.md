@@ -29,6 +29,7 @@ reference: @openzeppelin/upgrades-core 1.46.0
 engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 
 - abi-event-indexed: engine exit 0 | reference pass | agree
+- abi-fallback-kind: engine exit 0 | reference pass | agree
 - abi-function-removed: engine exit 0 | reference pass | agree
 - ambiguous-build-info: engine exit 2 | reference skip (no storageLayout) | n/a
 - append: engine exit 0 | reference pass | agree
@@ -40,6 +41,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - schema-solc-0.5-to-0.8: engine exit 0 | reference pass | agree
 - schema-solc-0.6-to-0.8: engine exit 0 | reference pass | agree
 - schema-unsupported: engine exit 2 | reference rename | n/a
+- storage-gap-dynamic: engine exit 1 | reference replace | agree
 - storage-gap-finished: engine exit 0 | reference pass | agree
 - storage-gap-shrink: engine exit 0 | reference pass | agree
 - storage-gap-unsafe: engine exit 1 | reference layoutchange | agree
@@ -52,7 +54,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 13 pairs, 1 divergences
+compared 15 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -61,6 +63,10 @@ compared 13 pairs, 1 divergences
 - **存储 gap。** `storage-gap-shrink` 正是催生该规则的情形：基础合约把 `__gap` 的一个 slot
   用于新变量，因此 gap 缩小，但结束位置不变。两者都通过。参考实现用 `endMatchesGap` 判定，而
   引擎用的是同一个判据，所以这里的一致并非偶然。
+- **动态数组不是 gap。** `storage-gap-dynamic` 用一个新变量替换名为 `__gap` 的动态数组：参考
+  实现报告 `replace`（同一位置上名字与类型都变了，而动态数组的 slot 不是它认得的 gap），两者都
+  阻断。引擎把动态数组当作普通变量比较，得到同一结论的路径更直接：那个 slot 里是数组长度，
+  不是保留字节。
 - **整体替换 gap。** `storage-gap-finished` 把一个 `__gap` 整体替换为结束位置相同的 struct。
   两者都接受，原因仍是同一条判据：gap 覆盖的是未使用字节，因此只有结束位置必须保持不变。
 - **追加。** `append` 追加了一个变量、一个函数和一个事件：两者都通过，因为没有移动任何东西的

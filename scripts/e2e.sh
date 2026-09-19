@@ -54,11 +54,14 @@ storage-moved|storage|text|1|storage.entry.slot.changed
 struct-change|storage|text|1|storage.entry.type.changed
 storage-gap-shrink|check|text|0|storage.gap.changed
 storage-gap-unsafe|storage|text|1|storage.entry.slot.changed
+storage-gap-dynamic|storage|text|1|storage.entry.removed
 storage-gap-finished|check|text|0|storage.gap.changed
 transient-moved|storage|text|1|storage.entry.slot.changed
 transient-append|check|text|0|storage.entry.added
 transient-removed|storage|text|1|storage.entry.removed
 abi-function-removed|abi|json|1|abi.function.removed
+abi-fallback-kind|abi|text|1|abi.function.removed
+abi-fallback-kind|storage|text|0|
 abi-function-removed|storage|text|0|
 abi-event-indexed|abi|text|1|abi.event.indexed.changed
 invalid-json|check|json|2|artifact.json.invalid
