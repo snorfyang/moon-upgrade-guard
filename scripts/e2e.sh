@@ -9,22 +9,24 @@
 # access; as with any build, a cold module cache is populated from the registry
 # before the first compile.
 #
-# Run from anywhere:  scripts/e2e.sh
+# Run from anywhere:  scripts/e2e.sh [native executable]
 
 set -euo pipefail
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 
-binary="_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe"
+binary="${1:-_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe}"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "e2e: python3 is required to validate JSON output" >&2
   exit 1
 fi
 
-echo "e2e: building $binary"
-moon build --target native
+if [[ $# -eq 0 ]]; then
+  echo "e2e: building $binary"
+  moon build --target native
+fi
 
 if [[ ! -x "$binary" ]]; then
   echo "e2e: executable not found at $binary" >&2

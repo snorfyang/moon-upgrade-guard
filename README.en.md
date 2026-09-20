@@ -59,6 +59,9 @@ and to the matching `_build/native/release/...` path for `moon build --target
 native --release`. Run it directly, or through `moon run cmd/moonupgradeguard
 --` while working in the repository.
 
+[GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases)
+provides native Linux x86_64 and macOS arm64 executables tested end to end.
+
 `./scripts/e2e.sh` builds the executable and runs every pair in `fixtures/`
 through it as a real process, checking exit codes, expected diagnostic codes,
 JSON validity, and that repeated runs produce identical bytes.

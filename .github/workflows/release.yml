@@ -1,0 +1,88 @@
+name: native release
+
+on:
+  pull_request:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux-x86_64
+            arch: x86_64
+          - runner: macos-15
+            platform: macos-arm64
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: check runner architecture
+        run: test "$(uname -m)" = '${{ matrix.arch }}'
+
+      - name: install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: package registry index
+        run: moon update
+
+      - name: check tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' moon.mod)
+          test -n "$version"
+          test "$GITHUB_REF_NAME" = "v$version"
+
+      - name: build release executable
+        run: moon build --target native --release
+
+      - name: test release executable
+        run: ./scripts/e2e.sh _build/native/release/build/cmd/moonupgradeguard/moonupgradeguard.exe
+
+      - name: prepare asset
+        run: |
+          version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' moon.mod)
+          mkdir dist
+          cp _build/native/release/build/cmd/moonupgradeguard/moonupgradeguard.exe \
+            "dist/moonupgradeguard-v${version}-${{ matrix.platform }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: dist
+          merge-multiple: true
+
+      - name: publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(find dist -type f | wc -l)" -eq 2
+          cp .github/release-notes.md "$RUNNER_TEMP/release-notes.md"
+          printf '\nBuilt and tested by [this CI run](https://github.com/%s/actions/runs/%s).\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$RUNNER_TEMP/release-notes.md"
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md"
