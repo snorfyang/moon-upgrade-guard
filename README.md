@@ -54,6 +54,9 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 `_build/native/release/...` 路径。可以直接运行该文件，也可以在仓库内通过
 `moon run cmd/moonupgradeguard --` 运行。
 
+[GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases)
+提供经过端到端检查的 Linux x86_64 与 macOS arm64 原生可执行文件。
+
 `./scripts/e2e.sh` 会构建可执行文件，并把 `fixtures/` 中的每一对样例当作真实
 进程跑一遍，校验退出码、应出现的诊断码、JSON 合法性，以及重复运行是否产生完全
 一致的字节。
