@@ -164,6 +164,11 @@ if ! grep -q -- "cli.argument.invalid" "$tmp/args.json"; then
 fi
 
 expect_exit "--help" 0 --help
+expect_exit "--version" 0 --version
+module_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' moon.mod)
+if [[ -z "$module_version" || "$(cat "$tmp/args.out")" != "moonupgradeguard $module_version" ]]; then
+  fail "--version: output does not match moon.mod"
+fi
 expect_exit "no arguments" 2
 expect_exit "unknown command" 2 check-fixtures
 expect_exit "unknown format" 2 check fixtures/compatible/old.json fixtures/compatible/new.json --format yaml
