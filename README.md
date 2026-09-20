@@ -57,6 +57,8 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 `./scripts/e2e.sh` 会构建可执行文件，并把 `fixtures/` 中的每一对样例当作真实
 进程跑一遍，校验退出码、应出现的诊断码、JSON 合法性，以及重复运行是否产生完全
 一致的字节。
+`python3 scripts/check_package.py` 会构建发布包，并核对包内文件清单。
+
 测试还会针对生成的布局检查若干不变量：同一布局与自身比较不会阻断，追加变量不会
 阻断，产物内部条目的顺序也不会改变报告内容。
 
@@ -66,7 +68,10 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 moonupgradeguard check OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 moonupgradeguard storage OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
+moonupgradeguard --version
 ```
+
+`--version` 输出 `moonupgradeguard 0.1.0`；端到端测试会核对它与 `moon.mod` 一致。
 
 `--contract` 用于从包含多个合约的产物中选择一个，可以写合约名，也可以写
 `source:contract`；选项可以按任意顺序出现。`fixtures/contract-selector` 这一对

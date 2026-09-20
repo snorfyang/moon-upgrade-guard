@@ -35,12 +35,18 @@ priv struct CliResult {
 let usage =
   #|usage: moonupgradeguard <check|storage|abi> OLD NEW [--format text|json]
   #|       [--contract NAME|SOURCE:NAME]
+  #|       moonupgradeguard --version
 
 ///|
 async fn main {
   let args = @env.args()
   if args.length() == 2 && (args[1] == "--help" || args[1] == "-h") {
     emit(usage)
+    process_exit(0)
+    return
+  }
+  if args.length() == 2 && args[1] == "--version" {
+    emit("moonupgradeguard \{@guard.version}")
     process_exit(0)
     return
   }

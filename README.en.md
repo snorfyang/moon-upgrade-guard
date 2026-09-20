@@ -62,6 +62,9 @@ native --release`. Run it directly, or through `moon run cmd/moonupgradeguard
 `./scripts/e2e.sh` builds the executable and runs every pair in `fixtures/`
 through it as a real process, checking exit codes, expected diagnostic codes,
 JSON validity, and that repeated runs produce identical bytes.
+`python3 scripts/check_package.py` builds the publishable package and checks
+its file list.
+
 The test suite also checks invariants over generated layouts: comparing a
 layout with itself never blocks, appending a variable never blocks, and the
 order of the entries inside an artifact does not change what is reported.
@@ -72,7 +75,11 @@ order of the entries inside an artifact does not change what is reported.
 moonupgradeguard check OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 moonupgradeguard storage OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
+moonupgradeguard --version
 ```
+
+`--version` prints `moonupgradeguard 0.1.0`; the end-to-end test checks that it
+matches `moon.mod`.
 
 `--contract` selects a contract from an artifact that holds several, by name or
 as `source:contract`; options may appear in any order. The
