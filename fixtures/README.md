@@ -44,8 +44,7 @@ Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `sto
 
 `schema-*` 各对用于检查不同编译器写出的字段形态：
 
-- solc 0.5.17 会在 ABI 条目中把 `constant` 与 `payable` 写在 `stateMutability` 旁边。这些
-  多余字段会被忽略，因此 0.5 的产物与其它版本一样可以解码。
+- solc 0.5.17 会在 ABI 条目中把 `constant` 与 `payable` 写在 `stateMutability` 旁边。这些多余字段会被忽略，因此 0.5 的产物与其它版本一样可以解码。
 - solc 0.6.12 与 0.8.28 只写 `stateMutability`。
 - 在 `stateMutability` 出现之前的 ABI（0.4 时代）无法精确解码，因为 `constant` 区分不了
   `pure` 与 `view`。这类条目会被显式报错拒绝，而不是被猜测。
@@ -75,29 +74,19 @@ contract Token {
 }
 ```
 
-三个版本为它生成的布局完全相同，因此这两对跨版本样例被期望是兼容的。源码属于本仓库；fixture 是
-它的编译产物。
+三个版本为它生成的布局完全相同，因此这两对跨版本样例被期望是兼容的。源码属于本仓库；fixture 是它的编译产物。
 
 transient storage 遵循与常规存储相同的规则，位于它自己的命名空间：诊断项使用
-`transientStorage[...]` 作为位置，因此报告能区分这两个地址空间。没有报告 transient 布局的产物
-会被视为没有 transient 变量——Foundry 写出空布局时就是这个样子；把它与带有该布局的产物相比，
-就会读成"删除"，因此用未开启 `transientStorageLayout` 输出选择的版本编译时会阻断，而不是悄悄
-通过。
+`transientStorage[...]` 作为位置，因此报告能区分这两个地址空间。没有报告 transient 布局的产物会被视为没有 transient 变量——Foundry 写出空布局时就是这个样子；把它与带有该布局的产物相比，
+就会读成"删除"，因此用未开启 `transientStorageLayout` 输出选择的版本编译时会阻断，而不是悄悄通过。
 
-重命名变量是本工具唯一一处刻意比 OpenZeppelin Upgrades Core 更宽松的地方：参考实现把重命名视为
-不安全（除非设置 `unsafeAllowRenames`），而这里字节留在原处，所以 `storage-renamed/` 报告警告
-并以 `0` 退出。详见[差分对比记录](../docs/oz-differential.md)。
+重命名变量是本工具唯一一处刻意比 OpenZeppelin Upgrades Core 更宽松的地方：参考实现把重命名视为不安全（除非设置 `unsafeAllowRenames`），而这里字节留在原处，所以 `storage-renamed/` 报告警告并以 `0` 退出。详见[差分对比记录](../docs/oz-differential.md)。
 
-包含多个合约的外层结构需要 `--contract NAME` 或 `--contract SOURCE:NAME`；不提供时会被报告为
-歧义，而不是被猜测。
+包含多个合约的外层结构需要 `--contract NAME` 或 `--contract SOURCE:NAME`；不提供时会被报告为歧义，而不是被猜测。
 
-ERC-7201 命名空间存储会被拒绝，而不是被假定兼容。命名空间通过其注释推导出的 slot 访问，而编译器
-在 `storageLayout` 中只列出状态变量，因此命名空间的成员不在输入里，其兼容性未知。
+ERC-7201 命名空间存储会被拒绝，而不是被假定兼容。命名空间通过其注释推导出的 slot 访问，而编译器在 `storageLayout` 中只列出状态变量，因此命名空间的成员不在输入里，其兼容性未知。
 
-存储 gap 使用 `__gap` 定长数组约定：它覆盖的字节是未使用的，因此后续版本可以取用，前提是 gap 仍然
-结束在它原先结束的位置——这正是让声明在它之后的变量保持在原位的原因。三对 `storage-gap-*` 分别是
-该变化的安全版本、不安全版本，以及动态数组命名 `__gap` 时不适用的版本：动态数组的 slot 存放的是
-长度，不是保留字节。
+存储 gap 使用 `__gap` 定长数组约定：它覆盖的字节是未使用的，因此后续版本可以取用，前提是 gap 仍然结束在它原先结束的位置——这正是让声明在它之后的变量保持在原位的原因。三对 `storage-gap-*` 分别是该变化的安全版本、不安全版本，以及动态数组命名 `__gap` 时不适用的版本：动态数组的 slot 存放的是长度，不是保留字节。
 
 三个子命令彼此独立，其中两对样例直接演示了这一点：
 

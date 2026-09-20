@@ -221,7 +221,10 @@ def render(language: str, rows: list[tuple[str, str, str]]) -> str:
         block = blocked if severity == 'Error' else allowed
         lines.append(f'| `{code}` | {severity} | {block} | {meanings[code]} |')
     lines.append('')
-    return '\n'.join(lines)
+    document = '\n'.join(lines)
+    if language == 'zh':
+        return re.sub(r'(?<=[\u4e00-\u9fff])\n[ \t]*(?=[\u4e00-\u9fff])', '', document)
+    return document
 
 
 def main() -> None:
