@@ -105,7 +105,7 @@ stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、
 
 选择输入时有两件事值得注意：
 
-- Hardhat 的单合约产物不内嵌存储布局，Hardhat 的默认编译设置也不会请求它。请从 `outputSelection` 包含 `storageLayout` 的 build info 文件提取，或使用独立的布局文件。
+- Hardhat 的单合约产物不内嵌存储布局，Hardhat 的默认编译设置也不会请求它。请使用在 `outputSelection` 中请求了 `storageLayout` 的 build info 文件，或使用独立的布局文件。
 - 当产物带有 transient storage 布局时，它会被比较：Foundry 会写出该布局，用
   solc 时需要在 `outputSelection` 中包含 `transientStorageLayout`。没有报告该布局的产物会被视为没有 transient storage 变量，因此与带有该布局的产物比较时会报告为删除。
 
