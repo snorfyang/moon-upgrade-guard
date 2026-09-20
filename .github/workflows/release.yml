@@ -46,6 +46,22 @@ jobs:
       - name: build release executable
         run: moon build --target native --release
 
+      - name: remove build paths
+        run: |
+          binary=_build/native/release/build/cmd/moonupgradeguard/moonupgradeguard.exe
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            strip -x "$binary"
+          else
+            strip --strip-all "$binary"
+          fi
+          python3 - "$binary" <<'PY'
+          from pathlib import Path
+          import sys
+          data = Path(sys.argv[1]).read_bytes()
+          if any(path in data for path in (b'/home/', b'/Users/', b'/private/var/')):
+              raise SystemExit('release executable contains a build-machine path')
+          PY
+
       - name: test release executable
         run: ./scripts/e2e.sh _build/native/release/build/cmd/moonupgradeguard/moonupgradeguard.exe
 
