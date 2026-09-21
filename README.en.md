@@ -2,6 +2,11 @@
 
 # MoonUpgradeGuard
 
+[![CI](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml)
+[![Native release](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/release.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/snorfyang/moon-upgrade-guard)](https://github.com/snorfyang/moon-upgrade-guard/releases/latest)
+[![License](https://img.shields.io/github/license/snorfyang/moon-upgrade-guard)](LICENSE)
+
 MoonUpgradeGuard is a MoonBit-native compatibility checker for upgrades of
 EVM smart contracts. It compares Solidity compiler artifacts from two contract
 versions and reports storage-layout and ABI changes that may make a proxy
