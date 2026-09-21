@@ -2,6 +2,11 @@
 
 # MoonUpgradeGuard
 
+[![CI](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml)
+[![Native release](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/release.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/snorfyang/moon-upgrade-guard)](https://github.com/snorfyang/moon-upgrade-guard/releases/latest)
+[![License](https://img.shields.io/github/license/snorfyang/moon-upgrade-guard)](LICENSE)
+
 MoonUpgradeGuard 是一个用 MoonBit 编写的 EVM 智能合约升级兼容性检查器。
 它比较两个合约版本的 Solidity 编译产物，报告可能让代理（proxy）升级变得不安全的存储布局（storage layout）与 ABI 变更。
 
