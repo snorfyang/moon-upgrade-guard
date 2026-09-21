@@ -2,14 +2,12 @@
 
 # 升级 fixture
 
-每个目录存放一对编译产物 `old.json` 与 `new.json`，端到端地演示一条兼容性规则。它们刻意做成
-Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `storageLayout` 对象。
+每个目录存放一对编译产物 `old.json` 与 `new.json`，端到端地演示一条兼容性规则。多数手写样例刻意做成 Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `storageLayout` 对象。
 `scripts/e2e.sh` 中的 CLI 端到端检查会跑遍每一对，顶层 README 的示例使用其中的前两对。
 
 每个目录都是自包含的：当某一侧未变时，它是复制而不是共享文件，因此单独看一个目录也能读懂并运行。
 
-来源说明：这里的每个文件都是为本仓库编写的。字段形态遵循 Solidity 编译器的 `storageLayout`
-文档与 ABI 规范；没有复制任何第三方产物或 fixture。
+来源说明：这里的源码和手写样例均属于本仓库；`real-*` 是由该源码生成的真实工具输出。手写样例的字段形态遵循 Solidity 编译器的 `storageLayout` 文档与 ABI 规范；没有复制任何第三方产物或 fixture。
 
 | 目录 | 变化 | `check` 退出码 |
 | --- | --- | --- |
@@ -35,10 +33,31 @@ Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `sto
 | `namespaced-storage/` | `old.json` 带有 ERC-7201 `@custom:storage-location` 注释，其命名空间成员不在编译器布局中 | 2 |
 | `schema-solc-0.5-to-0.8/` | 同一份合约分别由 solc 0.5.17 与 solc 0.8.28 编译，包含 0.5 写出的旧式 ABI 字段 | 0 |
 | `schema-solc-0.6-to-0.8/` | 同一份合约分别由 solc 0.6.12 与 solc 0.8.28 编译 | 0 |
+| `real-solc-compatible/` | solc Standard JSON：追加变量 | 0 |
+| `real-solc-incompatible/` | solc Standard JSON：变量宽度从 256 位缩为 128 位 | 1 |
+| `real-solc-no-layout/` | solc Standard JSON：编译时未请求存储布局 | 2 |
+| `real-foundry-compatible/` | Foundry 平铺 artifact：追加变量 | 0 |
+| `real-foundry-incompatible/` | Foundry 平铺 artifact：变量宽度缩小 | 1 |
+| `real-foundry-no-layout/` | Foundry 平铺 artifact：编译时未请求存储布局 | 2 |
+| `real-hardhat-compatible/` | Hardhat build info：追加变量 | 0 |
+| `real-hardhat-incompatible/` | Hardhat build info：变量宽度缩小 | 1 |
+| `real-hardhat-per-contract/` | Hardhat 单合约 artifact：不含存储布局 | 2 |
 | `schema-unsupported/` | 类型表使用了本版本不认识的 `encoding` | 2 |
 | `fractional-offset/` | 两边的 `offset` 都是四舍五入后为整数的小数，被当作不可用 schema 数据拒绝 | 2 |
 | `ambiguous-build-info/` | `old.json` 是包含两个带存储布局合约的 Hardhat build info | 2 |
 | `missing-file/` | 故意没有 `new.json`，用于覆盖不可读路径 | 2 |
+
+## 真实产物矩阵
+
+`real-*` 使用本仓库自行编写的 [`Counter` 源码](real-artifacts/sources/old.sol) 及其[兼容](real-artifacts/sources/compatible.sol)、[不兼容](real-artifacts/sources/incompatible.sol)版本（Apache-2.0）。三份源码分别复制成工具项目中的同一个源文件名，再编译成 `old.json` 或 `new.json`。没有改写编译器输出中的字段；`solcjs` 输出开头的非 JSON 提示行在保存前被移除。
+
+| 工具 | 固定版本 | 生成命令及保存位置 |
+| --- | --- | --- |
+| solcjs | 0.8.28 | `solcjs --standard-json < fixtures/real-artifacts/inputs/old.json > output.txt`；其余三份[输入文件](real-artifacts/inputs/compatible.json)同法编译。输入的源文件键为 `src/Counter.sol`，`outputSelection` 为 `abi` 与 `storageLayout`（`without-layout.json` 只请求 `abi`）。检查 `errors` 中没有 `severity: "error"`，移除 stdout 的提示行后保存完整 JSON。 |
+| Forge | 1.7.1，solc 0.8.28 | 将源码复制到临时项目的 `src/Counter.sol`，执行 `forge build --force --use /path/to/solc --extra-output storageLayout`，复制 `out/Counter.sol/Counter.json`；无布局用例省略 `--extra-output storageLayout`。 |
+| Hardhat | 2.27.2，solc 0.8.28 | 将源码复制到临时项目的 `contracts/Counter.sol`，使用[配置](real-artifacts/hardhat.config.cjs)执行 `hardhat compile --force --config hardhat.config.cjs`；复制 `artifacts/build-info/*.json`，以及无布局用例的 `artifacts/contracts/Counter.sol/Counter.json`。 |
+
+`real-solc-*`、`real-foundry-*` 和 `real-hardhat-*` 的旧端均由 `old.sol` 编译。兼容和不兼容用例的新端分别由对应源码编译；无布局用例的新端使用正常的旧版编译输出。上述命令只用于生成已提交的样例；运行检查器和测试无需安装这些工具或访问网络。
 
 ## 编译器 schema 矩阵
 
@@ -91,8 +110,8 @@ ERC-7201 命名空间存储会被拒绝，而不是被假定兼容。命名空�
 三个子命令彼此独立，其中两对样例直接演示了这一点：
 
 ```bash
-moon run cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
-moon run cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
+moon run src/cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
+moon run src/cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
 ```
 
 两者都以 `0` 退出，尽管对这两对执行 `check` 都会以 `1` 退出。
@@ -101,13 +120,13 @@ moon run cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json 
 
 ```bash
 # 兼容：不输出任何内容并以 0 退出
-moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+moon run src/cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
 
 # 不兼容：输出移动并以 1 退出
-moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
+moon run src/cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
 
 # 机器可读：诊断数组写在 stdout
-moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
+moon run src/cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
 ```
 
 `scripts/e2e.sh` 会把每一对样例交给构建出的 native 可执行文件运行，并核对退出码、应出现的诊断码、

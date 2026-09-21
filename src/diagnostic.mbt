@@ -367,3 +367,30 @@ pub fn Diagnostic::with_values(
     },
   }
 }
+
+///|
+pub extend Severity with Eq::{not_equal, equal}
+
+///|
+pub extend Severity with @debug.Debug::{to_repr}
+
+///|
+pub extend DiagnosticCode with Eq::{not_equal, equal}
+
+///|
+pub extend DiagnosticCode with @debug.Debug::{to_repr}
+
+///|
+pub extend Location with Eq::{not_equal, equal}
+
+///|
+pub extend Location with @debug.Debug::{to_repr}
+
+///|
+pub extend Diagnostic with Eq::{not_equal, equal}
+
+///|
+pub extend Diagnostic with @debug.Debug::{to_repr}
+
+///|
+pub extend Diagnostic with Compare::{op_lt, op_le, op_ge, compare, op_gt}

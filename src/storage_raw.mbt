@@ -51,3 +51,21 @@ pub(all) struct RawStorageLayout {
   /// hash iteration.
   types : Array[RawStorageType]
 } derive(Eq, @debug.Debug)
+
+///|
+pub extend RawStorageEntry with Eq::{not_equal, equal}
+
+///|
+pub extend RawStorageEntry with @debug.Debug::{to_repr}
+
+///|
+pub extend RawStorageType with Eq::{not_equal, equal}
+
+///|
+pub extend RawStorageType with @debug.Debug::{to_repr}
+
+///|
+pub extend RawStorageLayout with Eq::{not_equal, equal}
+
+///|
+pub extend RawStorageLayout with @debug.Debug::{to_repr}

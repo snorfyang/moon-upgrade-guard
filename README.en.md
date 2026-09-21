@@ -32,6 +32,13 @@ Nothing in that pipeline needs the network, the Solidity source, or a chain: the
 artifacts are the only input. The comparison core takes plain values, which is why
 the same code is usable as a library without the CLI.
 
+## Repository layout
+
+- `src/`: the MoonBit core library and its tests; `src/cmd/moonupgradeguard/` is the native CLI.
+- `fixtures/`: compatibility cases, real compiler artifacts, and their provenance.
+- `scripts/`: end-to-end, documentation, and package checks.
+- `docs/`: diagnostics, references, and differential comparison records.
+
 ## Requirements
 
 - The [MoonBit](https://www.moonbitlang.com/) toolchain, including the native
@@ -56,7 +63,7 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 ```
 
 and to the matching `_build/native/release/...` path for `moon build --target
-native --release`. Run it directly, or through `moon run cmd/moonupgradeguard
+native --release`. Run it directly, or through `moon run src/cmd/moonupgradeguard
 --` while working in the repository.
 
 [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases)
@@ -169,13 +176,13 @@ recompiled, so only compiler-generated ids and the order of the type table diffe
 prints informational findings.
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
 $ echo $?
 0
 ```
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
 info[abi.event.added] abi.events: event "Paused(address)" was added to the new ABI (new: Paused(address))
 info[abi.function.added] abi.functions: function "pause()" was added to the new ABI (new: pause())
 info[storage.entry.added] contracts/Token.sol:Token storage[2]: variable "paused" was added at slot 2, offset 0 (new: paused)
@@ -188,7 +195,7 @@ slots of `totalSupply` and `owner`. Not a byte is lost, but every byte now means
 something else, so the exit code is `1`.
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
 error[storage.entry.slot.changed] contracts/Token.sol:Token storage[0]: variable "totalSupply" moved from slot 0 to slot 1 (old: 0, new: 1)
 error[storage.entry.slot.changed] contracts/Token.sol:Token storage[1]: variable "owner" moved from slot 1 to slot 0 (old: 1, new: 0)
 $ echo $?
@@ -199,7 +206,7 @@ $ echo $?
 every exit code, including `2`.
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
 [
   {
     "code": "abi.function.removed",

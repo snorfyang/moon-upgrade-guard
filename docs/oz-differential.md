@@ -37,6 +37,15 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - invalid-json: engine exit 2 | reference skip (error: Expected ',' or '}' after property value in JSON at position 50 (line 4 column 1)) | n/a
 - missing-file: no pair
 - namespaced-storage: engine exit 2 | reference pass | n/a
+- real-foundry-compatible: engine exit 0 | reference pass | agree
+- real-foundry-incompatible: engine exit 1 | reference typechange | agree
+- real-foundry-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
+- real-hardhat-compatible: engine exit 0 | reference skip (no storageLayout) | n/a
+- real-hardhat-incompatible: engine exit 1 | reference skip (no storageLayout) | n/a
+- real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
+- real-solc-compatible: engine exit 0 | reference skip (no storageLayout) | n/a
+- real-solc-incompatible: engine exit 1 | reference skip (no storageLayout) | n/a
+- real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
 - schema-solc-0.5-to-0.8: engine exit 0 | reference pass | agree
 - schema-solc-0.6-to-0.8: engine exit 0 | reference pass | agree
 - schema-unsupported: engine exit 2 | reference rename | n/a
@@ -53,7 +62,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 15 pairs, 1 divergences
+compared 17 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -68,6 +77,7 @@ compared 15 pairs, 1 divergences
 - **追加。** `append` 追加了一个变量、一个函数和一个事件：两者都通过，因为没有移动任何东西的新增是安全的。
 - **移动、删除与类型变化。** `storage-moved`、`storage-removed`、`struct-change` 在两者中都阻断。特别是"struct 增加成员"对两者都是类型变化，说明引擎对递归类型变化的保守解读与参考实现一致，而不是更严格。
 - **编译器版本。** 由真实 solc 0.5.17、0.6.12、0.8.28 产出的 `schema-solc-*` 各对，在两者中都通过。
+- **Foundry 真实产物。** 追加变量与缩小变量宽度的两对平铺 artifact，在两者中分别通过和阻断。
 
 ## 唯一一处刻意差异
 
@@ -83,6 +93,7 @@ compared 15 pairs, 1 divergences
 ## 对比覆盖不到的情况
 
 - `ambiguous-build-info` 与 `contract-selector` 包含多个合约，需要 `--contract`；脚本不传选择器，引擎会报告歧义。
+- `real-solc-*` 与 `real-hardhat-*` 是完整编译器外层产物；当前脚本只把顶层 `storageLayout` 交给参考实现，因此跳过它们。
 - `invalid-json` 与 `missing-file` 在任何布局出现之前就被拒绝。
 - `unsupported-artifact` 是 Hardhat 的单合约产物，本身不含存储布局。
 - `schema-unsupported` 使用了引擎不认识的 `encoding`。引擎拒绝该产物（退出码 `2`），因为编码决定了字节如何被读取；参考实现不校验该字段，并报告了一个无关的重命名。拒绝是刻意的选择：可能影响兼容性的未知形态，绝不能被报告为兼容。

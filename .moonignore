@@ -1,14 +1,11 @@
 # Publish only the current public module surface.
 /*
-!/*.mbt
 !/moon.mod
-!/moon.pkg
 !/README.md
 !/README.en.md
 !/ROADMAP.md
 !/docs/
 !/docs/**
 !/LICENSE
-!/pkg.generated.mbti
-!/cmd/
-!/cmd/**
+!/src/
+!/src/**

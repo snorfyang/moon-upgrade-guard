@@ -8,7 +8,7 @@
 
 ///|
 fn digest(text : String) -> String {
-  hex_encode(keccak_256(@utf8.encode(text)))
+  @moonupgradeguard.hex_encode(@moonupgradeguard.keccak_256(@utf8.encode(text)))
 }
 
 ///|

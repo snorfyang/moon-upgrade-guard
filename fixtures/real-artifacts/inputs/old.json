@@ -1,0 +1,1 @@
+{"language":"Solidity","sources":{"src/Counter.sol":{"content":"// SPDX-License-Identifier: Apache-2.0\npragma solidity 0.8.28;\n\ncontract Counter {\n    uint256 public value;\n\n    function set(uint256 next) public {\n        value = next;\n    }\n}\n"}},"settings":{"outputSelection":{"*":{"*":["abi","storageLayout"]}}}}

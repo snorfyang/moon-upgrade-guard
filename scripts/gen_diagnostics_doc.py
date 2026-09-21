@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generates the diagnostics reference in every documented language.
 
-The codes, their severities, and their English meanings live in `diagnostic.mbt`.
+The codes, their severities, and their English meanings live in `src/diagnostic.mbt`.
 The Chinese meanings live in the table below, and the script refuses to run when
 a code has no meaning in some language, or when a translation refers to a code
 that no longer exists. CI regenerates both pages and fails when a committed copy
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / 'diagnostic.mbt'
+SOURCE = ROOT / 'src' / 'diagnostic.mbt'
 
 LANGUAGES = {
     'zh': {
@@ -46,7 +46,7 @@ LANGUAGES = {
             '报告该文件路径。',
         ],
         'generated': (
-            '本页共 {count} 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `diagnostic.mbt` '
+            '本页共 {count} 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `src/diagnostic.mbt` '
             '生成。CI 会重新生成，并在提交内容与源码不一致时失败，因此新诊断码不可能没有文档。'
         ),
         'codes': {
@@ -131,7 +131,7 @@ LANGUAGES = {
             'read one.',
         ],
         'generated': (
-            'This page lists {count} codes and is generated from `diagnostic.mbt` by '
+            'This page lists {count} codes and is generated from `src/diagnostic.mbt` by '
             '`scripts/gen_diagnostics_doc.py`. CI regenerates it and fails when the '
             'committed copy differs, so a new code cannot ship undocumented.'
         ),

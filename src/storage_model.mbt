@@ -161,3 +161,36 @@ pub fn StorageLayout::find_type(
   }
   None
 }
+
+///|
+pub extend Slot with Eq::{not_equal, equal}
+
+///|
+pub extend Slot with @debug.Debug::{to_repr}
+
+///|
+pub extend Slot with Compare::{op_lt, op_le, op_ge, compare, op_gt}
+
+///|
+pub extend TypeShape with Eq::{not_equal, equal}
+
+///|
+pub extend TypeShape with @debug.Debug::{to_repr}
+
+///|
+pub extend StorageEntry with Eq::{not_equal, equal}
+
+///|
+pub extend StorageEntry with @debug.Debug::{to_repr}
+
+///|
+pub extend TypeEntry with Eq::{not_equal, equal}
+
+///|
+pub extend TypeEntry with @debug.Debug::{to_repr}
+
+///|
+pub extend StorageLayout with Eq::{not_equal, equal}
+
+///|
+pub extend StorageLayout with @debug.Debug::{to_repr}

@@ -851,3 +851,15 @@ fn json_integer(value : Double) -> Int? {
     }
   }
 }
+
+///|
+pub extend ArtifactKind with Eq::{not_equal, equal}
+
+///|
+pub extend ArtifactKind with @debug.Debug::{to_repr}
+
+///|
+pub extend Artifact with Eq::{not_equal, equal}
+
+///|
+pub extend Artifact with @debug.Debug::{to_repr}

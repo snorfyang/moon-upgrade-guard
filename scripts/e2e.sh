@@ -77,6 +77,15 @@ contract-selector|check|text|2|artifact.contract.missing|--contract Nope
 namespaced-storage|check|text|2|artifact.namespaced-storage.unsupported
 schema-solc-0.5-to-0.8|check|json|0|
 schema-solc-0.6-to-0.8|check|text|0|
+real-solc-compatible|check|json|0|storage.entry.added
+real-solc-incompatible|check|json|1|storage.entry.type.changed
+real-solc-no-layout|check|json|2|artifact.layout.missing
+real-foundry-compatible|check|json|0|storage.entry.added
+real-foundry-incompatible|check|json|1|storage.entry.type.changed
+real-foundry-no-layout|check|json|2|artifact.layout.missing
+real-hardhat-compatible|check|json|0|storage.entry.added
+real-hardhat-incompatible|check|json|1|storage.entry.type.changed
+real-hardhat-per-contract|check|json|2|artifact.layout.missing
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
 fractional-offset|check|json|2|artifact.field.invalid
