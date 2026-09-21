@@ -149,8 +149,8 @@ named `__gap` holds a length in its slot, not reserved bytes.
 The subcommands are independent, which two of the pairs show directly:
 
 ```bash
-moon run cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
-moon run cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
+moon run src/cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
+moon run src/cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
 ```
 
 Both of those exit `0`, even though `check` on either pair exits `1`.
@@ -159,13 +159,13 @@ Both of those exit `0`, even though `check` on either pair exits `1`.
 
 ```bash
 # compatible: prints nothing and exits 0
-moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+moon run src/cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
 
 # incompatible: prints the move and exits 1
-moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
+moon run src/cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
 
 # machine-readable: the diagnostics array on stdout
-moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
+moon run src/cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
 ```
 
 `scripts/e2e.sh` runs all of the pairs against the built native executable and

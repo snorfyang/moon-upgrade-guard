@@ -24,10 +24,10 @@ BINARY = ROOT / '_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard
 READMES = ['README.md', 'README.en.md']
 BLOCK = re.compile(r'```console\n(.*?)```', re.S)
 
-# The walkthrough documents `moon run cmd/moonupgradeguard -- ...`, which a reader
+# The walkthrough documents `moon run src/cmd/moonupgradeguard -- ...`, which a reader
 # can paste. Executing that would rebuild from source, so it is rewritten to the
 # built executable: what is validated is the binary, not a source-level run.
-CLI_PREFIX = 'moon run cmd/moonupgradeguard -- '
+CLI_PREFIX = 'moon run src/cmd/moonupgradeguard -- '
 
 
 def argv_for(command: str) -> list[str]:

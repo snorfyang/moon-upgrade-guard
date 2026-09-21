@@ -110,8 +110,8 @@ ERC-7201 命名空间存储会被拒绝，而不是被假定兼容。命名空�
 三个子命令彼此独立，其中两对样例直接演示了这一点：
 
 ```bash
-moon run cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
-moon run cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
+moon run src/cmd/moonupgradeguard -- abi fixtures/storage-removed/old.json fixtures/storage-removed/new.json
+moon run src/cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json
 ```
 
 两者都以 `0` 退出，尽管对这两对执行 `check` 都会以 `1` 退出。
@@ -120,13 +120,13 @@ moon run cmd/moonupgradeguard -- storage fixtures/abi-function-removed/old.json 
 
 ```bash
 # 兼容：不输出任何内容并以 0 退出
-moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+moon run src/cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
 
 # 不兼容：输出移动并以 1 退出
-moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
+moon run src/cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
 
 # 机器可读：诊断数组写在 stdout
-moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
+moon run src/cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
 ```
 
 `scripts/e2e.sh` 会把每一对样例交给构建出的 native 可执行文件运行，并核对退出码、应出现的诊断码、

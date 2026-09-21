@@ -23,6 +23,13 @@ flowchart LR
 
 这条流水线不需要网络、不需要 Solidity 源码，也不需要链：产物是唯一的输入。比较核心接收的是普通的值，因此同一份代码不通过命令行也可以直接作为库使用。
 
+## 仓库结构
+
+- `src/`：MoonBit 核心库及其测试；`src/cmd/moonupgradeguard/` 是原生命令行。
+- `fixtures/`：兼容性样例、真实编译产物及其来源说明。
+- `scripts/`：端到端、文档和发布包检查。
+- `docs/`：诊断码、参考资料和差分对比记录。
+
 ## 环境要求
 
 - [MoonBit](https://www.moonbitlang.com/) 工具链，包含构建命令行所需的
@@ -48,7 +55,7 @@ _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 
 使用 `moon build --target native --release` 时输出到对应的
 `_build/native/release/...` 路径。可以直接运行该文件，也可以在仓库内通过
-`moon run cmd/moonupgradeguard --` 运行。
+`moon run src/cmd/moonupgradeguard --` 运行。
 
 [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases)
 提供经过端到端检查的 Linux x86_64 与 macOS arm64 原生可执行文件。
@@ -122,13 +129,13 @@ moon build --target native
 **1. 只追加内容：兼容。** `fixtures/compatible/` 是同一个合约重新编译的结果，只有编译器生成的 id 与类型表顺序不同；`fixtures/append/` 在末尾追加了一个变量、一个函数和一个事件，因此只输出信息级诊断。
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
 $ echo $?
 0
 ```
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
 info[abi.event.added] abi.events: event "Paused(address)" was added to the new ABI (new: Paused(address))
 info[abi.function.added] abi.functions: function "pause()" was added to the new ABI (new: pause())
 info[storage.entry.added] contracts/Token.sol:Token storage[2]: variable "paused" was added at slot 2, offset 0 (new: paused)
@@ -140,7 +147,7 @@ $ echo $?
 slot：一个字节都没有丢，但每个字节的含义都变了，所以退出码是 `1`。
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
 error[storage.entry.slot.changed] contracts/Token.sol:Token storage[0]: variable "totalSupply" moved from slot 0 to slot 1 (old: 0, new: 1)
 error[storage.entry.slot.changed] contracts/Token.sol:Token storage[1]: variable "owner" moved from slot 1 to slot 0 (old: 1, new: 0)
 $ echo $?
@@ -150,7 +157,7 @@ $ echo $?
 **3. 机器可读输出。** `--format json` 下 stdout 始终是一个 JSON 数组，即使在退出码 `2` 时也是如此。
 
 ```console
-$ moon run cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
 [
   {
     "code": "abi.function.removed",

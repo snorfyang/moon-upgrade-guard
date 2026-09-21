@@ -16,7 +16,7 @@
 
 位置相对于产生它的那一层所分析的值：提取层报告产物内部的路径，存储引擎报告它所比较的布局内部的路径（transient 命名空间为 `transientStorage[...]`），CLI 在无法读取文件时报告该文件路径。
 
-本页共 41 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `diagnostic.mbt` 生成。CI 会重新生成，并在提交内容与源码不一致时失败，因此新诊断码不可能没有文档。
+本页共 41 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `src/diagnostic.mbt` 生成。CI 会重新生成，并在提交内容与源码不一致时失败，因此新诊断码不可能没有文档。
 
 | 诊断码 | 严重度 | 是否阻断 | 含义 |
 | --- | --- | --- | --- |
