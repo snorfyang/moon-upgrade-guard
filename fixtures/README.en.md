@@ -3,7 +3,7 @@
 # Upgrade fixtures
 
 Each directory holds a pair of compiler artifacts, `old.json` and `new.json`,
-that exercises one compatibility rule end to end. They are deliberately small
+that exercises one compatibility rule end to end. Most hand-written cases are deliberately small
 flat artifacts in the shape Foundry writes: an `abi` array plus a
 `storageLayout` object. The CLI end-to-end check in `scripts/e2e.sh` runs every
 pair, and the examples in the top-level README use the first two.
@@ -11,7 +11,8 @@ pair, and the examples in the top-level README use the first two.
 Each directory is self-contained: when one side is unchanged, it is a copy
 rather than a shared file, so a case can be read and run on its own.
 
-Provenance: every file here was written for this repository. Field shapes follow
+Provenance: the source code and hand-written cases belong to this repository;
+`real-*` contains actual tool output generated from that source. Hand-written field shapes follow
 the Solidity compiler's `storageLayout` documentation and the ABI
 specification; no third-party artifact or fixture was copied.
 
@@ -39,10 +40,39 @@ specification; no third-party artifact or fixture was copied.
 | `namespaced-storage/` | `old.json` carries an ERC-7201 `@custom:storage-location` annotation, whose namespace members are not in the compiler layout | 2 |
 | `schema-solc-0.5-to-0.8/` | the same contract compiled by solc 0.5.17 and solc 0.8.28, including the legacy ABI fields 0.5 emits | 0 |
 | `schema-solc-0.6-to-0.8/` | the same contract compiled by solc 0.6.12 and solc 0.8.28 | 0 |
+| `real-solc-compatible/` | solc Standard JSON: append a variable | 0 |
+| `real-solc-incompatible/` | solc Standard JSON: narrow a variable from 256 to 128 bits | 1 |
+| `real-solc-no-layout/` | solc Standard JSON: storage layout was not requested | 2 |
+| `real-foundry-compatible/` | Foundry flat artifact: append a variable | 0 |
+| `real-foundry-incompatible/` | Foundry flat artifact: narrow a variable | 1 |
+| `real-foundry-no-layout/` | Foundry flat artifact: storage layout was not requested | 2 |
+| `real-hardhat-compatible/` | Hardhat build info: append a variable | 0 |
+| `real-hardhat-incompatible/` | Hardhat build info: narrow a variable | 1 |
+| `real-hardhat-per-contract/` | Hardhat per-contract artifact: no storage layout | 2 |
 | `schema-unsupported/` | the type table uses an `encoding` this version does not know | 2 |
 | `fractional-offset/` | both sides carry an `offset` written as a fraction that rounds to an integer, refused as unusable schema data | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
+
+## Real artifact matrix
+
+The `real-*` cases use this repository's own [`Counter` source](real-artifacts/sources/old.sol)
+and its [compatible](real-artifacts/sources/compatible.sol) and
+[incompatible](real-artifacts/sources/incompatible.sol) versions (Apache-2.0).
+Each source was copied to the same source filename in the tool project, then compiled into
+`old.json` or `new.json`. Compiler output fields were not rewritten; the non-JSON notice line
+printed by `solcjs` before its output was removed before saving.
+
+| tool | pinned version | generation command and saved output |
+| --- | --- | --- |
+| solcjs | 0.8.28 | `solcjs --standard-json < fixtures/real-artifacts/inputs/old.json > output.txt`; compile the other three [input files](real-artifacts/inputs/compatible.json) the same way. The input source key was `src/Counter.sol`, and `outputSelection` requested `abi` and `storageLayout` (`without-layout.json` requested only `abi`). Check that `errors` contains no `severity: "error"`, remove the stdout notice line, and save the full JSON. |
+| Forge | 1.7.1, solc 0.8.28 | Copy the source to `src/Counter.sol` in a temporary project, run `forge build --force --use /path/to/solc --extra-output storageLayout`, and copy `out/Counter.sol/Counter.json`; omit `--extra-output storageLayout` for the missing-layout case. |
+| Hardhat | 2.27.2, solc 0.8.28 | Copy the source to `contracts/Counter.sol` in a temporary project and run `hardhat compile --force --config hardhat.config.cjs` with this [config](real-artifacts/hardhat.config.cjs); copy `artifacts/build-info/*.json`, or `artifacts/contracts/Counter.sol/Counter.json` for the missing-layout case. |
+
+The old side of every `real-solc-*`, `real-foundry-*`, and `real-hardhat-*` pair was compiled from `old.sol`.
+The compatible and incompatible new sides came from their matching sources; the missing-layout
+new side uses the normal old-version compiler output. These commands only generate the committed
+fixtures; running the checker and tests does not require the tools or network access.
 
 ## Compiler schema matrix
 

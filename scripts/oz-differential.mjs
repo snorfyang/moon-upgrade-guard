@@ -91,7 +91,7 @@ function describe(result) {
 }
 
 const cases = readdirSync(fixtures, { withFileTypes: true })
-  .filter(entry => entry.isDirectory())
+  .filter(entry => entry.isDirectory() && existsSync(path.join(fixtures, entry.name, 'old.json')))
   .map(entry => entry.name)
   .sort();
 
