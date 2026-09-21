@@ -37,12 +37,18 @@ pub(all) struct Abi {
   errors : Array[AbiError]
 } derive(Eq, @debug.Debug)
 pub fn Abi::empty() -> Self
+pub fn Abi::equal(Self, Self) -> Bool
+pub fn Abi::not_equal(Self, Self) -> Bool
+pub fn Abi::to_repr(Self) -> @debug.Repr
 
 pub(all) enum AbiEntryKind {
   Function
   Fallback
   Receive
 } derive(Eq, @debug.Debug)
+pub fn AbiEntryKind::equal(Self, Self) -> Bool
+pub fn AbiEntryKind::not_equal(Self, Self) -> Bool
+pub fn AbiEntryKind::to_repr(Self) -> @debug.Repr
 
 pub(all) struct AbiError {
   name : String
@@ -50,6 +56,9 @@ pub(all) struct AbiError {
   selector : String
   inputs : Array[AbiParam]
 } derive(Eq, @debug.Debug)
+pub fn AbiError::equal(Self, Self) -> Bool
+pub fn AbiError::not_equal(Self, Self) -> Bool
+pub fn AbiError::to_repr(Self) -> @debug.Repr
 
 pub(all) struct AbiEvent {
   name : String
@@ -58,6 +67,9 @@ pub(all) struct AbiEvent {
   inputs : Array[AbiParam]
   anonymous : Bool
 } derive(Eq, @debug.Debug)
+pub fn AbiEvent::equal(Self, Self) -> Bool
+pub fn AbiEvent::not_equal(Self, Self) -> Bool
+pub fn AbiEvent::to_repr(Self) -> @debug.Repr
 
 pub(all) struct AbiFunction {
   kind : AbiEntryKind
@@ -68,12 +80,18 @@ pub(all) struct AbiFunction {
   outputs : Array[AbiParam]
   mutability : Mutability
 } derive(Eq, @debug.Debug)
+pub fn AbiFunction::equal(Self, Self) -> Bool
+pub fn AbiFunction::not_equal(Self, Self) -> Bool
+pub fn AbiFunction::to_repr(Self) -> @debug.Repr
 
 pub(all) struct AbiParam {
   name : String
   type_name : String
   indexed : Bool
 } derive(Eq, @debug.Debug)
+pub fn AbiParam::equal(Self, Self) -> Bool
+pub fn AbiParam::not_equal(Self, Self) -> Bool
+pub fn AbiParam::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Artifact {
   kind : ArtifactKind
@@ -83,6 +101,9 @@ pub(all) struct Artifact {
   abi : Abi?
   transient : RawStorageLayout?
 } derive(Eq, @debug.Debug)
+pub fn Artifact::equal(Self, Self) -> Bool
+pub fn Artifact::not_equal(Self, Self) -> Bool
+pub fn Artifact::to_repr(Self) -> @debug.Repr
 
 pub(all) enum ArtifactKind {
   Layout
@@ -90,6 +111,9 @@ pub(all) enum ArtifactKind {
   StandardJson
   BuildInfo
 } derive(Eq, @debug.Debug)
+pub fn ArtifactKind::equal(Self, Self) -> Bool
+pub fn ArtifactKind::not_equal(Self, Self) -> Bool
+pub fn ArtifactKind::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Diagnostic {
   code : DiagnosticCode
@@ -99,7 +123,15 @@ pub(all) struct Diagnostic {
   old_value : String?
   new_value : String?
 } derive(Eq, @debug.Debug)
+pub fn Diagnostic::compare(Self, Self) -> Int
+pub fn Diagnostic::equal(Self, Self) -> Bool
 pub fn Diagnostic::new(DiagnosticCode, Location, String) -> Self
+pub fn Diagnostic::not_equal(Self, Self) -> Bool
+pub fn Diagnostic::op_ge(Self, Self) -> Bool
+pub fn Diagnostic::op_gt(Self, Self) -> Bool
+pub fn Diagnostic::op_le(Self, Self) -> Bool
+pub fn Diagnostic::op_lt(Self, Self) -> Bool
+pub fn Diagnostic::to_repr(Self) -> @debug.Repr
 pub fn Diagnostic::with_values(Self, old_value? : String, new_value? : String) -> Self
 pub impl Compare for Diagnostic
 
@@ -146,13 +178,19 @@ pub(all) enum DiagnosticCode {
   AbiErrorAdded
   AbiSignatureCollision
 } derive(Eq, @debug.Debug)
+pub fn DiagnosticCode::equal(Self, Self) -> Bool
 pub fn DiagnosticCode::name(Self) -> String
+pub fn DiagnosticCode::not_equal(Self, Self) -> Bool
 pub fn DiagnosticCode::severity(Self) -> Severity
+pub fn DiagnosticCode::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Location {
   contract : String?
   path : String
 } derive(Eq, @debug.Debug)
+pub fn Location::equal(Self, Self) -> Bool
+pub fn Location::not_equal(Self, Self) -> Bool
+pub fn Location::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Mutability {
   Pure
@@ -160,7 +198,10 @@ pub(all) enum Mutability {
   NonPayable
   Payable
 } derive(Eq, @debug.Debug)
+pub fn Mutability::equal(Self, Self) -> Bool
 pub fn Mutability::name(Self) -> String
+pub fn Mutability::not_equal(Self, Self) -> Bool
+pub fn Mutability::to_repr(Self) -> @debug.Repr
 
 pub(all) struct RawStorageEntry {
   label : String?
@@ -169,11 +210,17 @@ pub(all) struct RawStorageEntry {
   offset : Int?
   type_id : String?
 } derive(Eq, @debug.Debug)
+pub fn RawStorageEntry::equal(Self, Self) -> Bool
+pub fn RawStorageEntry::not_equal(Self, Self) -> Bool
+pub fn RawStorageEntry::to_repr(Self) -> @debug.Repr
 
 pub(all) struct RawStorageLayout {
   storage : Array[RawStorageEntry]
   types : Array[RawStorageType]
 } derive(Eq, @debug.Debug)
+pub fn RawStorageLayout::equal(Self, Self) -> Bool
+pub fn RawStorageLayout::not_equal(Self, Self) -> Bool
+pub fn RawStorageLayout::to_repr(Self) -> @debug.Repr
 
 pub(all) struct RawStorageType {
   id : String?
@@ -185,18 +232,32 @@ pub(all) struct RawStorageType {
   value : String?
   members : Array[RawStorageEntry]?
 } derive(Eq, @debug.Debug)
+pub fn RawStorageType::equal(Self, Self) -> Bool
+pub fn RawStorageType::not_equal(Self, Self) -> Bool
+pub fn RawStorageType::to_repr(Self) -> @debug.Repr
 
 pub(all) enum Severity {
   Info
   Warning
   Error
 } derive(Eq, @debug.Debug)
+pub fn Severity::equal(Self, Self) -> Bool
 pub fn Severity::name(Self) -> String
+pub fn Severity::not_equal(Self, Self) -> Bool
+pub fn Severity::to_repr(Self) -> @debug.Repr
 
 pub struct Slot {
   // private fields
 } derive(Eq, @debug.Debug)
+pub fn Slot::compare(Self, Self) -> Int
+pub fn Slot::equal(Self, Self) -> Bool
+pub fn Slot::not_equal(Self, Self) -> Bool
+pub fn Slot::op_ge(Self, Self) -> Bool
+pub fn Slot::op_gt(Self, Self) -> Bool
+pub fn Slot::op_le(Self, Self) -> Bool
+pub fn Slot::op_lt(Self, Self) -> Bool
 pub fn Slot::parse(String) -> Self?
+pub fn Slot::to_repr(Self) -> @debug.Repr
 pub fn Slot::to_string(Self) -> String
 pub impl Compare for Slot
 
@@ -207,13 +268,19 @@ pub(all) struct StorageEntry {
   offset : Int
   type_id : String
 } derive(Eq, @debug.Debug)
+pub fn StorageEntry::equal(Self, Self) -> Bool
+pub fn StorageEntry::not_equal(Self, Self) -> Bool
+pub fn StorageEntry::to_repr(Self) -> @debug.Repr
 
 pub(all) struct StorageLayout {
   entries : Array[StorageEntry]
   types : Array[TypeEntry]
 } derive(Eq, @debug.Debug)
 pub fn StorageLayout::empty() -> Self
+pub fn StorageLayout::equal(Self, Self) -> Bool
 pub fn StorageLayout::find_type(Self, String) -> TypeEntry?
+pub fn StorageLayout::not_equal(Self, Self) -> Bool
+pub fn StorageLayout::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TypeEntry {
   id : String
@@ -221,6 +288,9 @@ pub(all) struct TypeEntry {
   byte_size : Int
   shape : TypeShape
 } derive(Eq, @debug.Debug)
+pub fn TypeEntry::equal(Self, Self) -> Bool
+pub fn TypeEntry::not_equal(Self, Self) -> Bool
+pub fn TypeEntry::to_repr(Self) -> @debug.Repr
 
 pub(all) enum TypeShape {
   Value
@@ -230,6 +300,9 @@ pub(all) enum TypeShape {
   Bytes
   Struct(Array[StorageEntry])
 } derive(Eq, @debug.Debug)
+pub fn TypeShape::equal(Self, Self) -> Bool
+pub fn TypeShape::not_equal(Self, Self) -> Bool
+pub fn TypeShape::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

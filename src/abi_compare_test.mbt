@@ -18,7 +18,9 @@ fn abi_indexed(type_name : String) -> @moonupgradeguard.AbiParam {
 /// The hex digest of a signature, so hand-built fixtures carry the same
 /// selectors and topics that decoding would produce.
 fn signature_digest(signature : String) -> String {
-  hex_encode(keccak_256(@utf8.encode(signature)))
+  @moonupgradeguard.hex_encode(
+    @moonupgradeguard.keccak_256(@utf8.encode(signature)),
+  )
 }
 
 ///|

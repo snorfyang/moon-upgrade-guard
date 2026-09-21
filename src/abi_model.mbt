@@ -119,3 +119,45 @@ pub(all) struct Abi {
 pub fn Abi::empty() -> Abi {
   { functions: [], events: [], errors: [], }
 }
+
+///|
+pub extend AbiEntryKind with Eq::{not_equal, equal}
+
+///|
+pub extend AbiEntryKind with @debug.Debug::{to_repr}
+
+///|
+pub extend Mutability with Eq::{not_equal, equal}
+
+///|
+pub extend Mutability with @debug.Debug::{to_repr}
+
+///|
+pub extend AbiParam with Eq::{not_equal, equal}
+
+///|
+pub extend AbiParam with @debug.Debug::{to_repr}
+
+///|
+pub extend AbiFunction with Eq::{not_equal, equal}
+
+///|
+pub extend AbiFunction with @debug.Debug::{to_repr}
+
+///|
+pub extend AbiEvent with Eq::{not_equal, equal}
+
+///|
+pub extend AbiEvent with @debug.Debug::{to_repr}
+
+///|
+pub extend AbiError with Eq::{not_equal, equal}
+
+///|
+pub extend AbiError with @debug.Debug::{to_repr}
+
+///|
+pub extend Abi with Eq::{not_equal, equal}
+
+///|
+pub extend Abi with @debug.Debug::{to_repr}
