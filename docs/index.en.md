@@ -9,7 +9,7 @@ It does not compile contracts, connect to a chain, or prove an upgrade safe in e
 ## Start here
 
 - [Getting started](getting-started.en.md): get an executable, run a first check, and understand the exit codes.
-- [User guide](guide.en.md): how it works, input formats, a reproducible walkthrough, and compatibility rules.
+- [Hands-on tutorial](guide.en.md): prepare real compiler artifacts, read compatible, incompatible, and invalid results, and integrate CI.
 - [Diagnostics reference](diagnostics.en.md): look up errors, warnings, and their meanings.
 - [Artifact fixtures](../fixtures/README.en.md): inspect compatible and incompatible inputs and real compiler artifacts.
 

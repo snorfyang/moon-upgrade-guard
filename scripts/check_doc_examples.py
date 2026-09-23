@@ -6,8 +6,8 @@ lines after it are that command's expected output, and `$ echo $?` followed by a
 number pins its exit status. Nothing else in these documents is executed.
 
 CI runs this, so a documented command, its output, or its exit code cannot drift
-away from the binary. All four documents must carry the same commands in the same
-order; the wording around them is free to differ.
+away from the binary. Each Chinese/English pair must carry the same commands in
+the same order; the wording around them is free to differ.
 """
 
 from __future__ import annotations
@@ -21,7 +21,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BINARY = ROOT / '_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe'
-DOCUMENTS = ['README.md', 'README.en.md', 'docs/guide.md', 'docs/guide.en.md']
+DOCUMENT_PAIRS = [
+    ('README.md', 'README.en.md'),
+    ('docs/guide.md', 'docs/guide.en.md'),
+]
 BLOCK = re.compile(r'```console\n(.*?)```', re.S)
 
 # The walkthrough documents `moon run src/cmd/moonupgradeguard -- ...`, which a reader
@@ -101,19 +104,19 @@ def show(expected: list[str], actual: str) -> str:
 
 def main() -> None:
     transcripts: dict[str, list[tuple[str, list[str], int | None]]] = {}
-    for name in DOCUMENTS:
+    for name in (name for pair in DOCUMENT_PAIRS for name in pair):
         text = (ROOT / name).read_text(encoding='utf-8')
         steps = []
         for index, block in enumerate(BLOCK.findall(text)):
             steps.extend(parse(block, f'{name} block {index + 1}'))
         transcripts[name] = steps
 
-    primary = [step[0] for step in transcripts[DOCUMENTS[0]]]
-    for name in DOCUMENTS[1:]:
-        commands = [step[0] for step in transcripts[name]]
-        if primary != commands:
+    for primary, translation in DOCUMENT_PAIRS:
+        commands = [step[0] for step in transcripts[primary]]
+        translated = [step[0] for step in transcripts[translation]]
+        if commands != translated:
             print(
-                f'{DOCUMENTS[0]} and {name} document different commands',
+                f'{primary} and {translation} document different commands',
                 file=sys.stderr,
             )
             raise SystemExit(1)

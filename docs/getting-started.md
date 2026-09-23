@@ -10,14 +10,14 @@
 
 ## 运行检查
 
-从 [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases/latest) 下载适合 Linux x86_64 或 macOS arm64 的原生可执行文件，重命名为 `moonupgradeguard`；如需自行构建，参见[用户指南](guide.md#构建与测试)。下载后若没有执行权限，先运行 `chmod +x moonupgradeguard`。
+从 [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases/latest) 下载适合 Linux x86_64 或 macOS arm64 的原生可执行文件，重命名为 `moonupgradeguard`；如需自行构建，参见[实战教程](guide.md)。下载后若没有执行权限，先运行 `chmod +x moonupgradeguard`。
 
 ```bash
 ./moonupgradeguard check OLD NEW --format text
 ./moonupgradeguard check OLD NEW --format json
 ```
 
-`check` 比较存储布局；两边都带 ABI 时也比较 ABI。只想检查其中一层，可把 `check` 换成 `storage` 或 `abi`。完整选项见[用户指南的命令行章节](guide.md#命令行)。
+`check` 比较存储布局；两边都带 ABI 时也比较 ABI。只想检查其中一层，可把 `check` 换成 `storage` 或 `abi`。完整选项见 [README 的命令行章节](../README.md#命令行)，逐步示例见[实战教程](guide.md)。
 
 ## 处理结果
 

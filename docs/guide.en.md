@@ -1,170 +1,34 @@
 **English** | [简体中文](guide.md)
 
-# User guide
+# From compiler artifacts to an upgrade report
 
-MoonUpgradeGuard is a MoonBit-native compatibility checker for upgrades of
-EVM smart contracts. It compares Solidity compiler artifacts from two contract
-versions and reports storage-layout and ABI changes that may make a proxy
-upgrade unsafe.
+This tutorial runs an upgrade preflight check on real solc artifacts committed to the repository, then shows how to use your own. MoonUpgradeGuard compares storage layout and ABI in existing artifacts only: it does not compile source, connect to a chain, or prove business logic or the entire upgrade safe. The commands and output here can be reproduced from this repository.
 
-It runs fully offline, never compiles Solidity source, and never touches a
-chain, a wallet, or a key. Its inputs are existing compiler artifacts, and its
-output is deterministic text or JSON with CI-friendly exit codes.
+## 1. Obtain comparable artifacts
 
-The core library, the storage and ABI comparison engines, and a native CLI are
-implemented and covered by tests. See [Limitations](#limitations) for what is
-deliberately not covered yet, and the [roadmap](../ROADMAP.md) for what is planned
-next.
+Both versions need the target contract's `storageLayout`; retain `abi` too if you want an ABI comparison. Keep the full compiler artifact rather than extracting one field. These are the paths verified by this repository:
 
-## How it works
+| Source | What to keep |
+| --- | --- |
+| solc Standard JSON | Request `abi` and `storageLayout` in `settings.outputSelection` and save the full compiler output; request `transientStorageLayout` too if needed. See the [Solidity compiler documentation](https://docs.soliditylang.org/en/v0.8.28/using-the-compiler.html). |
+| Foundry | Use `forge build --extra-output storageLayout` for a flat artifact with layout, then take `out/<source>/<contract>.json`. The [real artifact fixtures](../fixtures/README.en.md#real-artifact-matrix) record a pinned recipe. |
+| Hardhat | Request the layout in Solidity `outputSelection` and use `artifacts/build-info/*.json`; a per-contract artifact normally lacks it. The repository includes a [verified configuration](../fixtures/real-artifacts/hardhat.config.cjs). |
 
-```mermaid
-flowchart LR
-  old["OLD artifact<br/>Standard JSON · Foundry · Hardhat build info"] --> oldStage["extraction, then normalization<br/>lossless slots and semantic types"]
-  new["NEW artifact<br/>the same artifact shapes"] --> newStage["extraction, then normalization<br/>lossless slots and semantic types"]
-  oldStage --> compare["comparison<br/>regular storage · transient storage · ABI"]
-  newStage --> compare
-  compare --> report["diagnostics<br/>stable codes, sorted text or JSON"]
-  report --> exit["exit code<br/>0 compatible · 1 incompatible · 2 unsupported input"]
+For example, a solc Standard JSON input can include these choices in `settings`; then save the full output with `solc --standard-json < input.json > old.json`. Compile the new version likewise into `new.json`. If the compiler reports errors, fix the source or settings before treating its output as a comparable artifact.
+
+```json
+{
+  "outputSelection": {
+    "*": {"*": ["abi", "storageLayout"]}
+  }
+}
 ```
 
-Nothing in that pipeline needs the network, the Solidity source, or a chain: the
-artifacts are the only input. The comparison core takes plain values, which is why
-the same code is usable as a library without the CLI.
+Select the same contract on both sides. Standard JSON and build info can contain several contracts; use `--contract NAME` or `--contract SOURCE:NAME`. An ambiguous selection produces exit code `2` rather than a guessed result. See the [README input section](../README.en.md#inputs) for more shapes and limitations.
 
-## Repository layout
+## 2. Run a compatible check
 
-- `src/`: the MoonBit core library and its tests; `src/cmd/moonupgradeguard/` is the native CLI.
-- `fixtures/`: compatibility cases, real compiler artifacts, and their provenance.
-- `scripts/`: end-to-end, documentation, and package checks.
-- `docs/`: diagnostics, references, and differential comparison records.
-
-## Requirements
-
-- The [MoonBit](https://www.moonbitlang.com/) toolchain, including the native
-  backend that the CLI is built with.
-- Python 3 for `scripts/e2e.sh`, which uses it only to validate JSON output.
-
-The analysis itself makes no network calls. A cold module cache is populated
-from the MoonBit registry before the first build, as with any MoonBit project.
-
-## Build and test
-
-```bash
-moon check --deny-warn
-moon test --deny-warn
-moon build --target native
-```
-
-The native executable is written to
-
-```text
-_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
-```
-
-and to the matching `_build/native/release/...` path for `moon build --target
-native --release`. Run it directly, or through `moon run src/cmd/moonupgradeguard
---` while working in the repository.
-
-[GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases)
-provides native Linux x86_64 and macOS arm64 executables tested end to end.
-
-`./scripts/e2e.sh` builds the executable and runs every pair in `fixtures/`
-through it as a real process, checking exit codes, expected diagnostic codes,
-JSON validity, and that repeated runs produce identical bytes.
-`python3 scripts/check_package.py` builds the publishable package and checks
-its file list.
-
-The test suite also checks invariants over generated layouts: comparing a
-layout with itself never blocks, appending a variable never blocks, and the
-order of the entries inside an artifact does not change what is reported.
-
-## CLI
-
-```bash
-moonupgradeguard check OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
-moonupgradeguard storage OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
-moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
-moonupgradeguard --version
-```
-
-`--version` prints `moonupgradeguard 0.2.0`; the end-to-end test checks that it
-matches `moon.mod`.
-
-`--contract` selects a contract from an artifact that holds several, by name or
-as `source:contract`; options may appear in any order. The
-`fixtures/contract-selector` pair shows both forms, and shows that the selector
-decides the verdict.
-
-`check` always compares storage and also compares ABI when both artifacts carry
-one. If exactly one artifact has an ABI, it reports invalid input instead of
-silently skipping that comparison. `storage` accepts standalone layouts, while
-`abi` requires an ABI on both sides.
-
-Numbers in an artifact must be integer literals. Every producer this tool
-supports (solc Standard JSON, Foundry, Hardhat) writes integers only; a number
-with a fraction point or an exponent is refused as unusable schema data rather
-than rounded to the integer it happens to convert to.
-
-Exit code `0` means no blocking incompatibility was found, `1` means the
-comparison found an incompatible change, and `2` means the command or input was
-invalid. A successful report is a preflight result, not proof that an upgrade
-is safe in every respect.
-
-Diagnostics are sorted, so the same input always produces the same bytes. In
-`--format json` the report is an array of findings on stdout, each with a
-stable `code`, a `severity`, a `location`, a `message`, and the compared
-`oldValue`/`newValue` where they apply.
-An error produced by one input also has `input: "old"` or `input: "new"`;
-comparison findings omit this field.
-
-With `--format json`, stdout is a JSON array on every exit code, including `2`:
-a failure that never reached the analysis reports itself as a finding with a
-`cli.*` code, so a JSON reader never has to parse prose. Locations are relative
-to the value the reporting layer analysed — extraction reports paths inside the
-artifact, the storage engine reports paths inside `storageLayout`, and the CLI
-reports the file path when it cannot read one.
-
-## Inputs
-
-Extraction recognizes the artifact shapes that the compilers actually write:
-
-- a raw `storageLayout` object, as printed by `forge inspect` or written by
-  layout tooling;
-- a flat artifact with `storageLayout` at the top level, as Foundry writes;
-- solc Standard JSON output, `contracts.<source>.<contract>`;
-- a build info document, `output.contracts.<source>.<contract>`, as Hardhat
-  writes.
-
-Layouts produced by solc 0.5 through 0.8 are covered: the 0.5-era `constant`
-and `payable` ABI fields are ignored, while an ABI from before `stateMutability`
-existed is refused, because `constant` cannot distinguish `pure` from `view`.
-
-Wrappers that can hold several contracts, such as Standard JSON output and build
-info, need a selector: `--contract NAME` or `--contract SOURCE:NAME` on the
-command line, or `select` in the library API, which takes the same two forms.
-Without it, or when the selector matches nothing, extraction reports a
-diagnostic instead of guessing.
-
-Two facts are worth knowing when choosing an input:
-
-- A Hardhat per-contract artifact does not embed a storage layout, and
-  Hardhat's default compiler settings do not request one. Extract from a build
-  info file compiled with `storageLayout` in `outputSelection`, or from a
-  standalone layout file.
-- Transient storage layouts are compared when the artifact carries one: Foundry
-  writes it, and a compiler run needs `transientStorageLayout` in
-  `outputSelection`. An artifact that reports none is read as having no
-  transient variables, so comparing it against one that does reports a
-  removal.
-
-## Reproducible walkthrough
-
-A fresh clone, one compatible check, one incompatible check, one machine-readable
-report, and finally a single command that repeats every check. Nothing here needs
-the network apart from the first build, which populates the module cache from the
-MoonBit registry. The output and exit codes below are the ones the binary prints:
-CI runs this section line by line.
+Install [MoonBit](https://www.moonbitlang.com/), clone the repository, and run these commands from its root. A first build may need to populate the MoonBit module cache. Alternatively, download a native executable from [Releases](https://github.com/snorfyang/moon-upgrade-guard/releases/latest) and replace `moon run src/cmd/moonupgradeguard --` below with its path.
 
 ```bash
 git clone https://github.com/snorfyang/moon-upgrade-guard.git
@@ -172,177 +36,84 @@ cd moon-upgrade-guard
 moon build --target native
 ```
 
-**1. Appending only: compatible.** `fixtures/compatible/` is the same contract
-recompiled, so only compiler-generated ids and the order of the type table differ.
-`fixtures/append/` adds a variable, a function, and an event at the end, so it
-prints informational findings.
+In `real-solc-compatible`, the new `Counter` only adds a variable and function. The findings are informational, so the exit code is still `0`:
 
 ```console
-$ moon run src/cmd/moonupgradeguard -- check fixtures/compatible/old.json fixtures/compatible/new.json
+$ moon run src/cmd/moonupgradeguard -- check fixtures/real-solc-compatible/old.json fixtures/real-solc-compatible/new.json --contract Counter
+info[abi.function.added] abi.functions: function "extra()" was added to the new ABI (new: extra())
+info[storage.entry.added] src/Counter.sol:Counter storage[1]: variable "extra" was added at slot 1, offset 0 (new: extra)
 $ echo $?
 0
 ```
 
-```console
-$ moon run src/cmd/moonupgradeguard -- check fixtures/append/old.json fixtures/append/new.json
-info[abi.event.added] abi.events: event "Paused(address)" was added to the new ABI (new: Paused(address))
-info[abi.function.added] abi.functions: function "pause()" was added to the new ABI (new: pause())
-info[storage.entry.added] contracts/Token.sol:Token storage[2]: variable "paused" was added at slot 2, offset 0 (new: paused)
-$ echo $?
-0
-```
+`check` compares storage and an ABI when both sides have one; `storage` and `abi` check those layers separately. Exit code `0` only means no blocking incompatibility was found, not that the upgrade has been audited.
 
-**2. Moving existing variables: incompatible.** `fixtures/storage-moved/` swaps the
-slots of `totalSupply` and `owner`. Not a byte is lost, but every byte now means
-something else, so the exit code is `1`.
+## 3. Read an incompatible report
+
+`real-solc-incompatible` narrows `value` from `uint256` to `uint128`. That changes the interpretation of existing storage and the output type of `value()`, so both layers report an error:
 
 ```console
-$ moon run src/cmd/moonupgradeguard -- check fixtures/storage-moved/old.json fixtures/storage-moved/new.json
-error[storage.entry.slot.changed] contracts/Token.sol:Token storage[0]: variable "totalSupply" moved from slot 0 to slot 1 (old: 0, new: 1)
-error[storage.entry.slot.changed] contracts/Token.sol:Token storage[1]: variable "owner" moved from slot 1 to slot 0 (old: 1, new: 0)
+$ moon run src/cmd/moonupgradeguard -- check fixtures/real-solc-incompatible/old.json fixtures/real-solc-incompatible/new.json --contract Counter
+error[abi.function.outputs.changed] abi.functions["value()"].outputs: function "value()" changed its output types from "uint256" to "uint128" (old: uint256, new: uint128)
+error[storage.entry.type.changed] src/Counter.sol:Counter storage[0]: storage type of "value" changed from "uint256" to "uint128" (old: uint256, new: uint128)
 $ echo $?
 1
 ```
 
-**3. Machine-readable output.** With `--format json`, stdout is a JSON array on
-every exit code, including `2`.
+Each line gives a severity, stable code, location, explanation, and available old/new values. `Error` blocks; `Warning` needs human review; `Info` covers additions and other non-blocking changes. See the [diagnostics reference](diagnostics.en.md) for each code, and the [artifact fixtures](../fixtures/README.en.md) for real cases involving packing, mappings, structs, gaps, and transient storage.
 
-```console
-$ moon run src/cmd/moonupgradeguard -- check fixtures/abi-function-removed/old.json fixtures/abi-function-removed/new.json --format json
-[
-  {
-    "code": "abi.function.removed",
-    "severity": "error",
-    "location": {"path": "abi.functions"},
-    "message": "function \"transfer(address,uint256)\" is missing from the new ABI",
-    "oldValue": "transfer(address,uint256)"
-  }
-]
-$ echo $?
-1
-```
+Here `storage[0]` names the first variable in the normalized layout, not a Solidity source line; `old: uint256, new: uint128` identifies the concrete type change to review.
 
-**4. Everything at once.**
+## 4. Machine-readable reports and CI
+
+With `--format json`, stdout is always a JSON array of findings. `code` is useful for automation, `message` for people, and `location` plus `oldValue`/`newValue` for investigation. An error from one input also has `input: "old"` or `input: "new"`; cross-version comparison findings omit this field.
 
 ```bash
-./scripts/e2e.sh
+moon run src/cmd/moonupgradeguard -- check fixtures/real-solc-incompatible/old.json fixtures/real-solc-incompatible/new.json --contract Counter --format json
 ```
 
-It runs every pair in `fixtures/` through the binary as a real process and checks
-exit codes, expected diagnostic codes, JSON validity, and that repeated runs
-produce identical bytes, printing `e2e: N checks passed` at the end.
+For example, the storage finding contains a stable code, location, and both types. The full array also contains the ABI finding shown above:
 
-Exit codes: `0` compatible, `1` a blocking incompatibility, `2` input that could
-not be analysed, where the report still explains why. The severity and meaning of
-every code is in the [diagnostics reference](diagnostics.en.md).
+```json
+{
+  "code": "storage.entry.type.changed",
+  "severity": "error",
+  "location": {"contract": "src/Counter.sol:Counter", "path": "storage[0]"},
+  "message": "storage type of \"value\" changed from \"uint256\" to \"uint128\"",
+  "oldValue": "uint256",
+  "newValue": "uint128"
+}
+```
 
-## Use in CI
-
-Exit codes are the contract, so a check can gate a deployment pipeline
-directly:
+Let the exit code gate a CI job. Do not turn `1` or `2` into success or rely on searching the prose output:
 
 ```yaml
 - name: upgrade compatibility
   run: |
     moon build --target native
     _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe \
-      check build/old.json build/new.json --format json
+      check build/old.json build/new.json --contract Counter --format json
 ```
 
-A step that exits `1` fails the job, which is the intended behavior. Treat
-`2` as a separate failure class: it means the tool could not analyze the input,
-so a pipeline should fail loudly and fix the artifact rather than retrying.
+Replace `build/old.json`, `build/new.json`, and `Counter` with the artifacts and contract selector from your pipeline. Do not put private keys or unpublished deployment details in diagnostic examples.
 
-## Compatibility model
+## 5. Distinguish incompatibility from invalid input
 
-Every finding carries a stable code; the [diagnostics
-reference](diagnostics.en.md) lists all of them with their severity and
-meaning.
+Exit code `1` means a completed comparison found a blocking change; `2` means a file, selector, or schema could not be analyzed. Never treat `2` as compatible. Here the old artifact is truncated JSON, so the report identifies `input: "old"`:
 
-Only `Error` findings block an upgrade. `Warning` findings leave the layout or
-interface compatible but need review, and `Info` findings are additive.
-
-Storage findings:
-
-- `Error`: a variable that disappeared, a variable that moved slot or byte
-  offset, and a variable whose semantic type changed, including nested struct,
-  array, and mapping changes.
-- `Warning`: a variable renamed at the same position with the same type. The
-  bytes stay where they were, so the layout is still compatible, but the new
-  name may carry a new meaning.
-- `Info`: a variable that appears only in the new layout, so appending is
-  compatible, and a storage gap that was resized in place.
-
-A swap shows why a move is an error even though no byte is lost:
-
-```mermaid
-flowchart TB
-  subgraph oldLayout["old layout"]
-    o0["slot 0 — totalSupply"]
-    o1["slot 1 — owner"]
-  end
-  subgraph newLayout["new layout"]
-    n0["slot 0 — owner"]
-    n1["slot 1 — totalSupply"]
-  end
-  o1 -. "moved: error" .-> n0
+```console
+$ moon run src/cmd/moonupgradeguard -- check fixtures/invalid-json/old.json fixtures/invalid-json/new.json --format json
+[
+  {
+    "code": "artifact.json.invalid",
+    "severity": "error",
+    "input": "old",
+    "location": {"path": "$"},
+    "message": "artifact is not valid JSON: Unexpected end of file"
+  }
+]
+$ echo $?
+2
 ```
 
-Regular and transient storage follow the same rules. A transient finding names
-`transientStorage[...]` rather than `storage[...]`, so a report tells the two
-address spaces apart.
-
-Storage gaps use the `__gap` fixed-size array convention: the bytes a gap
-covers are unused, so a later version may spend them on new variables, or
-replace the gap wholesale, as long as whatever takes its place ends at the byte
-the gap ended at. That is what keeps everything declared after the gap in place.
-The name alone never skips a comparison: the type has to be a fixed-size array
-(a dynamic array's slot holds its length, not reserved bytes), the element type
-has to stay the same, and a gap whose end moved is reported as a move.
-
-The rename policy, and the one place where this tool differs from OpenZeppelin
-Upgrades Core by default, is recorded with the rest of the differential results
-in the [differential results](oz-differential.en.md).
-
-ABI findings:
-
-- `Error`: a signature that disappeared from functions, events, or custom
-  errors; a changed output list, because callers decode return data
-  positionally; a changed indexed layout or anonymity on an event; a
-  selector or topic that now belongs to a different signature; and a
-  `fallback`/`receive` handler replaced by a named function of the same
-  signature (or the reverse), because the two are reached differently: one
-  answers otherwise-unmatched calldata and the other is selector-dispatched.
-- `Warning`: a changed state mutability, because the selector and calldata are
-  unchanged while the call's contract changed.
-- `Info`: a new function, event, or error.
-
-## Limitations
-
-- ERC-7201 namespaced storage is not analysed, and an artifact that mentions it
-  is refused with an error rather than reported compatible. A namespace is
-  reached through a slot that its own annotation derives, so the compiler's
-  `storageLayout` — which lists state variables — does not contain its members,
-  and checking them would need the abstract syntax tree plus a recompilation
-  that this tool deliberately does not perform. Extracting a layout on its own
-  leaves no trace of a namespace at all, so pass a full artifact.
-- Constructors are not compared: their inputs affect deployment, not the
-  interface an existing proxy exposes.
-- ABI compatibility here is caller compatibility. It is not Solidity source
-  compatibility, and it says nothing about whether the new code behaves the
-  same way.
-- A passing report is a preflight check, not an audit.
-
-## Non-goals
-
-- Compiling Solidity source code.
-- Deploying or upgrading contracts.
-- Managing wallets, private keys, or RPC endpoints.
-- Replacing professional smart-contract audits.
-- Proving business-logic equivalence between contract versions.
-
-## License
-
-Apache License 2.0. The specifications behind the rules, the dependency
-licences, and the provenance of every fixture are recorded in
-[references and licensing](references.en.md).
+If a layout is missing, confirm that the saved compiler output contains `storageLayout`; in particular, do not use a Hardhat per-contract artifact in place of build info. For an ambiguous contract selection, add `--contract`. Do not bypass unknown encodings or unsupported namespaces to proceed with deployment. Authorization, initialization, business logic, and deployment still need separate review.

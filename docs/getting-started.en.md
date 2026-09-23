@@ -10,14 +10,14 @@ If a file contains several contracts, select one with `--contract NAME` or `--co
 
 ## Run a check
 
-Download the native Linux x86_64 or macOS arm64 executable from [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases/latest) and rename it to `moonupgradeguard`. To build it yourself, see the [user guide](guide.en.md#build-and-test). Run `chmod +x moonupgradeguard` first if the download is not executable.
+Download the native Linux x86_64 or macOS arm64 executable from [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases/latest) and rename it to `moonupgradeguard`. To build it yourself, see the [hands-on tutorial](guide.en.md). Run `chmod +x moonupgradeguard` first if the download is not executable.
 
 ```bash
 ./moonupgradeguard check OLD NEW --format text
 ./moonupgradeguard check OLD NEW --format json
 ```
 
-`check` compares storage layout and also compares ABI when both sides contain one. Replace `check` with `storage` or `abi` to check only that layer. See the [user guide's CLI section](guide.en.md#cli) for all options.
+`check` compares storage layout and also compares ABI when both sides contain one. Replace `check` with `storage` or `abi` to check only that layer. See the [README CLI section](../README.en.md#cli) for all options and the [hands-on tutorial](guide.en.md) for a worked example.
 
 ## Handle the result
 
