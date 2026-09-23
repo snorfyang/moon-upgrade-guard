@@ -81,7 +81,7 @@ moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 moonupgradeguard --version
 ```
 
-`--version` 输出 `moonupgradeguard 0.1.0`；端到端测试会核对它与 `moon.mod` 一致。
+`--version` 输出 `moonupgradeguard 0.2.0`；端到端测试会核对它与 `moon.mod` 一致。
 
 `--contract` 用于从包含多个合约的产物中选择一个，可以写合约名，也可以写
 `source:contract`；选项可以按任意顺序出现。`fixtures/contract-selector` 这一对样例展示了两种写法，也展示了选择哪个合约会直接决定结论。
