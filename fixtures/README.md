@@ -44,6 +44,8 @@
 | `real-hardhat-per-contract/` | Hardhat 单合约 artifact：不含存储布局 | 2 |
 | `real-complex-compatible/` | solc Standard JSON：打包字段、mapping、struct 与 transient 变量保持原位，同时缩减 `__gap` 并新增变量 | 0 |
 | `real-complex-incompatible/` | solc Standard JSON：打包偏移、mapping 值类型、struct 成员类型与 transient slot 发生变化 | 1 |
+| `real-custom-layout-compatible/` | solc 0.8.29 `layout at 42`：继承变量与派生变量共用 slot，追加变量不移动旧布局 | 0 |
+| `real-custom-layout-moved/` | solc 0.8.29 把基址从 42 改为 43：继承变量、打包变量和 mapping 的 slot 都移动 | 1 |
 | `schema-unsupported/` | 类型表使用了本版本不认识的 `encoding` | 2 |
 | `fractional-offset/` | 两边的 `offset` 都是四舍五入后为整数的小数，被当作不可用 schema 数据拒绝 | 2 |
 | `ambiguous-build-info/` | `old.json` 是包含两个带存储布局合约的 Hardhat build info | 2 |
@@ -62,6 +64,8 @@
 `real-solc-*`、`real-foundry-*` 和 `real-hardhat-*` 的旧端均由 `old.sol` 编译。兼容和不兼容用例的新端分别由对应源码编译；无布局用例的新端使用正常的旧版编译输出。上述命令只用于生成已提交的样例；运行检查器和测试无需安装这些工具或访问网络。
 
 `real-complex-*` 使用本仓库自行编写的 [`ComplexLayout` 源码](real-artifacts/sources/complex-old.sol)及其[兼容](real-artifacts/sources/complex-compatible.sol)、[不兼容](real-artifacts/sources/complex-incompatible.sol)版本（Apache-2.0）。三份 [Standard JSON 输入](real-artifacts/inputs/complex-old.json)将源码放在相同的 `src/ComplexLayout.sol` 键下，并请求 `abi`、`storageLayout` 与 `transientStorageLayout`。分别执行 `npx --yes solc@0.8.28 --standard-json < fixtures/real-artifacts/inputs/complex-old.json`（另两份输入同法），检查没有编译错误，移除 solcjs 的非 JSON 提示行，即得到两对样例中的完整编译器输出；两对的 `old.json` 相同。端到端测试同时核对这两对产物的具体诊断及退出码。生成时使用的是 solcjs 0.8.28，测试时无需安装它。
+
+`real-custom-layout-*` 的三份 [Standard JSON 输入](real-artifacts/inputs/custom-layout-old.json)包含本仓库自行编写的 `Base` 与 `Shifted` 源码（Apache-2.0），分别固定 `layout at 42`、同基址追加变量、改为 `layout at 43`。对每份输入执行 `npx --yes solc@0.8.29 --standard-json < fixtures/real-artifacts/inputs/custom-layout-old.json`（替换输入文件名），确认没有编译错误，去掉 solcjs 的非 JSON 提示行，保存完整输出。两对的 `old.json` 相同；运行测试无需安装 solc 或联网。布局预期依据 [Solidity 0.8.29 存储布局规范](https://docs.soliditylang.org/en/v0.8.29/internals/layout_in_storage.html)。
 
 ## 编译器 schema 矩阵
 

@@ -1,0 +1,11 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "src/Shifted.sol": {
+      "content": "// SPDX-License-Identifier: Apache-2.0\npragma solidity 0.8.29;\ncontract Base { uint128 public inherited; }\ncontract Shifted is Base layout at 43 {\n    uint128 public flag;\n    mapping(address => uint256) public balances;\n}\n"
+    }
+  },
+  "settings": {
+    "outputSelection": {"*": {"Shifted": ["abi", "storageLayout"]}}
+  }
+}
