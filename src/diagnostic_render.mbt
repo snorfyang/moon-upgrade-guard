@@ -6,7 +6,7 @@
 /// produce byte-identical output, whichever order the caller collected them
 /// in.
 ///
-/// JSON omits `contract`, `oldValue`, and `newValue` when they are absent
+/// JSON omits `input`, `contract`, `oldValue`, and `newValue` when absent
 /// instead of emitting `null`, so a missing key always means "not applicable"
 /// rather than "unknown".
 
@@ -35,6 +35,10 @@ pub fn render_text(diagnostics : Array[Diagnostic]) -> String {
     buf.write_char('[')
     buf.write_string(diagnostic.code.name())
     buf.write_string("] ")
+    if diagnostic.input is Some(input) {
+      buf.write_string(input.name())
+      buf.write_char(' ')
+    }
     if diagnostic.location.contract is Some(contract) {
       buf.write_string(contract)
       buf.write_char(' ')
@@ -110,6 +114,11 @@ pub fn render_json(diagnostics : Array[Diagnostic]) -> String {
     buf.write_string("    \"severity\": ")
     write_json_string(buf, diagnostic.severity.name())
     buf.write_string(",\n")
+    if diagnostic.input is Some(input) {
+      buf.write_string("    \"input\": ")
+      write_json_string(buf, input.name())
+      buf.write_string(",\n")
+    }
     buf.write_string("    \"location\": {")
     if diagnostic.location.contract is Some(contract) {
       buf.write_string("\"contract\": ")

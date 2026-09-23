@@ -31,6 +31,10 @@ paths inside the layout it compared — including `transientStorage[...]` for
 the transient namespace — and the CLI reports the file path when it cannot
 read one.
 
+The CLI adds `input: "old"` or `input: "new"` to findings produced by one
+artifact. Comparison findings and command-line argument errors omit `input`.
+When both artifacts lack an ABI, each gets its own attributed finding.
+
 This page lists 41 codes and is generated from `src/diagnostic.mbt` by `scripts/gen_diagnostics_doc.py`. CI regenerates it and fails when the committed copy differs, so a new code cannot ship undocumented.
 
 | code | severity | blocks | meaning |

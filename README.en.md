@@ -122,6 +122,8 @@ Diagnostics are sorted, so the same input always produces the same bytes. In
 `--format json` the report is an array of findings on stdout, each with a
 stable `code`, a `severity`, a `location`, a `message`, and the compared
 `oldValue`/`newValue` where they apply.
+An error produced by one input also has `input: "old"` or `input: "new"`;
+comparison findings omit this field.
 
 With `--format json`, stdout is a JSON array on every exit code, including `2`:
 a failure that never reached the analysis reports itself as a finding with a
@@ -333,10 +335,6 @@ ABI findings:
   leaves no trace of a namespace at all, so pass a full artifact.
 - Constructors are not compared: their inputs affect deployment, not the
   interface an existing proxy exposes.
-- When both artifacts are invalid, their findings share one sorted list and a
-  location does not say which artifact it came from. Compare the artifacts one
-  at a time to see which is at fault; tagging every finding with its source
-  would change the diagnostic contract, so it is left to a deliberate change.
 - ABI compatibility here is caller compatibility. It is not Solidity source
   compatibility, and it says nothing about whether the new code behaves the
   same way.

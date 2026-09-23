@@ -53,6 +53,7 @@ storage-renamed|check|text|0|storage.entry.label.changed
 storage-removed|storage|text|1|storage.entry.removed
 storage-removed|abi|text|0|
 storage-moved|storage|text|1|storage.entry.slot.changed
+storage-moved|check|json|1|storage.entry.slot.changed
 struct-change|storage|text|1|storage.entry.type.changed
 storage-gap-shrink|check|text|0|storage.gap.changed
 storage-gap-unsafe|storage|text|1|storage.entry.slot.changed
@@ -89,6 +90,7 @@ real-hardhat-per-contract|check|json|2|artifact.layout.missing
 real-complex-compatible|check|json|0|storage.gap.changed
 real-complex-incompatible|storage|json|1|storage.entry.type.changed
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
+schema-unsupported|check|json|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
 fractional-offset|check|json|2|artifact.field.invalid
 missing-file|check|text|2|
@@ -132,6 +134,33 @@ while IFS='|' read -r case command format expected code extra; do
     fail "$case $command $format: repeated run differs"
   fi
 done <<< "$cases"
+
+# Input errors identify the artifact that produced them. Findings from the
+# comparison itself have no input side.
+checks=$((checks + 1))
+if ! python3 - "$tmp/invalid-json.check.json.out" "$tmp/fractional-offset.check.json.out" "$tmp/missing-file.check.json.out" "$tmp/storage-moved.check.json.out" "$tmp/schema-unsupported.check.json.out" <<'PY'
+import json
+import sys
+
+def read(path):
+    with open(path) as stream:
+        return json.load(stream)
+
+single, both, missing, comparison, normalized = map(read, sys.argv[1:])
+if [item.get('input') for item in single] != ['old']:
+    raise SystemExit('invalid JSON was not attributed to the old input')
+if [item.get('input') for item in both] != ['old', 'new']:
+    raise SystemExit('both invalid artifacts were not distinguished')
+if [item.get('input') for item in missing] != ['new']:
+    raise SystemExit('unreadable new file was not attributed')
+if any(item.get('input') != 'old' for item in normalized):
+    raise SystemExit('normalization errors were not attributed')
+if any('input' in item for item in comparison):
+    raise SystemExit('comparison findings have an input side')
+PY
+then
+  fail "input attribution: unexpected findings"
+fi
 
 # These real solc outputs exercise nested types, packing, gaps, and transient
 # slots together. Check the individual findings, not just the overall verdict.
@@ -205,6 +234,9 @@ if ! python3 -c 'import json, sys; json.load(open(sys.argv[1]))' "$tmp/args.json
 fi
 if ! grep -q -- "cli.argument.invalid" "$tmp/args.json"; then
   fail "argument failure: output does not mention cli.argument.invalid"
+fi
+if python3 -c 'import json, sys; sys.exit(0 if any("input" in item for item in json.load(open(sys.argv[1]))) else 1)' "$tmp/args.json"; then
+  fail "argument failure: a command error has an input side"
 fi
 
 expect_exit "--help" 0 --help

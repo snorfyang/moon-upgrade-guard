@@ -44,6 +44,9 @@ LANGUAGES = {
             '位置相对于产生它的那一层所分析的值：提取层报告产物内部的路径，存储引擎报告它所比较的',
             '布局内部的路径（transient 命名空间为 `transientStorage[...]`），CLI 在无法读取文件时',
             '报告该文件路径。',
+            '',
+            'CLI 对单侧输入产生的诊断添加 `input: "old"` 或 `input: "new"`；比较产生的诊断及',
+            '命令行参数错误不带 `input`。两边都缺 ABI 时分别报告两条带来源的诊断。',
         ],
         'generated': (
             '本页共 {count} 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `src/diagnostic.mbt` '
@@ -129,6 +132,10 @@ LANGUAGES = {
             'paths inside the layout it compared — including `transientStorage[...]` for',
             'the transient namespace — and the CLI reports the file path when it cannot',
             'read one.',
+            '',
+            'The CLI adds `input: "old"` or `input: "new"` to findings produced by one',
+            'artifact. Comparison findings and command-line argument errors omit `input`.',
+            'When both artifacts lack an ABI, each gets its own attributed finding.',
         ],
         'generated': (
             'This page lists {count} codes and is generated from `src/diagnostic.mbt` by '
