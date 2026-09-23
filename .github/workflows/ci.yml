@@ -61,7 +61,7 @@ jobs:
       - name: build the CLI
         run: moon build --target native
 
-      # Every `console` block in the guides is a transcript: its commands,
+      # Every `console` block in the READMEs and guides is a transcript: its commands,
       # output, and exit codes are compared against that executable.
       - name: documented examples are current
         run: python3 scripts/check_doc_examples.py

@@ -19,4 +19,4 @@ It does not compile contracts, connect to a chain, or prove an upgrade safe in e
 - [References and licensing](references.en.md): rule sources, dependency licenses, and fixture provenance.
 - [Roadmap](../ROADMAP.md): delivered capabilities and later directions.
 
-The repository [README](../README.en.md) keeps only the project overview and shortest entry point; use this site for detailed instructions.
+The repository [README](../README.en.md) retains the full project description; this site also organizes the material by task.
