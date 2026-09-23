@@ -1,0 +1,32 @@
+site_name: MoonUpgradeGuard
+site_url: https://snorfyang.github.io/moon-upgrade-guard/
+repo_url: https://github.com/snorfyang/moon-upgrade-guard
+docs_dir: _build/pages-src
+site_dir: _build/pages
+theme:
+  name: material
+  language: zh
+markdown_extensions:
+  - toc:
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+nav:
+  - 简体中文:
+      - 概览: index.md
+      - 诊断码: diagnostics.md
+      - 差分对比: oz-differential.md
+      - 产物样例: fixtures.md
+      - 参考与许可: references.md
+      - 路线图: roadmap.md
+  - English:
+      - Overview: en/index.md
+      - Diagnostics: en/diagnostics.md
+      - Differential results: en/oz-differential.md
+      - Fixtures: en/fixtures.md
+      - References and licensing: en/references.md
