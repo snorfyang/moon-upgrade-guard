@@ -86,6 +86,8 @@ real-foundry-no-layout|check|json|2|artifact.layout.missing
 real-hardhat-compatible|check|json|0|storage.entry.added
 real-hardhat-incompatible|check|json|1|storage.entry.type.changed
 real-hardhat-per-contract|check|json|2|artifact.layout.missing
+real-complex-compatible|check|json|0|storage.gap.changed
+real-complex-incompatible|storage|json|1|storage.entry.type.changed
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
 fractional-offset|check|json|2|artifact.field.invalid
@@ -130,6 +132,37 @@ while IFS='|' read -r case command format expected code extra; do
     fail "$case $command $format: repeated run differs"
   fi
 done <<< "$cases"
+
+# These real solc outputs exercise nested types, packing, gaps, and transient
+# slots together. Check the individual findings, not just the overall verdict.
+checks=$((checks + 1))
+if ! python3 - "$tmp/real-complex-compatible.check.json.out" "$tmp/real-complex-incompatible.storage.json.out" <<'PY'
+import json
+import sys
+
+def findings(path):
+    with open(path) as stream:
+        return {(item['code'], item['location']['path']) for item in json.load(stream)}
+
+compatible = {
+    ('abi.function.added', 'abi.functions'),
+    ('storage.entry.added', 'storage[4]'),
+    ('storage.gap.changed', 'storage[4]'),
+}
+incompatible = {
+    ('storage.entry.type.changed', 'storage[0]'),
+    ('storage.entry.offset.changed', 'storage[1]'),
+    ('storage.entry.type.changed', 'storage[2]'),
+    ('storage.entry.type.changed', 'storage[3]'),
+    ('storage.entry.slot.changed', 'transientStorage[0]'),
+    ('storage.entry.slot.changed', 'transientStorage[1]'),
+}
+if findings(sys.argv[1]) != compatible or findings(sys.argv[2]) != incompatible:
+    raise SystemExit('unexpected complex layout findings')
+PY
+then
+  fail "real complex layouts: unexpected findings"
+fi
 
 # A compatible pair reports nothing at all.
 if [[ -s "$tmp/compatible.check.text.out" ]]; then
