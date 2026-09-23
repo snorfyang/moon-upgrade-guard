@@ -28,7 +28,7 @@ MoonUpgradeGuard 是一个针对 EVM 合约升级的升级前兼容性检查器�
 - **CI**：每次 push 与 pull request 都执行格式检查、类型检查、测试、生成物是否已提交
   （接口与诊断码手册）、空白检查、端到端 CLI 脚本与发布包文件清单检查。
 - **版本报告**：CLI 的 `--version` 输出版本号，端到端测试核对它与模块清单一致。
-- **原生发布产物**：[v0.1.0](https://github.com/snorfyang/moon-upgrade-guard/releases/tag/v0.1.0)
+- **原生发布产物**：[v0.2.0](https://github.com/snorfyang/moon-upgrade-guard/releases/tag/v0.2.0)
   提供 Linux x86_64 与 macOS arm64 可执行文件；两个平台均在发布 CI 中构建并通过端到端检查。
 - **诊断码手册**：一页列出全部诊断码、严重度、是否阻断与含义，由源码生成，CI 重新生成后若与提交内容不一致即失败，因此新诊断码不可能没有文档。
 - **可复现走查**：中英两版 README 都能从全新 clone 走到一次通过检查与一次失败检查，

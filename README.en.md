@@ -95,7 +95,7 @@ moonupgradeguard abi OLD NEW [--format text|json] [--contract NAME|SOURCE:NAME]
 moonupgradeguard --version
 ```
 
-`--version` prints `moonupgradeguard 0.1.0`; the end-to-end test checks that it
+`--version` prints `moonupgradeguard 0.2.0`; the end-to-end test checks that it
 matches `moon.mod`.
 
 `--contract` selects a contract from an artifact that holds several, by name or
