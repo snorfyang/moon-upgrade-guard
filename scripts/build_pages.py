@@ -15,6 +15,8 @@ PAGES = {
     'docs/index.en.md': 'en/index.md',
     'docs/getting-started.md': 'getting-started.md',
     'docs/getting-started.en.md': 'en/getting-started.md',
+    'docs/guide.md': 'guide.md',
+    'docs/guide.en.md': 'en/guide.md',
     'ROADMAP.md': 'roadmap.md',
     'docs/diagnostics.md': 'diagnostics.md',
     'docs/diagnostics.en.md': 'en/diagnostics.md',

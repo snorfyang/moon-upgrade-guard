@@ -3,7 +3,7 @@
 # 升级 fixture
 
 每个目录存放一对编译产物 `old.json` 与 `new.json`，端到端地演示一条兼容性规则。多数手写样例刻意做成 Foundry 写出的那种小型平铺 artifact：一个 `abi` 数组加一个 `storageLayout` 对象。
-`scripts/e2e.sh` 中的 CLI 端到端检查会跑遍每一对，顶层 README 的示例使用其中的前两对。
+`scripts/e2e.sh` 中的 CLI 端到端检查会跑遍每一对，[用户指南](../docs/guide.md)使用其中几对演示完整走查。
 
 每个目录都是自包含的：当某一侧未变时，它是复制而不是共享文件，因此单独看一个目录也能读懂并运行。
 

@@ -6,6 +6,8 @@ docs/diagnostics.en.md
 docs/diagnostics.md
 docs/getting-started.en.md
 docs/getting-started.md
+docs/guide.en.md
+docs/guide.md
 docs/index.en.md
 docs/index.md
 docs/oz-differential.en.md

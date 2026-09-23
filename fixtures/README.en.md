@@ -6,7 +6,7 @@ Each directory holds a pair of compiler artifacts, `old.json` and `new.json`,
 that exercises one compatibility rule end to end. Most hand-written cases are deliberately small
 flat artifacts in the shape Foundry writes: an `abi` array plus a
 `storageLayout` object. The CLI end-to-end check in `scripts/e2e.sh` runs every
-pair, and the examples in the top-level README use the first two.
+pair, and the [user guide](../docs/guide.en.md) uses several for a full walkthrough.
 
 Each directory is self-contained: when one side is unchanged, it is a copy
 rather than a shared file, so a case can be read and run on its own.

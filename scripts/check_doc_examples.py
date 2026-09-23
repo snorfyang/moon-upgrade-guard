@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Runs the `console` blocks of the READMEs against the built CLI.
+"""Runs the `console` blocks of the user guides against the built CLI.
 
 A `console` block is a transcript: a line starting with `$ ` is a command, the
 lines after it are that command's expected output, and `$ echo $?` followed by a
-number pins its exit status. Nothing else in the READMEs is executed.
+number pins its exit status. Nothing else in the guides is executed.
 
 CI runs this, so a documented command, its output, or its exit code cannot drift
-away from the binary. Both READMEs must carry the same commands in the same
+away from the binary. Both guides must carry the same commands in the same
 order; the wording around them is free to differ.
 """
 
@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BINARY = ROOT / '_build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe'
-READMES = ['README.md', 'README.en.md']
+GUIDES = ['docs/guide.md', 'docs/guide.en.md']
 BLOCK = re.compile(r'```console\n(.*?)```', re.S)
 
 # The walkthrough documents `moon run src/cmd/moonupgradeguard -- ...`, which a reader
@@ -44,7 +44,7 @@ def captured_lines(stdout: str) -> list[str]:
     """Splits captured output, dropping the one newline every line ends with.
 
     Only the captured side is adjusted: the documented lines are compared as
-    written, so a blank line that crept into the README is a mismatch rather
+    written, so a blank line that crept into a guide is a mismatch rather
     than something both sides shrug off.
     """
     lines = stdout.split('\n')
@@ -101,20 +101,20 @@ def show(expected: list[str], actual: str) -> str:
 
 def main() -> None:
     transcripts: dict[str, list[tuple[str, list[str], int | None]]] = {}
-    for name in READMES:
+    for name in GUIDES:
         text = (ROOT / name).read_text(encoding='utf-8')
         steps = []
         for index, block in enumerate(BLOCK.findall(text)):
             steps.extend(parse(block, f'{name} block {index + 1}'))
         transcripts[name] = steps
 
-    primaries = [step[0] for step in transcripts[READMES[0]]]
-    others = [step[0] for step in transcripts[READMES[1]]]
+    primaries = [step[0] for step in transcripts[GUIDES[0]]]
+    others = [step[0] for step in transcripts[GUIDES[1]]]
     if primaries != others:
-        print('the READMEs document different commands:', file=sys.stderr)
+        print('the guides document different commands:', file=sys.stderr)
         for left, right in zip(primaries, others):
             if left != right:
-                print(f'  {READMES[0]}: {left}\n  {READMES[1]}: {right}', file=sys.stderr)
+                print(f'  {GUIDES[0]}: {left}\n  {GUIDES[1]}: {right}', file=sys.stderr)
         raise SystemExit(1)
 
     failures = 0
