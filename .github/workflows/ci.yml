@@ -61,10 +61,10 @@ jobs:
       - name: build the CLI
         run: moon build --target native
 
-      # Every `console` block in the READMEs is a transcript: its commands,
+      # Every `console` block in the READMEs and guides is a transcript: its commands,
       # output, and exit codes are compared against that executable.
       - name: documented examples are current
-        run: python3 scripts/check_readme_examples.py
+        run: python3 scripts/check_doc_examples.py
 
       # Links between the language mirrors, and the shape of each pair, are easy
       # to get wrong and impossible to notice by reading one language.
