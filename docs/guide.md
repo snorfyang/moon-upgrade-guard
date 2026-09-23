@@ -14,12 +14,20 @@
 | Foundry | 使用 `forge build --extra-output storageLayout` 生成带布局的平铺 artifact，取 `out/<source>/<contract>.json`；仓库的[真实产物样例](../fixtures/README.md#真实产物矩阵)记录了固定版本的命令。 |
 | Hardhat | 在 Solidity `outputSelection` 中请求布局，取 `artifacts/build-info/*.json`；单合约 artifact 通常不含布局。本仓库提供[已验证的配置](../fixtures/real-artifacts/hardhat.config.cjs)。 |
 
-例如，solc Standard JSON 输入的 `settings` 可包含以下选择项，然后用 `solc --standard-json < input.json > old.json` 保存完整输出；新版同样编译并保存为 `new.json`。若编译器报告错误，先修正源码或配置，不能把有错误的输出当作可比较产物。
+例如，将以下完整的 solc 0.8.28 Standard JSON 输入保存为 `input.json`，然后用 `solc --standard-json < input.json > old.json` 保存完整输出；新版替换 `sources` 中的源码后同样编译并保存为 `new.json`。若编译器报告错误，先修正源码或配置，不能把有错误的输出当作可比较产物。
 
 ```json
 {
-  "outputSelection": {
-    "*": {"*": ["abi", "storageLayout"]}
+  "language": "Solidity",
+  "sources": {
+    "src/Counter.sol": {
+      "content": "// SPDX-License-Identifier: Apache-2.0\npragma solidity 0.8.28;\ncontract Counter { uint256 public value; }\n"
+    }
+  },
+  "settings": {
+    "outputSelection": {
+      "*": {"*": ["abi", "storageLayout"]}
+    }
   }
 }
 ```
@@ -33,6 +41,7 @@
 ```bash
 git clone https://github.com/snorfyang/moon-upgrade-guard.git
 cd moon-upgrade-guard
+moon update
 moon build --target native
 ```
 

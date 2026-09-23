@@ -14,12 +14,20 @@ Both versions need the target contract's `storageLayout`; retain `abi` too if yo
 | Foundry | Use `forge build --extra-output storageLayout` for a flat artifact with layout, then take `out/<source>/<contract>.json`. The [real artifact fixtures](../fixtures/README.en.md#real-artifact-matrix) record a pinned recipe. |
 | Hardhat | Request the layout in Solidity `outputSelection` and use `artifacts/build-info/*.json`; a per-contract artifact normally lacks it. The repository includes a [verified configuration](../fixtures/real-artifacts/hardhat.config.cjs). |
 
-For example, a solc Standard JSON input can include these choices in `settings`; then save the full output with `solc --standard-json < input.json > old.json`. Compile the new version likewise into `new.json`. If the compiler reports errors, fix the source or settings before treating its output as a comparable artifact.
+For example, save this complete solc 0.8.28 Standard JSON input as `input.json`, then save the full output with `solc --standard-json < input.json > old.json`. Replace the source under `sources` for the new version and compile it likewise into `new.json`. If the compiler reports errors, fix the source or settings before treating its output as a comparable artifact.
 
 ```json
 {
-  "outputSelection": {
-    "*": {"*": ["abi", "storageLayout"]}
+  "language": "Solidity",
+  "sources": {
+    "src/Counter.sol": {
+      "content": "// SPDX-License-Identifier: Apache-2.0\npragma solidity 0.8.28;\ncontract Counter { uint256 public value; }\n"
+    }
+  },
+  "settings": {
+    "outputSelection": {
+      "*": {"*": ["abi", "storageLayout"]}
+    }
   }
 }
 ```
@@ -33,6 +41,7 @@ Install [MoonBit](https://www.moonbitlang.com/), clone the repository, and run t
 ```bash
 git clone https://github.com/snorfyang/moon-upgrade-guard.git
 cd moon-upgrade-guard
+moon update
 moon build --target native
 ```
 
