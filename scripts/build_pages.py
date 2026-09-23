@@ -11,8 +11,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 STAGING = ROOT / '_build/pages-src'
 PAGES = {
-    'README.md': 'index.md',
-    'README.en.md': 'en/index.md',
+    'docs/index.md': 'index.md',
+    'docs/index.en.md': 'en/index.md',
+    'docs/getting-started.md': 'getting-started.md',
+    'docs/getting-started.en.md': 'en/getting-started.md',
     'ROADMAP.md': 'roadmap.md',
     'docs/diagnostics.md': 'diagnostics.md',
     'docs/diagnostics.en.md': 'en/diagnostics.md',
