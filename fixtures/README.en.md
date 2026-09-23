@@ -49,6 +49,8 @@ specification; no third-party artifact or fixture was copied.
 | `real-hardhat-compatible/` | Hardhat build info: append a variable | 0 |
 | `real-hardhat-incompatible/` | Hardhat build info: narrow a variable | 1 |
 | `real-hardhat-per-contract/` | Hardhat per-contract artifact: no storage layout | 2 |
+| `real-complex-compatible/` | solc Standard JSON: packed fields, a mapping, a struct, and transient variables stay in place while `__gap` shrinks and a variable is added | 0 |
+| `real-complex-incompatible/` | solc Standard JSON: packed offset, mapping value type, struct member type, and transient slots change | 1 |
 | `schema-unsupported/` | the type table uses an `encoding` this version does not know | 2 |
 | `fractional-offset/` | both sides carry an `offset` written as a fraction that rounds to an integer, refused as unusable schema data | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
@@ -73,6 +75,8 @@ The old side of every `real-solc-*`, `real-foundry-*`, and `real-hardhat-*` pair
 The compatible and incompatible new sides came from their matching sources; the missing-layout
 new side uses the normal old-version compiler output. These commands only generate the committed
 fixtures; running the checker and tests does not require the tools or network access.
+
+The `real-complex-*` pairs use this repository's own [`ComplexLayout` source](real-artifacts/sources/complex-old.sol) and its [compatible](real-artifacts/sources/complex-compatible.sol) and [incompatible](real-artifacts/sources/complex-incompatible.sol) versions (Apache-2.0). The three [Standard JSON inputs](real-artifacts/inputs/complex-old.json) use the same `src/ComplexLayout.sol` source key and request `abi`, `storageLayout`, and `transientStorageLayout`. Run `npx --yes solc@0.8.28 --standard-json < fixtures/real-artifacts/inputs/complex-old.json` (likewise for the other two inputs), check for compiler errors, and remove solcjs's non-JSON notice line to obtain the complete compiler outputs in these pairs. Both `old.json` files are identical. The end-to-end checks verify their specific findings and exit codes. Fixture generation used solcjs 0.8.28; running the checks requires neither solcjs nor network access.
 
 ## Compiler schema matrix
 
