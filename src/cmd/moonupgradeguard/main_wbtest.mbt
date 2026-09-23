@@ -40,10 +40,47 @@ test "invalid input uses exit code two" {
 }
 
 ///|
+test "both invalid artifacts identify their input" {
+  let result = analyze_text(Check, "{", "{", Json, None)
+  assert_eq(result.exit_code, 2)
+  inspect(
+    result.output,
+    content=(
+      #|[
+      #|  {
+      #|    "code": "artifact.json.invalid",
+      #|    "severity": "error",
+      #|    "input": "old",
+      #|    "location": {"path": "$"},
+      #|    "message": "artifact is not valid JSON: Unexpected end of file"
+      #|  },
+      #|  {
+      #|    "code": "artifact.json.invalid",
+      #|    "severity": "error",
+      #|    "input": "new",
+      #|    "location": {"path": "$"},
+      #|    "message": "artifact is not valid JSON: Unexpected end of file"
+      #|  }
+      #|]
+      #|
+    ),
+  )
+}
+
+///|
 test "abi command requires both artifacts to carry an ABI" {
   let result = analyze_text(Abi, empty_layout, layout_with_abi, Json, None)
   assert_eq(result.exit_code, 2)
   assert_true(result.output.contains("artifact.abi.missing"))
+  assert_true(result.output.contains("\"input\": \"old\""))
+}
+
+///|
+test "abi command identifies both missing inputs" {
+  let result = analyze_text(Abi, empty_layout, empty_layout, Json, None)
+  assert_eq(result.exit_code, 2)
+  assert_true(result.output.contains("\"input\": \"old\""))
+  assert_true(result.output.contains("\"input\": \"new\""))
 }
 
 ///|
@@ -55,6 +92,8 @@ test "storage incompatibility uses exit code one" {
   let result = analyze_text(Storage, old, new, Text, None)
   assert_eq(result.exit_code, 1)
   assert_true(result.output.contains("storage.entry.removed"))
+  let json = analyze_text(Storage, old, new, Json, None)
+  assert_true(!json.output.contains("\"input\""))
 }
 
 ///|

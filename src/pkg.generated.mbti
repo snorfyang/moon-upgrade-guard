@@ -118,6 +118,7 @@ pub fn ArtifactKind::to_repr(Self) -> @debug.Repr
 pub(all) struct Diagnostic {
   code : DiagnosticCode
   severity : Severity
+  input : InputSide?
   location : Location
   message : String
   old_value : String?
@@ -132,6 +133,7 @@ pub fn Diagnostic::op_gt(Self, Self) -> Bool
 pub fn Diagnostic::op_le(Self, Self) -> Bool
 pub fn Diagnostic::op_lt(Self, Self) -> Bool
 pub fn Diagnostic::to_repr(Self) -> @debug.Repr
+pub fn Diagnostic::with_input(Self, InputSide) -> Self
 pub fn Diagnostic::with_values(Self, old_value? : String, new_value? : String) -> Self
 pub impl Compare for Diagnostic
 
@@ -183,6 +185,15 @@ pub fn DiagnosticCode::name(Self) -> String
 pub fn DiagnosticCode::not_equal(Self, Self) -> Bool
 pub fn DiagnosticCode::severity(Self) -> Severity
 pub fn DiagnosticCode::to_repr(Self) -> @debug.Repr
+
+pub(all) enum InputSide {
+  Old
+  New
+} derive(Eq, @debug.Debug)
+pub fn InputSide::equal(Self, Self) -> Bool
+pub fn InputSide::name(Self) -> String
+pub fn InputSide::not_equal(Self, Self) -> Bool
+pub fn InputSide::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Location {
   contract : String?

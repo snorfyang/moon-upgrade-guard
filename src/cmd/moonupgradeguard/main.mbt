@@ -62,10 +62,11 @@ async fn main {
         message,
         json,
         true,
+        None,
       )
   }
-  let old_text = read_input(options.old_path, json)
-  let new_text = read_input(options.new_path, json)
+  let old_text = read_input(options.old_path, json, @guard.InputSide::Old)
+  let new_text = read_input(options.new_path, json, @guard.InputSide::New)
   let result = analyze_text(
     options.command,
     old_text,
@@ -155,8 +156,13 @@ fn[T] fail_operational(
   message : String,
   json : Bool,
   show_usage : Bool,
+  input : @guard.InputSide?,
 ) -> T {
-  let diagnostic = @guard.Diagnostic::new(code, location, message)
+  let diagnostic = match input {
+    Some(input) =>
+      @guard.Diagnostic::new(code, location, message).with_input(input)
+    None => @guard.Diagnostic::new(code, location, message)
+  }
   if json {
     emit(@guard.render_json([diagnostic]))
   } else {
@@ -170,7 +176,11 @@ fn[T] fail_operational(
 }
 
 ///|
-async fn read_input(path : String, json : Bool) -> String {
+async fn read_input(
+  path : String,
+  json : Bool,
+  input : @guard.InputSide,
+) -> String {
   @fs.read_file(path).text() catch {
     error =>
       fail_operational(
@@ -179,6 +189,7 @@ async fn read_input(path : String, json : Bool) -> String {
         "cannot read \"\{path}\": \{error}",
         json,
         false,
+        Some(input),
       )
   }
 }
@@ -225,8 +236,8 @@ fn analyze_text(
   let diagnostics : Array[@guard.Diagnostic] = []
   let (old_artifact, old_extract) = extract(old_text, contract)
   let (new_artifact, new_extract) = extract(new_text, contract)
-  append_diagnostics(diagnostics, old_extract)
-  append_diagnostics(diagnostics, new_extract)
+  append_input_diagnostics(diagnostics, old_extract, @guard.InputSide::Old)
+  append_input_diagnostics(diagnostics, new_extract, @guard.InputSide::New)
   if has_errors(diagnostics) || old_artifact is None || new_artifact is None {
     return finish(diagnostics, format, 2)
   }
@@ -244,10 +255,18 @@ fn analyze_text(
   let (new_transient, new_transient_normalize) = normalize_transient(
     new_artifact.transient,
   )
-  append_diagnostics(diagnostics, old_normalize)
-  append_diagnostics(diagnostics, new_normalize)
-  append_diagnostics(diagnostics, old_transient_normalize)
-  append_diagnostics(diagnostics, new_transient_normalize)
+  append_input_diagnostics(diagnostics, old_normalize, @guard.InputSide::Old)
+  append_input_diagnostics(diagnostics, new_normalize, @guard.InputSide::New)
+  append_input_diagnostics(
+    diagnostics,
+    old_transient_normalize,
+    @guard.InputSide::Old,
+  )
+  append_input_diagnostics(
+    diagnostics,
+    new_transient_normalize,
+    @guard.InputSide::New,
+  )
   if has_errors(diagnostics) {
     return finish(diagnostics, format, 2)
   }
@@ -267,12 +286,37 @@ fn analyze_text(
         append_diagnostics(diagnostics, @guard.compare_abi(old_abi, new_abi))
       (None, None) =>
         if command == Abi {
-          diagnostics.push(missing_abi("old and new artifacts", None))
+          diagnostics.push(
+            missing_abi(
+              "old artifact",
+              old_artifact.contract,
+              @guard.InputSide::Old,
+            ),
+          )
+          diagnostics.push(
+            missing_abi(
+              "new artifact",
+              new_artifact.contract,
+              @guard.InputSide::New,
+            ),
+          )
         }
       (None, Some(_)) =>
-        diagnostics.push(missing_abi("old artifact", old_artifact.contract))
+        diagnostics.push(
+          missing_abi(
+            "old artifact",
+            old_artifact.contract,
+            @guard.InputSide::Old,
+          ),
+        )
       (Some(_), None) =>
-        diagnostics.push(missing_abi("new artifact", new_artifact.contract))
+        diagnostics.push(
+          missing_abi(
+            "new artifact",
+            new_artifact.contract,
+            @guard.InputSide::New,
+          ),
+        )
     }
   }
   let exit_code = if has_missing_abi(diagnostics) {
@@ -286,12 +330,27 @@ fn analyze_text(
 }
 
 ///|
-fn missing_abi(subject : String, contract : String?) -> @guard.Diagnostic {
+fn missing_abi(
+  subject : String,
+  contract : String?,
+  input : @guard.InputSide,
+) -> @guard.Diagnostic {
   @guard.Diagnostic::new(
     @guard.DiagnosticCode::ArtifactAbiMissing,
     { contract, path: "abi", },
     "\{subject} does not contain an ABI required by this command",
-  )
+  ).with_input(input)
+}
+
+///|
+fn append_input_diagnostics(
+  target : Array[@guard.Diagnostic],
+  source : Array[@guard.Diagnostic],
+  input : @guard.InputSide,
+) -> Unit {
+  for diagnostic in source {
+    target.push(diagnostic.with_input(input))
+  }
 }
 
 ///|

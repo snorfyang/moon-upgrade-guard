@@ -247,12 +247,30 @@ pub(all) struct Location {
 } derive(Eq, @debug.Debug)
 
 ///|
+/// Which input produced a finding before the two artifacts were compared.
+pub(all) enum InputSide {
+  Old
+  New
+} derive(Eq, @debug.Debug)
+
+///|
+/// Stable name used in text and JSON reports.
+pub fn InputSide::name(self : InputSide) -> String {
+  match self {
+    Old => "old"
+    New => "new"
+  }
+}
+
+///|
 /// One finding.
 pub(all) struct Diagnostic {
   /// Stable rule code.
   code : DiagnosticCode
   /// Severity of this finding.
   severity : Severity
+  /// Input that produced the finding, if it came from one artifact alone.
+  input : InputSide?
   /// Where the finding was located.
   location : Location
   /// Human-readable description. Messages are single-line.
@@ -273,6 +291,7 @@ pub fn Diagnostic::new(
   {
     code,
     severity: code.severity(),
+    input: None,
     location,
     message,
     old_value: None,
@@ -281,8 +300,8 @@ pub fn Diagnostic::new(
 }
 
 ///|
-/// Total order over diagnostics: contract, path, code, severity, message, and
-/// finally the compared values. Text fields compare with MoonBit's
+/// Total order over diagnostics: contract, path, code, severity, input,
+/// message, and finally the compared values. Text fields compare with MoonBit's
 /// `String::compare`, which orders shorter strings first and then by code
 /// unit.
 ///
@@ -308,6 +327,10 @@ pub impl Compare for Diagnostic with fn compare(
   if c != 0 {
     return c
   }
+  let c = compare_optional_input(self.input, other.input)
+  if c != 0 {
+    return c
+  }
   let c = self.message.compare(other.message)
   if c != 0 {
     return c
@@ -327,6 +350,19 @@ fn compare_optional(a : String?, b : String?) -> Int {
     (None, Some(_)) => -1
     (Some(_), None) => 1
     (Some(a), Some(b)) => a.compare(b)
+  }
+}
+
+///|
+/// Input findings at the same location list the old side first.
+fn compare_optional_input(a : InputSide?, b : InputSide?) -> Int {
+  match (a, b) {
+    (None, None) => 0
+    (None, Some(_)) => -1
+    (Some(_), None) => 1
+    (Some(Old), Some(New)) => -1
+    (Some(New), Some(Old)) => 1
+    (Some(_), Some(_)) => 0
   }
 }
 
@@ -369,6 +405,15 @@ pub fn Diagnostic::with_values(
 }
 
 ///|
+/// Identifies the artifact that produced an input finding.
+pub fn Diagnostic::with_input(
+  self : Diagnostic,
+  input : InputSide,
+) -> Diagnostic {
+  { ..self, input: Some(input), }
+}
+
+///|
 pub extend Severity with Eq::{not_equal, equal}
 
 ///|
@@ -385,6 +430,12 @@ pub extend Location with Eq::{not_equal, equal}
 
 ///|
 pub extend Location with @debug.Debug::{to_repr}
+
+///|
+pub extend InputSide with Eq::{not_equal, equal}
+
+///|
+pub extend InputSide with @debug.Debug::{to_repr}
 
 ///|
 pub extend Diagnostic with Eq::{not_equal, equal}

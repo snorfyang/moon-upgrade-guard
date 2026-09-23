@@ -1,5 +1,7 @@
 MoonUpgradeGuard compares the storage layout and ABI of existing Solidity compiler artifacts before an EVM proxy upgrade. It reports deterministic diagnostics and exit codes for CI. Passing this preflight check does not prove an upgrade safe in every respect.
 
+JSON report change since v0.1.0: a finding produced by one input now includes `"input": "old"` or `"input": "new"`. Comparison findings omit the field. An `abi` check where both inputs lack an ABI now emits one finding for each input.
+
 The Linux x86_64 and macOS arm64 assets are native CLI executables. After downloading, run `chmod +x <filename>` before use if the executable bit was not preserved.
 
 Known limitations:

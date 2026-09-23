@@ -42,6 +42,7 @@ test "new uses the canonical severity and no values" {
     "bad slot",
   )
   assert_eq(diagnostic.severity, @moonupgradeguard.Severity::Error)
+  assert_eq(diagnostic.input, None)
   assert_eq(diagnostic.old_value, None)
   assert_eq(diagnostic.new_value, None)
 }
@@ -110,6 +111,26 @@ test "renderers sort findings into a canonical order" {
 }
 
 ///|
+test "input findings render old before new" {
+  let diagnostic = diag(
+    @moonupgradeguard.DiagnosticCode::ArtifactLayoutMissing,
+    None,
+    "$",
+    "no layout",
+  )
+  let old = diagnostic.with_input(@moonupgradeguard.InputSide::Old)
+  let new = diagnostic.with_input(@moonupgradeguard.InputSide::New)
+  inspect(
+    @moonupgradeguard.render_text([new, old]),
+    content=(
+      #|error[artifact.layout.missing] old $: no layout
+      #|error[artifact.layout.missing] new $: no layout
+      #|
+    ),
+  )
+}
+
+///|
 test "json output escapes strings" {
   let diagnostic = diag(
     @moonupgradeguard.DiagnosticCode::StorageEntrySlotInvalid,
@@ -138,6 +159,7 @@ test "compared values render when both sides are known" {
   let both : @moonupgradeguard.Diagnostic = {
     code: @moonupgradeguard.DiagnosticCode::StorageEntryTypeMissing,
     severity: @moonupgradeguard.Severity::Error,
+    input: None,
     location: { contract: None, path: "storage[0].type", },
     message: "type changed",
     old_value: Some("t_uint128"),
@@ -146,6 +168,7 @@ test "compared values render when both sides are known" {
   let old_only : @moonupgradeguard.Diagnostic = {
     code: @moonupgradeguard.DiagnosticCode::StorageEntryTypeMissing,
     severity: @moonupgradeguard.Severity::Error,
+    input: None,
     location: { contract: None, path: "storage[1].type", },
     message: "field removed",
     old_value: Some("t_bool"),
@@ -154,6 +177,7 @@ test "compared values render when both sides are known" {
   let new_only : @moonupgradeguard.Diagnostic = {
     code: @moonupgradeguard.DiagnosticCode::StorageEntryTypeMissing,
     severity: @moonupgradeguard.Severity::Error,
+    input: None,
     location: { contract: None, path: "storage[2].type", },
     message: "field added",
     old_value: None,
