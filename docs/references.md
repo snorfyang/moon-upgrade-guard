@@ -41,6 +41,8 @@
 - **solc**：GPL-3.0；本仓库只使用它的输出来生成 `schema-solc-*` fixture，不重新分发 solc 本身。
 - **pycryptodome**：BSD-2-Clause / Apache-2.0 双许可；用于生成 Keccak 测试中的参考摘要，
   不重新分发。
+- **Material for MkDocs 9.7.7**：MIT；仅用于构建文档站点，不进入检查器或发布包。
+- **MkDocs**：BSD-2-Clause；由文档构建依赖安装，仅用于生成静态页面。
 
 ## fixture 的来源与许可
 

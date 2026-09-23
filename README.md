@@ -1,5 +1,7 @@
 [English](README.en.md) | **简体中文**
 
+[在线文档](https://snorfyang.github.io/moon-upgrade-guard/)
+
 # MoonUpgradeGuard
 
 [![CI](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml)

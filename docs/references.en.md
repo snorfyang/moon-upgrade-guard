@@ -61,6 +61,10 @@ Tools used for development only, not part of the product:
   fixtures, and solc itself is not redistributed.
 - **pycryptodome**: BSD-2-Clause / Apache-2.0 dual licence; used to produce the
   reference digests in the Keccak tests, and not redistributed.
+- **Material for MkDocs 9.7.7**: MIT; used only to build the documentation site,
+  not included in the checker or release package.
+- **MkDocs**: BSD-2-Clause; installed with the documentation build dependencies
+  and used only to generate static pages.
 
 ## Where the fixtures come from
 
