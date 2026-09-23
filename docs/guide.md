@@ -99,6 +99,7 @@ moon run src/cmd/moonupgradeguard -- check fixtures/real-solc-incompatible/old.j
 ```yaml
 - name: upgrade compatibility
   run: |
+    moon update
     moon build --target native
     _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe \
       check build/old.json build/new.json --contract Counter --format json

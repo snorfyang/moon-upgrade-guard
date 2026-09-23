@@ -99,6 +99,7 @@ Let the exit code gate a CI job. Do not turn `1` or `2` into success or rely on 
 ```yaml
 - name: upgrade compatibility
   run: |
+    moon update
     moon build --target native
     _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe \
       check build/old.json build/new.json --contract Counter --format json
