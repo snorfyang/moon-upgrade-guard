@@ -4,6 +4,10 @@ README.md
 ROADMAP.md
 docs/diagnostics.en.md
 docs/diagnostics.md
+docs/getting-started.en.md
+docs/getting-started.md
+docs/index.en.md
+docs/index.md
 docs/oz-differential.en.md
 docs/oz-differential.md
 docs/references.en.md
