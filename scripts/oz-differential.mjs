@@ -11,7 +11,7 @@
 // `@openzeppelin/upgrades-core`, while the test suite stays offline and depends
 // on nothing but the MoonBit toolchain.
 //
-//   npm install --prefix /tmp/ozdiff @openzeppelin/upgrades-core
+//   npm install --prefix /tmp/ozdiff @openzeppelin/upgrades-core@1.46.0
 //   OZ_UPGRADES_CORE=/tmp/ozdiff/node_modules/@openzeppelin/upgrades-core \
 //     node scripts/oz-differential.mjs
 //
@@ -67,7 +67,17 @@ function runEngine(dir) {
 function runReference(dir) {
   const oldArtifact = JSON.parse(readFileSync(`${dir}/old.json`, 'utf8'));
   const newArtifact = JSON.parse(readFileSync(`${dir}/new.json`, 'utf8'));
-  if (!oldArtifact.storageLayout || !newArtifact.storageLayout) {
+  const layoutOf = artifact => {
+    if (artifact.storageLayout) return artifact.storageLayout;
+    const contracts = artifact.output?.contracts ?? artifact.contracts ?? {};
+    const layouts = Object.values(contracts).flatMap(source =>
+      Object.values(source).map(contract => contract.storageLayout).filter(Boolean),
+    );
+    return layouts.length === 1 ? layouts[0] : undefined;
+  };
+  const oldLayout = layoutOf(oldArtifact);
+  const newLayout = layoutOf(newArtifact);
+  if (!oldLayout || !newLayout) {
     return { skipped: 'no storageLayout' };
   }
   if (oldArtifact.transientStorageLayout || newArtifact.transientStorageLayout) {
@@ -76,8 +86,8 @@ function runReference(dir) {
     return { skipped: 'transient layout' };
   }
   const report = oz.getStorageUpgradeReport(
-    oldArtifact.storageLayout,
-    newArtifact.storageLayout,
+    oldLayout,
+    newLayout,
     {},
   );
   const kinds = [...new Set(report.ops.map(operation => operation.kind))].sort();

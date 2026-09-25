@@ -7,7 +7,7 @@
 
 每个目录都是自包含的：当某一侧未变时，它是复制而不是共享文件，因此单独看一个目录也能读懂并运行。
 
-来源说明：这里的源码和手写样例均属于本仓库；`real-*` 是由该源码生成的真实工具输出。手写样例的字段形态遵循 Solidity 编译器的 `storageLayout` 文档与 ABI 规范；没有复制任何第三方产物或 fixture。
+来源说明：除下面单独标注的 OpenZeppelin 样例外，这里的源码和手写样例均属于本仓库；其余 `real-*` 是由本仓库源码生成的真实工具输出。手写样例的字段形态遵循 Solidity 编译器的 `storageLayout` 文档与 ABI 规范。
 
 | 目录 | 变化 | `check` 退出码 |
 | --- | --- | --- |
@@ -46,6 +46,7 @@
 | `real-complex-incompatible/` | solc Standard JSON：打包偏移、mapping 值类型、struct 成员类型与 transient slot 发生变化 | 1 |
 | `real-custom-layout-compatible/` | solc 0.8.29 `layout at 42`：继承变量与派生变量共用 slot，追加变量不移动旧布局 | 0 |
 | `real-custom-layout-moved/` | solc 0.8.29 把基址从 42 改为 43：继承变量、打包变量和 mapping 的 slot 都移动 | 1 |
+| `real-oz-erc20-4.9.3-to-4.9.6/` | OpenZeppelin ERC20Upgradeable 两个正式版本：`astId` 变化，但继承布局、mapping 与 gap 保持不变 | 0 |
 | `schema-unsupported/` | 类型表使用了本版本不认识的 `encoding` | 2 |
 | `fractional-offset/` | 两边的 `offset` 都是四舍五入后为整数的小数，被当作不可用 schema 数据拒绝 | 2 |
 | `ambiguous-build-info/` | `old.json` 是包含两个带存储布局合约的 Hardhat build info | 2 |
@@ -66,6 +67,8 @@
 `real-complex-*` 使用本仓库自行编写的 [`ComplexLayout` 源码](real-artifacts/sources/complex-old.sol)及其[兼容](real-artifacts/sources/complex-compatible.sol)、[不兼容](real-artifacts/sources/complex-incompatible.sol)版本（Apache-2.0）。三份 [Standard JSON 输入](real-artifacts/inputs/complex-old.json)将源码放在相同的 `src/ComplexLayout.sol` 键下，并请求 `abi`、`storageLayout` 与 `transientStorageLayout`。分别执行 `npx --yes solc@0.8.28 --standard-json < fixtures/real-artifacts/inputs/complex-old.json`（另两份输入同法），检查没有编译错误，移除 solcjs 的非 JSON 提示行，即得到两对样例中的完整编译器输出；两对的 `old.json` 相同。端到端测试同时核对这两对产物的具体诊断及退出码。生成时使用的是 solcjs 0.8.28，测试时无需安装它。
 
 `real-custom-layout-*` 的三份 [Standard JSON 输入](real-artifacts/inputs/custom-layout-old.json)包含本仓库自行编写的 `Base` 与 `Shifted` 源码（Apache-2.0），分别固定 `layout at 42`、同基址追加变量、改为 `layout at 43`。对每份输入执行 `npx --yes solc@0.8.29 --standard-json < fixtures/real-artifacts/inputs/custom-layout-old.json`（替换输入文件名），确认没有编译错误，去掉 solcjs 的非 JSON 提示行，保存完整输出。两对的 `old.json` 相同；运行测试无需安装 solc 或联网。布局预期依据 [Solidity 0.8.29 存储布局规范](https://docs.soliditylang.org/en/v0.8.29/internals/layout_in_storage.html)。
+
+`real-oz-erc20-4.9.3-to-4.9.6/` 来自 OpenZeppelin Contracts Upgradeable 的 [v4.9.3](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v4.9.3) 和 [v4.9.6](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v4.9.6) `token/ERC20/ERC20Upgradeable.sol` 及其依赖，源项目以 [MIT](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v4.9.6/LICENSE) 授权。仓库没有复制 Solidity 源码；两份 fixture 是用 solcjs 0.8.20 从对应 npm 包生成的完整 Standard JSON 输出，只请求 `ERC20Upgradeable` 的 `abi` 与 `storageLayout`，保存时仅去掉 solcjs 的非 JSON 提示行。复现时分别安装 `@openzeppelin/contracts-upgradeable@4.9.3` 与 `@openzeppelin/contracts-upgradeable@4.9.6` 到独立目录；将各版本源码以 `@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol` 为键放入 Standard JSON `sources`，用对应目录的 `node_modules` 作为 `solcjs --base-path` 和 `--include-path`。两版均使用 solcjs 0.8.20。生成产物沿用上游 MIT 来源；本仓库新增的测试代码仍为 Apache-2.0，运行测试不需要 npm 或网络。
 
 ## 编译器 schema 矩阵
 

@@ -91,6 +91,7 @@ real-complex-compatible|check|json|0|storage.gap.changed
 real-complex-incompatible|storage|json|1|storage.entry.type.changed
 real-custom-layout-compatible|check|json|0|storage.entry.added
 real-custom-layout-moved|check|json|1|storage.entry.slot.changed
+real-oz-erc20-4.9.3-to-4.9.6|storage|json|0|
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 schema-unsupported|check|json|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
@@ -224,6 +225,35 @@ if findings(sys.argv[1]) != compatible or findings(sys.argv[2]) != moved:
 PY
 then
   fail "real custom layouts: unexpected findings"
+fi
+
+# Two upstream ERC20Upgradeable releases have different compiler astIds but
+# the same inherited storage, including mappings and reserved gaps.
+checks=$((checks + 1))
+if ! python3 - "fixtures/real-oz-erc20-4.9.3-to-4.9.6/old.json" "fixtures/real-oz-erc20-4.9.3-to-4.9.6/new.json" "$tmp/real-oz-erc20-4.9.3-to-4.9.6.storage.json.out" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as stream:
+    old = json.load(stream)
+with open(sys.argv[2]) as stream:
+    new = json.load(stream)
+with open(sys.argv[3]) as stream:
+    findings = json.load(stream)
+
+source = '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol'
+old_storage = old['contracts'][source]['ERC20Upgradeable']['storageLayout']['storage']
+new_storage = new['contracts'][source]['ERC20Upgradeable']['storageLayout']['storage']
+semantic = lambda entry: {key: value for key, value in entry.items() if key != 'astId'}
+if len(old_storage) != 9 or [semantic(item) for item in old_storage] != [semantic(item) for item in new_storage]:
+    raise SystemExit('upstream ERC20 storage changed unexpectedly')
+if [item['astId'] for item in old_storage] == [item['astId'] for item in new_storage]:
+    raise SystemExit('upstream ERC20 artifacts no longer test astId drift')
+if findings != []:
+    raise SystemExit('unchanged upstream ERC20 storage produced findings')
+PY
+then
+  fail "upstream ERC20 storage: unexpected findings"
 fi
 
 # A compatible pair reports nothing at all.

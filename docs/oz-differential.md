@@ -14,7 +14,7 @@
 ## 复现方式
 
 ```bash
-npm install --prefix /tmp/ozdiff @openzeppelin/upgrades-core
+npm install --prefix /tmp/ozdiff @openzeppelin/upgrades-core@1.46.0
 moon build --target native
 OZ_UPGRADES_CORE=/tmp/ozdiff/node_modules/@openzeppelin/upgrades-core \
   node scripts/oz-differential.mjs
@@ -37,14 +37,19 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - invalid-json: engine exit 2 | reference skip (error: Expected ',' or '}' after property value in JSON at position 50 (line 4 column 1)) | n/a
 - missing-file: no pair
 - namespaced-storage: engine exit 2 | reference pass | n/a
+- real-complex-compatible: engine exit 0 | reference pass | agree
+- real-complex-incompatible: engine exit 1 | reference layoutchange, typechange | agree
+- real-custom-layout-compatible: engine exit 0 | reference pass | agree
+- real-custom-layout-moved: engine exit 1 | reference layoutchange | agree
 - real-foundry-compatible: engine exit 0 | reference pass | agree
 - real-foundry-incompatible: engine exit 1 | reference typechange | agree
 - real-foundry-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
-- real-hardhat-compatible: engine exit 0 | reference skip (no storageLayout) | n/a
-- real-hardhat-incompatible: engine exit 1 | reference skip (no storageLayout) | n/a
+- real-hardhat-compatible: engine exit 0 | reference pass | agree
+- real-hardhat-incompatible: engine exit 1 | reference typechange | agree
 - real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
-- real-solc-compatible: engine exit 0 | reference skip (no storageLayout) | n/a
-- real-solc-incompatible: engine exit 1 | reference skip (no storageLayout) | n/a
+- real-oz-erc20-4.9.3-to-4.9.6: engine exit 0 | reference pass | agree
+- real-solc-compatible: engine exit 0 | reference pass | agree
+- real-solc-incompatible: engine exit 1 | reference typechange | agree
 - real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
 - schema-solc-0.5-to-0.8: engine exit 0 | reference pass | agree
 - schema-solc-0.6-to-0.8: engine exit 0 | reference pass | agree
@@ -62,7 +67,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 17 pairs, 1 divergences
+compared 26 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -78,6 +83,7 @@ compared 17 pairs, 1 divergences
 - **移动、删除与类型变化。** `storage-moved`、`storage-removed`、`struct-change` 在两者中都阻断。特别是"struct 增加成员"对两者都是类型变化，说明引擎对递归类型变化的保守解读与参考实现一致，而不是更严格。
 - **编译器版本。** 由真实 solc 0.5.17、0.6.12、0.8.28 产出的 `schema-solc-*` 各对，在两者中都通过。
 - **Foundry 真实产物。** 追加变量与缩小变量宽度的两对平铺 artifact，在两者中分别通过和阻断。
+- **真实开源版本。** OpenZeppelin Contracts Upgradeable 的 ERC20Upgradeable 4.9.3 与 4.9.6 使用相同编译器生成的布局有不同 `astId`，但继承变量、mapping 和 gap 的存储语义不变，两者均通过。
 
 ## 唯一一处刻意差异
 
@@ -93,7 +99,7 @@ compared 17 pairs, 1 divergences
 ## 对比覆盖不到的情况
 
 - `ambiguous-build-info` 与 `contract-selector` 包含多个合约，需要 `--contract`；脚本不传选择器，引擎会报告歧义。
-- `real-solc-*` 与 `real-hardhat-*` 是完整编译器外层产物；当前脚本只把顶层 `storageLayout` 交给参考实现，因此跳过它们。
+- 有多个带布局合约的编译器外层产物仍需显式选择合约；当前脚本只自动提取唯一布局。
 - `invalid-json` 与 `missing-file` 在任何布局出现之前就被拒绝。
 - `unsupported-artifact` 是 Hardhat 的单合约产物，本身不含存储布局。
 - `schema-unsupported` 使用了引擎不认识的 `encoding`。引擎拒绝该产物（退出码 `2`），因为编码决定了字节如何被读取；参考实现不校验该字段，并报告了一个无关的重命名。拒绝是刻意的选择：可能影响兼容性的未知形态，绝不能被报告为兼容。
@@ -104,4 +110,4 @@ compared 17 pairs, 1 divergences
 ## 来源说明
 
 参考实现用于理解公开行为；为对齐 gap 规则，阅读了它公开的源码（`storage/gap.ts`、
-`storage/compare.ts`）。没有复制任何源代码、测试或 fixture：本仓库中的每个 fixture 都是自行编写或生成的，脚本只对比行为。
+`storage/compare.ts`）。没有复制 Upgrades Core 的源码、测试或 fixture；真实 ERC20 案例只保存 Contracts Upgradeable 两个 MIT 授权版本的编译输出，来源见[产物样例](../fixtures/README.md)。脚本只对比行为。

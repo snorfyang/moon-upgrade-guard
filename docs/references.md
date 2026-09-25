@@ -46,14 +46,15 @@
 
 ## fixture 的来源与许可
 
-- 每个 fixture 都是为本仓库编写或生成的，没有复制任何第三方 artifact 或测试数据。
+- 除下面的 OpenZeppelin 案例外，fixture 都由本仓库自有源码编写或生成，没有复制第三方测试数据。
 - `schema-solc-*` 来自本仓库自带的一份合约源码，由 solc 0.5.17、0.6.12 与 0.8.28 编译得到；源码与生成方式记录在 [fixture 说明](../fixtures/README.md)。
-- fixture 与本仓库其余部分一样以 Apache-2.0 授权。
+- `real-oz-erc20-4.9.3-to-4.9.6` 是从 OpenZeppelin Contracts Upgradeable 4.9.3 与 4.9.6 的 MIT 授权源码生成的编译产物；未复制其 Solidity 源码。来源、生成范围与命令见 [fixture 说明](../fixtures/README.md)，上游版权与许可证全文见该案例的 [LICENSE](../fixtures/real-oz-erc20-4.9.3-to-4.9.6/LICENSE)。
+- 本仓库自行编写的 fixture 与测试代码以 Apache-2.0 授权；OpenZeppelin 生成产物保留上述 MIT 来源与声明。
 
 ## 与 OpenZeppelin Upgrades Core 的关系
 
 OpenZeppelin Upgrades Core 用于理解成熟工具的公开行为，并作为差分对比的参照；为对齐 gap 规则，
-阅读了它公开的源码。没有复制其源代码、测试或 fixture：差分脚本只对比行为，结果记录在
+阅读了它公开的源码。没有复制 Upgrades Core 的源代码、测试或 fixture；上述 Contracts Upgradeable 案例仅保存指定版本的编译输出。差分脚本只对比行为，结果记录在
 [差分对比记录](oz-differential.md)，其中列明唯一一处刻意差异。
 
 ## 项目许可证
