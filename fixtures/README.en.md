@@ -11,10 +11,10 @@ pair, and the [hands-on tutorial](../docs/guide.en.md) uses several for a full w
 Each directory is self-contained: when one side is unchanged, it is a copy
 rather than a shared file, so a case can be read and run on its own.
 
-Provenance: the source code and hand-written cases belong to this repository;
-`real-*` contains actual tool output generated from that source. Hand-written field shapes follow
-the Solidity compiler's `storageLayout` documentation and the ABI
-specification; no third-party artifact or fixture was copied.
+Provenance: except for the OpenZeppelin pair identified below, the source code
+and hand-written cases belong to this repository; the other `real-*` cases are
+tool output generated from that source. Hand-written field shapes follow the
+Solidity compiler's `storageLayout` documentation and the ABI specification.
 
 | directory | change | `check` exit |
 | --- | --- | --- |
@@ -53,6 +53,7 @@ specification; no third-party artifact or fixture was copied.
 | `real-complex-incompatible/` | solc Standard JSON: packed offset, mapping value type, struct member type, and transient slots change | 1 |
 | `real-custom-layout-compatible/` | solc 0.8.29 `layout at 42`: inherited and derived variables share a slot; an appended variable preserves the old layout | 0 |
 | `real-custom-layout-moved/` | solc 0.8.29 moves the base from 42 to 43, shifting inherited, packed, and mapping slots | 1 |
+| `real-oz-erc20-4.9.3-to-4.9.6/` | Two OpenZeppelin ERC20Upgradeable releases: `astId` changes while inherited layout, mappings, and gaps stay in place | 0 |
 | `schema-unsupported/` | the type table uses an `encoding` this version does not know | 2 |
 | `fractional-offset/` | both sides carry an `offset` written as a fraction that rounds to an integer, refused as unusable schema data | 2 |
 | `ambiguous-build-info/` | `old.json` is Hardhat build info with two contracts that both carry a storage layout | 2 |
@@ -81,6 +82,8 @@ fixtures; running the checker and tests does not require the tools or network ac
 The `real-complex-*` pairs use this repository's own [`ComplexLayout` source](real-artifacts/sources/complex-old.sol) and its [compatible](real-artifacts/sources/complex-compatible.sol) and [incompatible](real-artifacts/sources/complex-incompatible.sol) versions (Apache-2.0). The three [Standard JSON inputs](real-artifacts/inputs/complex-old.json) use the same `src/ComplexLayout.sol` source key and request `abi`, `storageLayout`, and `transientStorageLayout`. Run `npx --yes solc@0.8.28 --standard-json < fixtures/real-artifacts/inputs/complex-old.json` (likewise for the other two inputs), check for compiler errors, and remove solcjs's non-JSON notice line to obtain the complete compiler outputs in these pairs. Both `old.json` files are identical. The end-to-end checks verify their specific findings and exit codes. Fixture generation used solcjs 0.8.28; running the checks requires neither solcjs nor network access.
 
 The three [Standard JSON inputs](real-artifacts/inputs/custom-layout-old.json) for `real-custom-layout-*` contain this repository's own `Base` and `Shifted` source (Apache-2.0): `layout at 42`, an append at the same base, and a move to `layout at 43`. Run `npx --yes solc@0.8.29 --standard-json < fixtures/real-artifacts/inputs/custom-layout-old.json` (substituting each input filename), check for compiler errors, remove solcjs's non-JSON notice line, and save the complete output. Both `old.json` files are identical; the tests need neither solc nor network access. The expected slots follow the [Solidity 0.8.29 storage layout specification](https://docs.soliditylang.org/en/v0.8.29/internals/layout_in_storage.html).
+
+The `real-oz-erc20-4.9.3-to-4.9.6/` pair comes from OpenZeppelin Contracts Upgradeable [v4.9.3](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v4.9.3) and [v4.9.6](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v4.9.6), specifically `token/ERC20/ERC20Upgradeable.sol` and its imports. The upstream source is [MIT-licensed](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v4.9.6/LICENSE). No Solidity source is copied here. Both fixtures are full Standard JSON outputs generated with solcjs 0.8.20, requesting only `abi` and `storageLayout` for `ERC20Upgradeable`; only solcjs's non-JSON notice line was removed. To reproduce them, install `@openzeppelin/contracts-upgradeable@4.9.3` and `@openzeppelin/contracts-upgradeable@4.9.6` in separate directories, use each version's source under the key `@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol` in a Standard JSON input, and pass that version's `node_modules` as `solcjs --base-path` and `--include-path`. The generated artifacts retain their upstream MIT provenance; the new test code is Apache-2.0. Running the tests requires neither npm nor network access.
 
 ## Compiler schema matrix
 

@@ -68,19 +68,19 @@ Tools used for development only, not part of the product:
 
 ## Where the fixtures come from
 
-- Every fixture was written or generated for this repository; no third-party
-  artifact or test data was copied.
+- Except for the OpenZeppelin case below, fixtures were written or generated
+  from this repository's own source; no third-party test data was copied.
 - The `schema-solc-*` pairs come from a contract that lives in this repository,
   compiled by solc 0.5.17, 0.6.12, and 0.8.28; the source and the way it is
   compiled are recorded in the [fixture catalogue](../fixtures/README.en.md).
-- The fixtures are licensed under Apache-2.0, like the rest of the repository.
+- `real-oz-erc20-4.9.3-to-4.9.6` contains compiler output generated from the MIT-licensed OpenZeppelin Contracts Upgradeable 4.9.3 and 4.9.6 sources; no Solidity source was copied. Its source versions, generation scope, and commands are in the [fixture catalogue](../fixtures/README.en.md), with the upstream copyright notice and licence in its [LICENSE](../fixtures/real-oz-erc20-4.9.3-to-4.9.6/LICENSE).
+- Fixtures and test code written by this repository are Apache-2.0; the OpenZeppelin-generated artifacts retain the MIT provenance and notice above.
 
 ## Relationship to OpenZeppelin Upgrades Core
 
 OpenZeppelin Upgrades Core was used to understand the public behaviour of a mature
 tool and as the reference for the differential comparison; its published source
-was read to align the gap rule. No source code, test, or fixture was copied: the
-harness compares behaviour only, and the outcome is recorded in the
+was read to align the gap rule. No Upgrades Core source, test, or fixture was copied; the Contracts Upgradeable case above stores only versioned compiler output. The harness compares behaviour only, and the outcome is recorded in the
 [differential record](oz-differential.en.md), which lists the one deliberate
 difference.
 

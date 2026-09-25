@@ -21,7 +21,7 @@ of the reference package, while the test suite stays offline.
 ## Reproducing
 
 ```bash
-npm install --prefix /tmp/ozdiff @openzeppelin/upgrades-core
+npm install --prefix /tmp/ozdiff @openzeppelin/upgrades-core@1.46.0
 moon build --target native
 OZ_UPGRADES_CORE=/tmp/ozdiff/node_modules/@openzeppelin/upgrades-core \
   node scripts/oz-differential.mjs
@@ -44,14 +44,19 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - invalid-json: engine exit 2 | reference skip (error: Expected ',' or '}' after property value in JSON at position 50 (line 4 column 1)) | n/a
 - missing-file: no pair
 - namespaced-storage: engine exit 2 | reference pass | n/a
+- real-complex-compatible: engine exit 0 | reference pass | agree
+- real-complex-incompatible: engine exit 1 | reference layoutchange, typechange | agree
+- real-custom-layout-compatible: engine exit 0 | reference pass | agree
+- real-custom-layout-moved: engine exit 1 | reference layoutchange | agree
 - real-foundry-compatible: engine exit 0 | reference pass | agree
 - real-foundry-incompatible: engine exit 1 | reference typechange | agree
 - real-foundry-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
-- real-hardhat-compatible: engine exit 0 | reference skip (no storageLayout) | n/a
-- real-hardhat-incompatible: engine exit 1 | reference skip (no storageLayout) | n/a
+- real-hardhat-compatible: engine exit 0 | reference pass | agree
+- real-hardhat-incompatible: engine exit 1 | reference typechange | agree
 - real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
-- real-solc-compatible: engine exit 0 | reference skip (no storageLayout) | n/a
-- real-solc-incompatible: engine exit 1 | reference skip (no storageLayout) | n/a
+- real-oz-erc20-4.9.3-to-4.9.6: engine exit 0 | reference pass | agree
+- real-solc-compatible: engine exit 0 | reference pass | agree
+- real-solc-incompatible: engine exit 1 | reference typechange | agree
 - real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
 - schema-solc-0.5-to-0.8: engine exit 0 | reference pass | agree
 - schema-solc-0.6-to-0.8: engine exit 0 | reference pass | agree
@@ -69,7 +74,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 17 pairs, 1 divergences
+compared 26 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -100,6 +105,7 @@ compared 17 pairs, 1 divergences
   0.6.12, and 0.8.28, pass in both.
 - **Real Foundry artifacts.** The two flat artifacts that append a variable or
   narrow its width respectively pass and block in both tools.
+- **Real upstream releases.** ERC20Upgradeable 4.9.3 and 4.9.6 from OpenZeppelin Contracts Upgradeable produce different `astId` values with the same compiler, while inherited variables, mappings, and gaps retain their storage meaning. Both tools pass the pair.
 
 ## The one deliberate difference
 
@@ -122,8 +128,7 @@ users, so it is left as an explicit decision rather than a silent one.
 - `ambiguous-build-info` and `contract-selector` hold several contracts, so they
   need `--contract`; the harness passes no selector and the engine reports the
   ambiguity.
-- `real-solc-*` and `real-hardhat-*` are complete compiler wrappers. This harness
-  passes only top-level `storageLayout` objects to the reference, so it skips them.
+- Compiler wrappers containing several contracts with layouts still need an explicit contract selection; the harness extracts only a unique layout automatically.
 - `invalid-json` and `missing-file` are rejected before any layout exists.
 - `unsupported-artifact` is a Hardhat per-contract artifact, which carries no
   storage layout at all.
@@ -144,5 +149,4 @@ users, so it is left as an explicit decision rather than a silent one.
 
 The reference was used to understand public behaviour and its published source
 (`storage/gap.ts`, `storage/compare.ts`) was read to align the gap rule. No
-source code, test, or fixture was copied: every fixture in this repository was
-written or generated here, and the harness compares behaviour only.
+Upgrades Core source, test, or fixture was copied; the real ERC20 case stores only compiler output from two MIT-licensed Contracts Upgradeable releases, with provenance in the [fixture catalogue](../fixtures/README.en.md). The harness compares behaviour only.
