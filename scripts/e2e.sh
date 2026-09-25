@@ -89,6 +89,8 @@ real-hardhat-incompatible|check|json|1|storage.entry.type.changed
 real-hardhat-per-contract|check|json|2|artifact.layout.missing
 real-complex-compatible|check|json|0|storage.gap.changed
 real-complex-incompatible|storage|json|1|storage.entry.type.changed
+real-custom-layout-compatible|check|json|0|storage.entry.added
+real-custom-layout-moved|check|json|1|storage.entry.slot.changed
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 schema-unsupported|check|json|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
@@ -191,6 +193,37 @@ if findings(sys.argv[1]) != compatible or findings(sys.argv[2]) != incompatible:
 PY
 then
   fail "real complex layouts: unexpected findings"
+fi
+
+# Solidity 0.8.29 custom layout shifts inherited, packed, and mapping slots
+# together. A same-base append is informational; a new base blocks the upgrade.
+checks=$((checks + 1))
+if ! python3 - "$tmp/real-custom-layout-compatible.check.json.out" "$tmp/real-custom-layout-moved.check.json.out" <<'PY'
+import json
+import sys
+
+def findings(path):
+    with open(path) as stream:
+        return {
+            (item['code'], item['location']['path'],
+             item.get('oldValue'), item.get('newValue'))
+            for item in json.load(stream)
+        }
+
+compatible = {
+    ('abi.function.added', 'abi.functions', None, 'tail()'),
+    ('storage.entry.added', 'storage[3]', None, 'tail'),
+}
+moved = {
+    ('storage.entry.slot.changed', 'storage[0]', '42', '43'),
+    ('storage.entry.slot.changed', 'storage[1]', '42', '43'),
+    ('storage.entry.slot.changed', 'storage[2]', '43', '44'),
+}
+if findings(sys.argv[1]) != compatible or findings(sys.argv[2]) != moved:
+    raise SystemExit('unexpected custom layout findings')
+PY
+then
+  fail "real custom layouts: unexpected findings"
 fi
 
 # A compatible pair reports nothing at all.
