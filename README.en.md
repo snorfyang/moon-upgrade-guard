@@ -326,8 +326,9 @@ ABI findings:
 
 ## Limitations
 
-- ERC-7201 namespaced storage is not analysed, and an artifact that mentions it
-  is refused with an error rather than reported compatible. A namespace is
+- ERC-7201 namespaced storage is not analysed. An artifact whose AST contains
+  a contract struct annotated with `@custom:storage-location erc7201:` is
+  refused with an error rather than reported compatible. A namespace is
   reached through a slot that its own annotation derives, so the compiler's
   `storageLayout` — which lists state variables — does not contain its members,
   and checking them would need the abstract syntax tree plus a recompilation

@@ -143,10 +143,11 @@ users, so it is left as an explicit decision rather than a silent one.
 - Pairs that carry a transient storage layout are skipped: this harness gives
   the reference the regular layout, so its verdict says nothing about the
   transient namespace, which this engine compares separately.
-- `namespaced-storage` is refused by the engine (exit `2`). The reference passes
-  it here only because the fixture carries a single documentation string rather
-  than a real compilation AST; its namespace support reads the AST, which this
-  tool does not analyse. Both facts are recorded as limitations.
+- `namespaced-storage` is refused by the engine (exit `2`). This fixture has a
+  hand-written contract struct AST annotation; the harness gives only the
+  ordinary `storageLayout` to the reference comparator, so its `pass` does not
+  mean it checked the namespace. This tool recognizes the AST annotation but
+  does not analyse namespace members.
 - `real-oz-erc20-5.0.0-ast` has a real compiler AST with an ERC-7201 annotation on its new side, so the engine refuses it (exit `2`). The harness passes only the two ordinary `storageLayout` objects to the reference comparator; its `pass` on empty layouts does not mean the reference checked the namespace, so this pair is not comparable.
 
 ## Provenance

@@ -70,21 +70,6 @@ pub fn extract_artifact(
   select? : String,
 ) -> (Artifact?, Array[Diagnostic]) {
   let diagnostics : Array[Diagnostic] = []
-  // ERC-7201 namespaced storage is invisible in `storageLayout`: the compiler
-  // lists state variables, and a namespace is reached through a slot that its
-  // own annotation derives. Since namespace members are not in the layout, a
-  // verdict for such an artifact would not have been checked, so the artifact
-  // is refused instead. The marker is the annotation id itself, which appears
-  // in the AST that artifacts carry.
-  if text.contains("erc7201") {
-    diagnostics.push(
-      Diagnostic::new(
-        ArtifactNamespacedStorageUnsupported,
-        artifact_root(),
-        "artifact mentions ERC-7201 namespaced storage, which this version cannot locate; the compiler storageLayout does not list namespace members, so their compatibility is unknown",
-      ),
-    )
-  }
   let parsed = @json.parse(text) catch {
     err => {
       diagnostics.push(
@@ -97,6 +82,17 @@ pub fn extract_artifact(
       diagnostics.sort()
       return (None, diagnostics)
     }
+  }
+  // Namespace members are absent from `storageLayout`. Only a struct's AST
+  // annotation establishes an ERC-7201 namespace; unrelated text does not.
+  if artifact_has_erc7201_annotation(parsed) {
+    diagnostics.push(
+      Diagnostic::new(
+        ArtifactNamespacedStorageUnsupported,
+        artifact_root(),
+        "artifact mentions ERC-7201 namespaced storage, which this version cannot locate; the compiler storageLayout does not list namespace members, so their compatibility is unknown",
+      ),
+    )
   }
   // Numbers must be validated on their lexical form. The parser keeps only a
   // correctly rounded Double, so a fraction such as 3.0000000000000000000001
@@ -122,6 +118,83 @@ pub fn extract_artifact(
   let artifact = extract_from_root(parsed, select, diagnostics)
   diagnostics.sort()
   (artifact, diagnostics)
+}
+
+///|
+/// Finds ERC-7201 struct annotations in source ASTs carried by supported
+/// artifact wrappers. Without an AST, namespace storage remains invisible.
+fn artifact_has_erc7201_annotation(json : Json) -> Bool {
+  guard json is Object(fields) else { return false }
+  let flat_ast = match fields.get("ast") {
+    Some(ast) => ast_has_erc7201_annotation(ast)
+    None => false
+  }
+  if flat_ast {
+    return true
+  }
+  let source_asts = match fields.get("sources") {
+    Some(sources) => sources_have_erc7201_annotation(sources)
+    None => false
+  }
+  if source_asts {
+    return true
+  }
+  match fields.get("output") {
+    Some(Object(output)) =>
+      match output.get("sources") {
+        Some(sources) => sources_have_erc7201_annotation(sources)
+        None => false
+      }
+    _ => false
+  }
+}
+
+///|
+fn sources_have_erc7201_annotation(json : Json) -> Bool {
+  guard json is Object(sources) else { return false }
+  for source in sources.keys() {
+    match sources.get(source) {
+      Some(Object(fields)) =>
+        match fields.get("ast") {
+          Some(ast) => if ast_has_erc7201_annotation(ast) { return true }
+          None => ()
+        }
+      _ => ()
+    }
+  }
+  false
+}
+
+///|
+fn ast_has_erc7201_annotation(json : Json) -> Bool {
+  guard json is Object(ast) else { return false }
+  guard ast.get("nodes") is Some(Array(nodes)) else { return false }
+  for node in nodes {
+    guard node is Object(contract) else { continue }
+    if get_string(contract, "nodeType") != Some("ContractDefinition") {
+      continue
+    }
+    guard contract.get("nodes") is Some(Array(members)) else { continue }
+    for node in members {
+      guard node is Object(fields) else { continue }
+      if get_string(fields, "nodeType") != Some("StructDefinition") {
+        continue
+      }
+      let documentation = match fields.get("documentation") {
+        Some(String(value)) => Some(value)
+        Some(Object(doc)) => get_string(doc, "text")
+        _ => None
+      }
+      match documentation {
+        Some(value) =>
+          if value.contains("@custom:storage-location erc7201:") {
+            return true
+          }
+        None => ()
+      }
+    }
+  }
+  false
 }
 
 ///|
