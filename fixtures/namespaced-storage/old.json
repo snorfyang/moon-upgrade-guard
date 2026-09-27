@@ -99,13 +99,25 @@
     }
   },
   "ast": {
-    "nodeType": "StructDefinition",
-    "name": "MainStorage",
-    "documentation": "@custom:storage-location erc7201:example.main",
-    "members": [
+    "nodeType": "SourceUnit",
+    "nodes": [
       {
-        "nodeType": "VariableDeclaration",
-        "name": "value"
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "nodeType": "StructDefinition",
+            "name": "MainStorage",
+            "documentation": {
+              "text": "@custom:storage-location erc7201:example.main"
+            },
+            "members": [
+              {
+                "nodeType": "VariableDeclaration",
+                "name": "value"
+              }
+            ]
+          }
+        ]
       }
     ]
   }

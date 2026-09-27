@@ -441,7 +441,7 @@ test "an artifact that reports no transient layout carries none" {
 ///|
 test "ERC-7201 namespaced storage is refused, not assumed compatible" {
   let text =
-    #|{"abi":[],"storageLayout":{"storage":[],"types":{}},"ast":{"documentation":"@custom:storage-location erc7201:example.main"}}
+    #|{"abi":[],"storageLayout":{"storage":[],"types":{}},"ast":{"nodeType":"SourceUnit","nodes":[{"nodeType":"ContractDefinition","nodes":[{"nodeType":"StructDefinition","documentation":{"text":"@custom:storage-location erc7201:example.main"}}]}]}}
   let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
   // The layout itself is fine; the finding is what stops a verdict.
   assert_true(artifact is Some(_))
@@ -457,5 +457,40 @@ test "ERC-7201 namespaced storage is refused, not assumed compatible" {
       #|error[artifact.namespaced-storage.unsupported] $: artifact mentions ERC-7201 namespaced storage, which this version cannot locate; the compiler storageLayout does not list namespace members, so their compatibility is unknown
       #|
     ),
+  )
+}
+
+///|
+test "ERC-7201 text outside a contract struct annotation is not a namespace" {
+  let text =
+    #|{"abi":[{"type":"function","name":"erc7201","inputs":[],"outputs":[],"stateMutability":"view"}],"metadata":"@custom:storage-location erc7201:example.main","storageLayout":{"storage":[],"types":{}},"ast":{"nodeType":"SourceUnit","nodes":[{"nodeType":"StructDefinition","documentation":{"text":"@custom:storage-location erc7201:outside"}},{"nodeType":"ContractDefinition","nodes":[{"nodeType":"StructDefinition","documentation":{"text":"a plain erc7201 mention"}}]}]}}
+  let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
+  assert_true(artifact is Some(_))
+  assert_eq(diagnostics.length(), 0)
+}
+
+///|
+test "ERC-7201 annotation in Standard JSON source AST is refused" {
+  let text =
+    #|{"contracts":{"Token.sol":{"Token":{"abi":[],"storageLayout":{"storage":[],"types":{}}}}},"sources":{"Token.sol":{"ast":{"nodeType":"SourceUnit","nodes":[{"nodeType":"ContractDefinition","nodes":[{"nodeType":"StructDefinition","documentation":{"text":"@custom:storage-location erc7201:example.main"}}]}]}}}}
+  let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
+  assert_true(artifact is Some(_))
+  assert_eq(diagnostics.length(), 1)
+  assert_eq(
+    diagnostics[0].code,
+    @moonupgradeguard.DiagnosticCode::ArtifactNamespacedStorageUnsupported,
+  )
+}
+
+///|
+test "ERC-7201 annotation in build info source AST is refused" {
+  let text =
+    #|{"output":{"contracts":{"Token.sol":{"Token":{"abi":[],"storageLayout":{"storage":[],"types":{}}}}},"sources":{"Token.sol":{"ast":{"nodeType":"SourceUnit","nodes":[{"nodeType":"ContractDefinition","nodes":[{"nodeType":"StructDefinition","documentation":{"text":"@custom:storage-location erc7201:example.main"}}]}]}}}}}
+  let (artifact, diagnostics) = @moonupgradeguard.extract_artifact(text)
+  assert_true(artifact is Some(_))
+  assert_eq(diagnostics.length(), 1)
+  assert_eq(
+    diagnostics[0].code,
+    @moonupgradeguard.DiagnosticCode::ArtifactNamespacedStorageUnsupported,
   )
 }

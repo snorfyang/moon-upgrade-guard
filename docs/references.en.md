@@ -29,11 +29,12 @@ where a file in this repository came from and under which licence it is used.
   namespaces and assembly-assigned slots such as [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967)
   are both outside what the compiler's `storageLayout` can see, but they differ in
   detectability here. ERC-7201 requires an `erc7201` annotation in the source, and an
-  artifact that carries the AST keeps that marker in its text; the tool scans for it
-  and reports `artifact.namespaced-storage.unsupported` — an Error that blocks the
-  upgrade — on an artifact that carries it, instead of reporting compatible. The scan
-  only sees artifact text: a bare `storageLayout` object or a flattened artifact
-  without the AST carries no marker, so this check does not fire there either.
+  artifact that carries the AST keeps that annotation; the tool checks contract
+  structs in the AST for `@custom:storage-location erc7201:` and reports
+  `artifact.namespaced-storage.unsupported` — an Error that blocks the upgrade —
+  instead of reporting compatible. An ordinary string mentioning `erc7201` does
+  not trigger this check; a bare `storageLayout` object or an artifact without
+  the AST cannot expose the annotation, so this check does not fire there either.
   EIP-1967, like every slot written by assembly, leaves no detectable marker in
   compiler output, so it is **undetectable and not validated** — an artifact that
   omits such slots can be reported compatible, and confirming them is the reader's

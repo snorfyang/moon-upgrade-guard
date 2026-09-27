@@ -20,8 +20,8 @@
 - **命名空间与非结构化 slot**：[ERC-7201](https://eips.ethereum.org/EIPS/eip-7201) 的命名空间与
   [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967) 这类由汇编写入的 slot 都不在编译器
   `storageLayout` 的可见范围内，但两者在本工具中的可检测性不同。ERC-7201 要求源码携带
-  `erc7201` 标注，该标注会留在带 AST 的产物文本里；本工具扫描这一标记，对携带它的产物报
-  `artifact.namespaced-storage.unsupported`（Error，会阻断升级），而不是判定兼容。该检查只看得见产物文本：裸 `storageLayout` 对象或不带 AST 的平铺产物不携带标记，因此连这一检查也不会触发。
+  `erc7201` 标注，该标注会留在带 AST 的产物里；本工具检查 AST 中合约内结构体的 `@custom:storage-location erc7201:` 标注，对携带它的产物报
+  `artifact.namespaced-storage.unsupported`（Error，会阻断升级），而不是判定兼容。普通字符串中的 `erc7201` 不触发该检查；裸 `storageLayout` 对象或不带 AST 的产物看不见标注，因此连这一检查也不会触发。
   EIP-1967 与一切由汇编写入的 slot 不会在编译产物中留下可检测标记，因此**不可检测、不参与验证**——省略了这类 slot 的产物可能被判定为兼容，确认它们是使用者的责任。两者的共同前提是：
   产物文本里看不见的存储，本工具无法验证。
 - **Keccak-256**：实现遵循 Keccak 规范（Keccak-f[1600]，Ethereum 使用的 `0x01` 填充，而非 SHA-3
