@@ -55,6 +55,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - real-hardhat-incompatible: engine exit 1 | reference typechange | agree
 - real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
 - real-oz-erc20-4.9.3-to-4.9.6: engine exit 0 | reference pass | agree
+- real-oz-erc20-4.9.3-to-5.0.0: engine exit 1 | reference delete | agree
 - real-solc-compatible: engine exit 0 | reference pass | agree
 - real-solc-incompatible: engine exit 1 | reference typechange | agree
 - real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
@@ -74,7 +75,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 26 pairs, 1 divergences
+compared 27 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -106,6 +107,7 @@ compared 26 pairs, 1 divergences
 - **Real Foundry artifacts.** The two flat artifacts that append a variable or
   narrow its width respectively pass and block in both tools.
 - **Real upstream releases.** ERC20Upgradeable 4.9.3 and 4.9.6 from OpenZeppelin Contracts Upgradeable produce different `astId` values with the same compiler, while inherited variables, mappings, and gaps retain their storage meaning. Both tools pass the pair.
+- **Major-version upgrade.** Old ordinary storage variables disappear from the layout between ERC20Upgradeable 4.9.3 and 5.0.0, so both tools block the pair; comparing these two `storageLayout` objects does not validate the new ERC-7201 namespace.
 
 ## The one deliberate difference
 
@@ -149,4 +151,4 @@ users, so it is left as an explicit decision rather than a silent one.
 
 The reference was used to understand public behaviour and its published source
 (`storage/gap.ts`, `storage/compare.ts`) was read to align the gap rule. No
-Upgrades Core source, test, or fixture was copied; the real ERC20 case stores only compiler output from two MIT-licensed Contracts Upgradeable releases, with provenance in the [fixture catalogue](../fixtures/README.en.md). The harness compares behaviour only.
+Upgrades Core source, test, or fixture was copied; the real ERC20 cases store only compiler output from MIT-licensed Contracts Upgradeable releases, with provenance in the [fixture catalogue](../fixtures/README.en.md). The harness compares behaviour only.

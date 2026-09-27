@@ -47,6 +47,7 @@
 | `real-custom-layout-compatible/` | solc 0.8.29 `layout at 42`：继承变量与派生变量共用 slot，追加变量不移动旧布局 | 0 |
 | `real-custom-layout-moved/` | solc 0.8.29 把基址从 42 改为 43：继承变量、打包变量和 mapping 的 slot 都移动 | 1 |
 | `real-oz-erc20-4.9.3-to-4.9.6/` | OpenZeppelin ERC20Upgradeable 两个正式版本：`astId` 变化，但继承布局、mapping 与 gap 保持不变 | 0 |
+| `real-oz-erc20-4.9.3-to-5.0.0/` | OpenZeppelin ERC20Upgradeable 跨大版本：旧版普通存储变量从新版布局消失，部分 ABI 条目也被移除 | 1 |
 | `schema-unsupported/` | 类型表使用了本版本不认识的 `encoding` | 2 |
 | `fractional-offset/` | 两边的 `offset` 都是四舍五入后为整数的小数，被当作不可用 schema 数据拒绝 | 2 |
 | `ambiguous-build-info/` | `old.json` 是包含两个带存储布局合约的 Hardhat build info | 2 |
@@ -69,6 +70,8 @@
 `real-custom-layout-*` 的三份 [Standard JSON 输入](real-artifacts/inputs/custom-layout-old.json)包含本仓库自行编写的 `Base` 与 `Shifted` 源码（Apache-2.0），分别固定 `layout at 42`、同基址追加变量、改为 `layout at 43`。对每份输入执行 `npx --yes solc@0.8.29 --standard-json < fixtures/real-artifacts/inputs/custom-layout-old.json`（替换输入文件名），确认没有编译错误，去掉 solcjs 的非 JSON 提示行，保存完整输出。两对的 `old.json` 相同；运行测试无需安装 solc 或联网。布局预期依据 [Solidity 0.8.29 存储布局规范](https://docs.soliditylang.org/en/v0.8.29/internals/layout_in_storage.html)。
 
 `real-oz-erc20-4.9.3-to-4.9.6/` 来自 OpenZeppelin Contracts Upgradeable 的 [v4.9.3](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v4.9.3) 和 [v4.9.6](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v4.9.6) `token/ERC20/ERC20Upgradeable.sol` 及其依赖，源项目以 [MIT](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v4.9.6/LICENSE) 授权。仓库没有复制 Solidity 源码；两份 fixture 是用 solcjs 0.8.20 从对应 npm 包生成的完整 Standard JSON 输出，只请求 `ERC20Upgradeable` 的 `abi` 与 `storageLayout`，保存时仅去掉 solcjs 的非 JSON 提示行。复现时分别安装 `@openzeppelin/contracts-upgradeable@4.9.3` 与 `@openzeppelin/contracts-upgradeable@4.9.6` 到独立目录；将各版本源码以 `@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol` 为键放入 Standard JSON `sources`，用对应目录的 `node_modules` 作为 `solcjs --base-path` 和 `--include-path`。两版均使用 solcjs 0.8.20。生成产物沿用上游 MIT 来源；本仓库新增的测试代码仍为 Apache-2.0，运行测试不需要 npm 或网络。
+
+`real-oz-erc20-4.9.3-to-5.0.0/` 的旧端是上述 v4.9.3 产物的独立副本；新端来自 OpenZeppelin Contracts Upgradeable [v5.0.0](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/tree/v5.0.0) 的同名合约及其依赖，同样遵循上游 [MIT](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.0.0/LICENSE) 许可。复现新端时，在独立目录安装 `@openzeppelin/contracts-upgradeable@5.0.0`、`@openzeppelin/contracts@5.0.0` 和 `solc@0.8.20`，使用相同的源码键与 `abi`、`storageLayout` 输出选择，并用该目录的 `node_modules` 作为 `solcjs --base-path` 和 `--include-path`；仅去掉 stdout 的非 JSON 提示行，未改写编译器输出字段。没有复制 Solidity 源码。新布局的普通 `storage` 为空，旧变量删除及 ABI 移除使 `check` 以 1 退出。由于这两份产物没有 AST，测试**不能**验证 v5 的 ERC-7201 命名空间成员；它只验证这次跨大版本升级被阻断。运行测试不需要 npm 或网络。
 
 ## 编译器 schema 矩阵
 

@@ -49,6 +49,7 @@
 - 除下面的 OpenZeppelin 案例外，fixture 都由本仓库自有源码编写或生成，没有复制第三方测试数据。
 - `schema-solc-*` 来自本仓库自带的一份合约源码，由 solc 0.5.17、0.6.12 与 0.8.28 编译得到；源码与生成方式记录在 [fixture 说明](../fixtures/README.md)。
 - `real-oz-erc20-4.9.3-to-4.9.6` 是从 OpenZeppelin Contracts Upgradeable 4.9.3 与 4.9.6 的 MIT 授权源码生成的编译产物；未复制其 Solidity 源码。来源、生成范围与命令见 [fixture 说明](../fixtures/README.md)，上游版权与许可证全文见该案例的 [LICENSE](../fixtures/real-oz-erc20-4.9.3-to-4.9.6/LICENSE)。
+- `real-oz-erc20-4.9.3-to-5.0.0` 是同一合约的跨大版本编译产物，来源于 OpenZeppelin Contracts Upgradeable 4.9.3 与 5.0.0 的 MIT 授权源码；未复制 Solidity 源码。生成方式、可检测范围及局限见 [fixture 说明](../fixtures/README.md)，许可证全文见该案例的 [LICENSE](../fixtures/real-oz-erc20-4.9.3-to-5.0.0/LICENSE)。
 - 本仓库自行编写的 fixture 与测试代码以 Apache-2.0 授权；OpenZeppelin 生成产物保留上述 MIT 来源与声明。
 
 ## 与 OpenZeppelin Upgrades Core 的关系

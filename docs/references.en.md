@@ -74,6 +74,7 @@ Tools used for development only, not part of the product:
   compiled by solc 0.5.17, 0.6.12, and 0.8.28; the source and the way it is
   compiled are recorded in the [fixture catalogue](../fixtures/README.en.md).
 - `real-oz-erc20-4.9.3-to-4.9.6` contains compiler output generated from the MIT-licensed OpenZeppelin Contracts Upgradeable 4.9.3 and 4.9.6 sources; no Solidity source was copied. Its source versions, generation scope, and commands are in the [fixture catalogue](../fixtures/README.en.md), with the upstream copyright notice and licence in its [LICENSE](../fixtures/real-oz-erc20-4.9.3-to-4.9.6/LICENSE).
+- `real-oz-erc20-4.9.3-to-5.0.0` contains compiler output for the same contract across major releases, generated from MIT-licensed OpenZeppelin Contracts Upgradeable 4.9.3 and 5.0.0 sources; no Solidity source was copied. Its generation method and detection limits are in the [fixture catalogue](../fixtures/README.en.md), with the upstream copyright notice and licence in its [LICENSE](../fixtures/real-oz-erc20-4.9.3-to-5.0.0/LICENSE).
 - Fixtures and test code written by this repository are Apache-2.0; the OpenZeppelin-generated artifacts retain the MIT provenance and notice above.
 
 ## Relationship to OpenZeppelin Upgrades Core
