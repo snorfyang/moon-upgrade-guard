@@ -92,6 +92,7 @@ real-complex-incompatible|storage|json|1|storage.entry.type.changed
 real-custom-layout-compatible|check|json|0|storage.entry.added
 real-custom-layout-moved|check|json|1|storage.entry.slot.changed
 real-oz-erc20-4.9.3-to-4.9.6|storage|json|0|
+real-oz-erc20-4.9.3-to-5.0.0|check|json|1|storage.entry.removed
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 schema-unsupported|check|json|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
@@ -254,6 +255,36 @@ if findings != []:
 PY
 then
   fail "upstream ERC20 storage: unexpected findings"
+fi
+
+# The 5.0.0 release moves ERC20 storage out of the compiler's ordinary layout.
+# This ABI-and-layout-only artifact cannot expose its ERC-7201 namespace, but
+# the removed 4.9.3 variables and ABI entries must still block this upgrade.
+checks=$((checks + 1))
+if ! python3 - "fixtures/real-oz-erc20-4.9.3-to-5.0.0/old.json" "fixtures/real-oz-erc20-4.9.3-to-5.0.0/new.json" "$tmp/real-oz-erc20-4.9.3-to-5.0.0.check.json.out" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as stream:
+    old = json.load(stream)
+with open(sys.argv[2]) as stream:
+    new = json.load(stream)
+with open(sys.argv[3]) as stream:
+    findings = json.load(stream)
+
+source = '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol'
+old_storage = old['contracts'][source]['ERC20Upgradeable']['storageLayout']['storage']
+new_storage = new['contracts'][source]['ERC20Upgradeable']['storageLayout']['storage']
+removed = {(item['code'], item.get('oldValue')) for item in findings}
+if len(old_storage) != 9 or new_storage != []:
+    raise SystemExit('upstream ERC20 major-release layouts changed unexpectedly')
+if ('storage.entry.removed', '_balances') not in removed:
+    raise SystemExit('removed ERC20 balance mapping was not reported')
+if ('abi.function.removed', 'increaseAllowance(address,uint256)') not in removed:
+    raise SystemExit('removed ERC20 ABI function was not reported')
+PY
+then
+  fail "upstream ERC20 major upgrade: unexpected findings"
 fi
 
 # A compatible pair reports nothing at all.

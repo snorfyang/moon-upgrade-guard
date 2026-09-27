@@ -48,6 +48,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - real-hardhat-incompatible: engine exit 1 | reference typechange | agree
 - real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
 - real-oz-erc20-4.9.3-to-4.9.6: engine exit 0 | reference pass | agree
+- real-oz-erc20-4.9.3-to-5.0.0: engine exit 1 | reference delete | agree
 - real-solc-compatible: engine exit 0 | reference pass | agree
 - real-solc-incompatible: engine exit 1 | reference typechange | agree
 - real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
@@ -67,7 +68,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - transient-removed: engine exit 1 | reference skip (transient layout) | n/a
 - unsupported-artifact: engine exit 2 | reference skip (no storageLayout) | n/a
 
-compared 26 pairs, 1 divergences
+compared 27 pairs, 1 divergences
   storage-renamed: engine exit 0 vs reference rename
 ```
 
@@ -84,6 +85,7 @@ compared 26 pairs, 1 divergences
 - **编译器版本。** 由真实 solc 0.5.17、0.6.12、0.8.28 产出的 `schema-solc-*` 各对，在两者中都通过。
 - **Foundry 真实产物。** 追加变量与缩小变量宽度的两对平铺 artifact，在两者中分别通过和阻断。
 - **真实开源版本。** OpenZeppelin Contracts Upgradeable 的 ERC20Upgradeable 4.9.3 与 4.9.6 使用相同编译器生成的布局有不同 `astId`，但继承变量、mapping 和 gap 的存储语义不变，两者均通过。
+- **跨大版本升级。** ERC20Upgradeable 4.9.3 到 5.0.0 的旧版普通存储变量在新版布局中消失，两者均阻断；仅比较这两个 `storageLayout` 不代表已验证新版 ERC-7201 命名空间。
 
 ## 唯一一处刻意差异
 
@@ -110,4 +112,4 @@ compared 26 pairs, 1 divergences
 ## 来源说明
 
 参考实现用于理解公开行为；为对齐 gap 规则，阅读了它公开的源码（`storage/gap.ts`、
-`storage/compare.ts`）。没有复制 Upgrades Core 的源码、测试或 fixture；真实 ERC20 案例只保存 Contracts Upgradeable 两个 MIT 授权版本的编译输出，来源见[产物样例](../fixtures/README.md)。脚本只对比行为。
+`storage/compare.ts`）。没有复制 Upgrades Core 的源码、测试或 fixture；真实 ERC20 案例只保存 Contracts Upgradeable MIT 授权版本的编译输出，来源见[产物样例](../fixtures/README.md)。脚本只对比行为。
