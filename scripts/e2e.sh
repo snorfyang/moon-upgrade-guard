@@ -93,6 +93,7 @@ real-custom-layout-compatible|check|json|0|storage.entry.added
 real-custom-layout-moved|check|json|1|storage.entry.slot.changed
 real-oz-erc20-4.9.3-to-4.9.6|storage|json|0|
 real-oz-erc20-4.9.3-to-5.0.0|check|json|1|storage.entry.removed
+real-oz-erc20-5.0.0-ast|check|json|2|artifact.namespaced-storage.unsupported
 schema-unsupported|check|text|2|storage.type.encoding.unsupported
 schema-unsupported|check|json|2|storage.type.encoding.unsupported
 fractional-offset|check|text|2|artifact.field.invalid
@@ -285,6 +286,39 @@ if ('abi.function.removed', 'increaseAllowance(address,uint256)') not in removed
 PY
 then
   fail "upstream ERC20 major upgrade: unexpected findings"
+fi
+
+# The same real 5.0.0 contract carries an ERC-7201 annotation only when its
+# compiler AST is requested. Refuse the AST-bearing side instead of treating
+# its empty ordinary storage layout as evidence of compatibility.
+checks=$((checks + 1))
+if ! python3 - "fixtures/real-oz-erc20-5.0.0-ast/old.json" "fixtures/real-oz-erc20-5.0.0-ast/new.json" "$tmp/real-oz-erc20-5.0.0-ast.check.json.out" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1]) as stream:
+    old = json.load(stream)
+with open(sys.argv[2]) as stream:
+    new = json.load(stream)
+with open(sys.argv[3]) as stream:
+    findings = json.load(stream)
+
+source = '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol'
+if 'ast' in old['sources'][source]:
+    raise SystemExit('old ERC20 artifact unexpectedly includes an AST')
+nodes = new['sources'][source]['ast']['nodes']
+contracts = [node for node in nodes if node['nodeType'] == 'ContractDefinition']
+annotations = [node['documentation']['text'] for contract in contracts
+               for node in contract['nodes'] if node['nodeType'] == 'StructDefinition']
+if '@custom:storage-location erc7201:openzeppelin.storage.ERC20' not in annotations:
+    raise SystemExit('real ERC20 namespace annotation is missing from the AST')
+if [(item['code'], item.get('input')) for item in findings] != [
+    ('artifact.namespaced-storage.unsupported', 'new')
+]:
+    raise SystemExit('AST-bearing ERC20 artifact was not refused on the new side')
+PY
+then
+  fail "upstream ERC20 namespace AST: unexpected findings"
 fi
 
 # A compatible pair reports nothing at all.

@@ -49,6 +49,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
 - real-oz-erc20-4.9.3-to-4.9.6: engine exit 0 | reference pass | agree
 - real-oz-erc20-4.9.3-to-5.0.0: engine exit 1 | reference delete | agree
+- real-oz-erc20-5.0.0-ast: engine exit 2 | reference pass | n/a
 - real-solc-compatible: engine exit 0 | reference pass | agree
 - real-solc-incompatible: engine exit 1 | reference typechange | agree
 - real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
@@ -108,6 +109,7 @@ compared 27 pairs, 1 divergences
 - 带有 transient storage 布局的样例对会被跳过：脚本把常规布局交给参考实现，所以它的结论与
   transient 命名空间无关，而引擎会单独比较后者。
 - `namespaced-storage` 被引擎拒绝（退出码 `2`）。参考实现在这里通过，只是因为该 fixture 携带的是一行文档字符串而不是真实的编译 AST；它的命名空间支持读取 AST，而本工具不分析 AST。这两点都已记录为已知限制。
+- `real-oz-erc20-5.0.0-ast` 的新端含真实编译器 AST 和 ERC-7201 标注，引擎因此拒绝（退出码 `2`）；脚本只把两侧普通 `storageLayout` 交给参考比较器，空布局的 `pass` 不代表参考实现检查了命名空间，故不计入可比较案例。
 
 ## 来源说明
 
