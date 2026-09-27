@@ -56,6 +56,7 @@ engine:    _build/native/debug/build/cmd/moonupgradeguard/moonupgradeguard.exe
 - real-hardhat-per-contract: engine exit 2 | reference skip (no storageLayout) | n/a
 - real-oz-erc20-4.9.3-to-4.9.6: engine exit 0 | reference pass | agree
 - real-oz-erc20-4.9.3-to-5.0.0: engine exit 1 | reference delete | agree
+- real-oz-erc20-5.0.0-ast: engine exit 2 | reference pass | n/a
 - real-solc-compatible: engine exit 0 | reference pass | agree
 - real-solc-incompatible: engine exit 1 | reference typechange | agree
 - real-solc-no-layout: engine exit 2 | reference skip (no storageLayout) | n/a
@@ -146,6 +147,7 @@ users, so it is left as an explicit decision rather than a silent one.
   it here only because the fixture carries a single documentation string rather
   than a real compilation AST; its namespace support reads the AST, which this
   tool does not analyse. Both facts are recorded as limitations.
+- `real-oz-erc20-5.0.0-ast` has a real compiler AST with an ERC-7201 annotation on its new side, so the engine refuses it (exit `2`). The harness passes only the two ordinary `storageLayout` objects to the reference comparator; its `pass` on empty layouts does not mean the reference checked the namespace, so this pair is not comparable.
 
 ## Provenance
 
