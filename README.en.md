@@ -55,6 +55,19 @@ the same code is usable as a library without the CLI.
 The analysis itself makes no network calls. A cold module cache is populated
 from the MoonBit registry before the first build, as with any MoonBit project.
 
+## Installation
+
+As a library:
+
+```bash
+moon add snorfyang/moonupgradeguard
+```
+
+See the package page at <https://mooncakes.io/docs/snorfyang/moonupgradeguard>.
+The native CLI can be built from source (see the next section), or downloaded as
+an end-to-end-checked executable from
+[GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases).
+
 ## Build and test
 
 ```bash

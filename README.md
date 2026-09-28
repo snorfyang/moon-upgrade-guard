@@ -46,6 +46,16 @@ flowchart LR
 分析本身不发起任何网络请求。与任何 MoonBit 项目一样，首次构建前需要从 MoonBit
 注册表填充模块缓存。
 
+## 安装
+
+作为库使用：
+
+```bash
+moon add snorfyang/moonupgradeguard
+```
+
+包页面见 <https://mooncakes.io/docs/snorfyang/moonupgradeguard>。原生命令行可从源码构建（见下节），或直接下载 [GitHub Releases](https://github.com/snorfyang/moon-upgrade-guard/releases) 中经过端到端检查的可执行文件。
+
 ## 构建与测试
 
 ```bash
