@@ -48,8 +48,8 @@ the same code is usable as a library without the CLI.
 
 ## Requirements
 
-- The [MoonBit](https://www.moonbitlang.com/) toolchain, including the native
-  backend that the CLI is built with.
+- The [MoonBit](https://www.moonbitlang.com/) toolchain with `moonc` 0.10.14 or
+  newer, including the native backend that the CLI is built with.
 - Python 3 for `scripts/e2e.sh`, which uses it only to validate JSON output.
 
 The analysis itself makes no network calls. A cold module cache is populated

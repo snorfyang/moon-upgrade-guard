@@ -39,8 +39,8 @@ flowchart LR
 
 ## 环境要求
 
-- [MoonBit](https://www.moonbitlang.com/) 工具链，包含构建命令行所需的
-  native 后端。
+- [MoonBit](https://www.moonbitlang.com/) 工具链，`moonc` 版本不低于 0.10.14，
+  并包含构建命令行所需的 native 后端。
 - Python 3，仅用于 `scripts/e2e.sh` 校验 JSON 输出。
 
 分析本身不发起任何网络请求。与任何 MoonBit 项目一样，首次构建前需要从 MoonBit
