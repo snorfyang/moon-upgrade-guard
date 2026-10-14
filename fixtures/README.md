@@ -17,6 +17,7 @@
 | `storage-renamed/` | `owner` 在同一位置、类型不变的前提下重命名为 `admin` | 0 |
 | `storage-moved/` | `totalSupply` 与 `owner` 交换 slot | 1 |
 | `struct-change/` | `Config` struct 增加一个成员 | 1 |
+| `struct-members-missing/` | `struct` 类型缺少 `members` 字段，输入被拒绝 | 2 |
 | `storage-gap-shrink/` | 基础合约把 `__gap` 的一个 slot 用于新变量，gap 缩小但结束位置不变 | 0 |
 | `transient-moved/` | transient 变量在 slot 之间移动 | 1 |
 | `transient-append/` | 新版本新增一个 transient 变量 | 0 |

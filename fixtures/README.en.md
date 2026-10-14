@@ -24,6 +24,7 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `storage-renamed/` | `owner` is renamed to `admin` at the same position with the same type | 0 |
 | `storage-moved/` | `totalSupply` and `owner` swap slots | 1 |
 | `struct-change/` | the `Config` struct gains a member | 1 |
+| `struct-members-missing/` | a `struct` type is missing its required `members` field, so the input is rejected | 2 |
 | `storage-gap-shrink/` | a base contract spends one slot of its `__gap` on a new variable, so the gap shrinks but still ends where it ended | 0 |
 | `transient-moved/` | a transient variable moves between slots | 1 |
 | `transient-append/` | the new version adds a transient variable | 0 |

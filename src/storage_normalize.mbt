@@ -269,7 +269,18 @@ fn normalize_type(
               }
               StaticArray(base, length)
             }
-            None => Value
+            None => {
+              if label.has_prefix("struct ") {
+                missing_field(
+                  "members",
+                  StorageTypeFieldMissing,
+                  location,
+                  diagnostics,
+                )
+                return None
+              }
+              Value
+            }
           }
       }
     "mapping" => {

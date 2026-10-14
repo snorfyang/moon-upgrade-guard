@@ -1,0 +1,13 @@
+{
+  "abi": [],
+  "storageLayout": {
+    "storage": [],
+    "types": {
+      "t_struct(Config)1_storage": {
+        "encoding": "inplace",
+        "label": "struct Token.Config",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
