@@ -290,6 +290,106 @@ test "mappings, arrays, and byte strings become structural shapes" {
 }
 
 ///|
+test "a struct without members is rejected instead of becoming a value" {
+  let raw = raw_layout([], [
+    raw_type("t_struct(S)", "inplace", "struct A.S", "32"),
+  ])
+  let (layout, diagnostics) = normalize(raw)
+  assert_eq(layout.types.length(), 0)
+  inspect(
+    @moonupgradeguard.render_text(diagnostics),
+    content=(
+      #|error[storage.type.field.missing] types["t_struct(S)"].members: required field "members" is missing
+      #|
+    ),
+  )
+}
+
+///|
+test "both sides missing struct members each report an input diagnostic" {
+  let raw = raw_layout([], [
+    raw_type("t_struct(S)", "inplace", "struct A.S", "32"),
+  ])
+  let (_, old_diagnostics) = normalize(raw)
+  let (_, new_diagnostics) = normalize(raw)
+  assert_eq(old_diagnostics, new_diagnostics)
+  assert_eq(old_diagnostics.length(), 1)
+  assert_eq(
+    old_diagnostics[0].code,
+    @moonupgradeguard.DiagnosticCode::StorageTypeFieldMissing,
+  )
+}
+
+///|
+test "only one side missing struct members remains an input error" {
+  let incomplete = raw_layout([], [
+    raw_type("t_struct(S)", "inplace", "struct A.S", "32"),
+  ])
+  let complete = raw_layout([], [
+    {
+      ..raw_type("t_struct(S)", "inplace", "struct A.S", "32"),
+      members: Some([]),
+    },
+  ])
+  let (_, old_diagnostics) = normalize(incomplete)
+  let (_, new_diagnostics) = normalize(complete)
+  assert_eq(old_diagnostics.length(), 1)
+  assert_eq(new_diagnostics.length(), 0)
+}
+
+///|
+test "elementary enum contract and value type labels remain values" {
+  let raw = raw_layout([], [
+    raw_type("t_uint256", "inplace", "uint256", "32"),
+    raw_type("t_enum", "inplace", "enum A.Kind", "1"),
+    raw_type("t_contract", "inplace", "contract A", "20"),
+    raw_type("t_value", "inplace", "A.Amount", "32"),
+  ])
+  let (layout, diagnostics) = normalize(raw)
+  assert_eq(diagnostics.length(), 0)
+  assert_eq(layout.types.length(), 4)
+  assert_true(
+    layout.types.all(fn(entry) {
+      entry.shape == @moonupgradeguard.TypeShape::Value
+    }),
+  )
+}
+
+///|
+test "mapping and array references require their fields" {
+  let missing_key = {
+    ..raw_type("t_mapping_key", "mapping", "mapping(uint256 => uint256)", "32"),
+    value: Some("t_uint256"),
+  }
+  let missing_value = {
+    ..raw_type(
+      "t_mapping_value", "mapping", "mapping(uint256 => uint256)", "32",
+    ),
+    key: Some("t_uint256"),
+  }
+  let missing_fixed_base = raw_type("t_fixed", "inplace", "uint256[2]", "64")
+  let missing_dynamic_base = raw_type(
+    "t_dynamic", "dynamic_array", "uint256[]", "32",
+  )
+  let complete = raw_type("t_uint256", "inplace", "uint256", "32")
+  let raw = raw_layout([], [
+    missing_key, missing_value, missing_fixed_base, missing_dynamic_base, complete,
+  ])
+  let (layout, diagnostics) = normalize(raw)
+  assert_eq(layout.types.length(), 1)
+  inspect(
+    @moonupgradeguard.render_text(diagnostics),
+    content=(
+      #|error[storage.type.field.missing] types["t_fixed"].base: required field "base" is missing
+      #|error[storage.type.field.missing] types["t_dynamic"].base: required field "base" is missing
+      #|error[storage.type.field.missing] types["t_mapping_key"].key: required field "key" is missing
+      #|error[storage.type.field.missing] types["t_mapping_value"].value: required field "value" is missing
+      #|
+    ),
+  )
+}
+
+///|
 test "struct members keep relative slots and offsets" {
   let raw = raw_layout(
     [raw_entry("point", "0", 0, "t_struct(Point)10_storage")],

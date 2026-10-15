@@ -269,7 +269,27 @@ fn normalize_type(
               }
               StaticArray(base, length)
             }
-            None => Value
+            None => {
+              if label.has_prefix("struct ") {
+                missing_field(
+                  "members",
+                  StorageTypeFieldMissing,
+                  location,
+                  diagnostics,
+                )
+                return None
+              }
+              if has_array_suffix(label) {
+                missing_field(
+                  "base",
+                  StorageTypeFieldMissing,
+                  location,
+                  diagnostics,
+                )
+                return None
+              }
+              Value
+            }
           }
       }
     "mapping" => {
@@ -358,6 +378,15 @@ fn static_array_length(label : String) -> String? {
   match Slot::parse(digits) {
     Some(length) => Some(length.to_string())
     None => None
+  }
+}
+
+///|
+/// Whether a compiler type label has an array suffix, including `[]`.
+fn has_array_suffix(label : String) -> Bool {
+  match label.rev_split_once("[") {
+    Some((_, suffix)) => suffix.has_suffix("]")
+    None => false
   }
 }
 

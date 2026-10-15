@@ -55,6 +55,8 @@ storage-removed|abi|text|0|
 storage-moved|storage|text|1|storage.entry.slot.changed
 storage-moved|check|json|1|storage.entry.slot.changed
 struct-change|storage|text|1|storage.entry.type.changed
+struct-members-missing|check|json|2|storage.type.field.missing
+schema-missing-fields|check|json|2|storage.type.field.missing
 storage-gap-shrink|check|text|0|storage.gap.changed
 storage-gap-unsafe|storage|text|1|storage.entry.slot.changed
 storage-gap-dynamic|storage|text|1|storage.entry.removed
