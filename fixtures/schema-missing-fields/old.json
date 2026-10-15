@@ -1,0 +1,35 @@
+{
+  "abi": [],
+  "storageLayout": {
+    "storage": [],
+    "types": {
+      "t_mapping_key": {
+        "encoding": "mapping",
+        "label": "mapping(uint256 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping_value": {
+        "encoding": "mapping",
+        "label": "mapping(uint256 => uint256)",
+        "numberOfBytes": "32",
+        "key": "t_uint256"
+      },
+      "t_fixed": {
+        "encoding": "inplace",
+        "label": "uint256[2]",
+        "numberOfBytes": "64"
+      },
+      "t_dynamic": {
+        "encoding": "dynamic_array",
+        "label": "uint256[]",
+        "numberOfBytes": "32"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
