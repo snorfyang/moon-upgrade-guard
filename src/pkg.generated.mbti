@@ -124,7 +124,7 @@ pub(all) struct Diagnostic {
   old_value : String?
   new_value : String?
 } derive(Eq, @debug.Debug)
-pub fn Diagnostic::compare(Self, Self) -> Int
+pub fn Diagnostic::compare(Self, Self) -> Int32
 pub fn Diagnostic::equal(Self, Self) -> Bool
 pub fn Diagnostic::new(DiagnosticCode, Location, String) -> Self
 pub fn Diagnostic::not_equal(Self, Self) -> Bool
@@ -218,7 +218,7 @@ pub(all) struct RawStorageEntry {
   label : String?
   contract : String?
   slot : String?
-  offset : Int?
+  offset : Int32?
   type_id : String?
 } derive(Eq, @debug.Debug)
 pub fn RawStorageEntry::equal(Self, Self) -> Bool
@@ -260,7 +260,7 @@ pub fn Severity::to_repr(Self) -> @debug.Repr
 pub struct Slot {
   // private fields
 } derive(Eq, @debug.Debug)
-pub fn Slot::compare(Self, Self) -> Int
+pub fn Slot::compare(Self, Self) -> Int32
 pub fn Slot::equal(Self, Self) -> Bool
 pub fn Slot::not_equal(Self, Self) -> Bool
 pub fn Slot::op_ge(Self, Self) -> Bool
@@ -276,7 +276,7 @@ pub(all) struct StorageEntry {
   label : String
   contract : String?
   slot : Slot
-  offset : Int
+  offset : Int32
   type_id : String
 } derive(Eq, @debug.Debug)
 pub fn StorageEntry::equal(Self, Self) -> Bool
@@ -296,7 +296,7 @@ pub fn StorageLayout::to_repr(Self) -> @debug.Repr
 pub(all) struct TypeEntry {
   id : String
   label : String
-  byte_size : Int
+  byte_size : Int32
   shape : TypeShape
 } derive(Eq, @debug.Debug)
 pub fn TypeEntry::equal(Self, Self) -> Bool
