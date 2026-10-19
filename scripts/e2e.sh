@@ -380,6 +380,11 @@ expect_exit "unknown command" 2 check-fixtures
 expect_exit "unknown format" 2 check fixtures/compatible/old.json fixtures/compatible/new.json --format yaml
 expect_exit "--contract without a value" 2 check fixtures/compatible/old.json fixtures/compatible/new.json --contract
 
+checks=$((checks + 1))
+if ! python3 scripts/check_input_integrity.py "$binary"; then
+  fail "input integrity matrix"
+fi
+
 if [[ "$failures" -ne 0 ]]; then
   echo "e2e: $checks checks, $failures failed" >&2
   exit 1

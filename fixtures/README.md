@@ -58,6 +58,8 @@
 
 ## 真实产物矩阵
 
+`scripts/e2e.sh` 还会调用 `scripts/check_input_integrity.py`，从本仓库 Apache-2.0 的 `real-complex-compatible/old.json` 派生损坏输入。矩阵覆盖变量与 struct 成员的必需字段、mapping/数组引用、struct 成员表、未知 encoding 和错误字段类型；逐一检查平铺、Standard JSON、Hardhat 外层格式，以及常规和 transient 布局在 old/new 单侧及双侧损坏时的退出码 `2`、诊断路径、输入来源和重复运行一致性。完整布局的控制组必须返回 `0`。这些变体仅在临时目录生成，不需要 Solidity 编译器或网络。
+
 `real-*` 使用本仓库自行编写的 [`Counter` 源码](real-artifacts/sources/old.sol) 及其[兼容](real-artifacts/sources/compatible.sol)、[不兼容](real-artifacts/sources/incompatible.sol)版本（Apache-2.0）。三份源码分别复制成工具项目中的同一个源文件名，再编译成 `old.json` 或 `new.json`。没有改写编译器输出中的字段；`solcjs` 输出开头的非 JSON 提示行在保存前被移除。
 
 | 工具 | 固定版本 | 生成命令及保存位置 |
