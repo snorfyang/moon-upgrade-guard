@@ -542,6 +542,45 @@ test "inherited variables keep their emitting contract" {
 }
 
 ///|
+test "an invalid first type definition cannot be replaced by a valid duplicate" {
+  let first = {
+    ..raw_type("t_uint256", "inplace", "uint256", "32"),
+    number_of_bytes: None,
+  }
+  let dependent = {
+    ..raw_type("t_array", "dynamic_array", "uint256[]", "32"),
+    base: Some("t_uint256"),
+  }
+  let raw = raw_layout([raw_entry("values", "0", 0, "t_array")], [
+    first,
+    uint256_type(),
+    dependent,
+  ])
+  let (layout, diagnostics) = normalize(raw)
+  assert_eq(layout.types.length(), 0)
+  assert_eq(layout.entries.length(), 0)
+  assert_eq(diagnostics.length(), 3)
+  assert_true(
+    diagnostics.any(fn(diagnostic) {
+      diagnostic.code ==
+      @moonupgradeguard.DiagnosticCode::StorageTypeIdDuplicate
+    }),
+  )
+  assert_true(
+    diagnostics.any(fn(diagnostic) {
+      diagnostic.code ==
+      @moonupgradeguard.DiagnosticCode::StorageTypeFieldMissing
+    }),
+  )
+  assert_true(
+    diagnostics.any(fn(diagnostic) {
+      diagnostic.code ==
+      @moonupgradeguard.DiagnosticCode::StorageEntryTypeMissing
+    }),
+  )
+}
+
+///|
 test "an invalid slot is reported and the entry is dropped" {
   let raw = raw_layout([raw_entry("x", "0x1f", 0, "t_uint256")], [
     raw_type("t_uint256", "inplace", "uint256", "32"),

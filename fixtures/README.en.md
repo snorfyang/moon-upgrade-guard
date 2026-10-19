@@ -65,6 +65,8 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 
 ## Real artifact matrix
 
+`scripts/e2e.sh` also invokes `scripts/check_input_integrity.py`, deriving malformed inputs from this repository's Apache-2.0 `real-complex-compatible/old.json`. The matrix covers required variable and struct-member fields, mapping/array references, struct member tables, unknown encodings, and invalid field types. It checks flat, Standard JSON, and Hardhat wrappers, regular and transient layouts, and old-only, new-only, and both-side failures for exit code `2`, diagnostic paths, input attribution, and byte-identical reruns. Complete-layout controls must return `0`. Variants are generated only in temporary directories and need neither a Solidity compiler nor network access.
+
 The `real-*` cases use this repository's own [`Counter` source](real-artifacts/sources/old.sol)
 and its [compatible](real-artifacts/sources/compatible.sol) and
 [incompatible](real-artifacts/sources/incompatible.sol) versions (Apache-2.0).

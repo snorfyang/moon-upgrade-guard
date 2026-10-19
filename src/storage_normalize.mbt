@@ -83,7 +83,8 @@ fn collect_type_ids(
 }
 
 ///|
-/// Normalizes every raw type that has an id, sorted by id.
+/// Normalizes the first definition of every type id, sorted by id. An invalid
+/// first definition must not be replaced by a later duplicate.
 fn normalize_types(
   raw_types : Array[RawStorageType],
   declared : Array[String],
@@ -91,10 +92,11 @@ fn normalize_types(
   diagnostics : Array[Diagnostic],
 ) -> Array[TypeEntry] {
   let types : Array[TypeEntry] = []
-  let normalized : Array[String] = []
+  let seen : Array[String] = []
   for i in 0..<raw_types.length() {
     let raw_type = raw_types[i]
-    if raw_type.id is Some(id) && !normalized.contains(id) {
+    if raw_type.id is Some(id) && !seen.contains(id) {
+      seen.push(id)
       match
         normalize_type(
           raw_type,
@@ -103,10 +105,7 @@ fn normalize_types(
           type_path(prefix, id),
           diagnostics,
         ) {
-        Some(entry) => {
-          normalized.push(id)
-          types.push(entry)
-        }
+        Some(entry) => types.push(entry)
         None => ()
       }
     }
