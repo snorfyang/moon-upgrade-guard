@@ -1,0 +1,4 @@
+{
+  "abi": [{"type": "receive", "stateMutability": "nonpayable"}],
+  "storageLayout": {"storage": [], "types": {}}
+}

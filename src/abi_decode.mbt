@@ -109,6 +109,20 @@ fn decode_callable(
   guard require_mutability(fields, path, diagnostics) is Some(mutability) else {
     return None
   }
+  let valid_mutability = match kind {
+    Function => true
+    Receive => mutability == Payable
+    Fallback => mutability == NonPayable || mutability == Payable
+  }
+  if !valid_mutability {
+    let message = if kind == Receive {
+      "receive entry must be payable"
+    } else {
+      "fallback entry must be nonpayable or payable"
+    }
+    diagnostics.push(invalid_field(path + ".stateMutability", message))
+    return None
+  }
   let inputs = if kind == Function {
     match decode_params(fields, "inputs", path, false, diagnostics) {
       Some(inputs) => inputs
