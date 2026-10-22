@@ -236,6 +236,22 @@ fn normalize_type(
     )
     return None
   }
+  // Array labels may begin with "struct ". Check the outer array before
+  // interpreting struct metadata, so members can never hide a missing base.
+  if encoding == "inplace" && has_array_suffix(label) && raw.base is None {
+    missing_field("base", StorageTypeFieldMissing, location, diagnostics)
+    return None
+  }
+  if raw.base is Some(_) && raw.members is Some(_) {
+    diagnostics.push(
+      Diagnostic::new(
+        StorageTypeShapeInvalid,
+        { contract: None, path: path + ".members", },
+        "storage type cannot declare both array base and struct members",
+      ),
+    )
+    return None
+  }
   let shape = match encoding {
     "inplace" =>
       match raw.members {
@@ -272,15 +288,6 @@ fn normalize_type(
               if label.has_prefix("struct ") {
                 missing_field(
                   "members",
-                  StorageTypeFieldMissing,
-                  location,
-                  diagnostics,
-                )
-                return None
-              }
-              if has_array_suffix(label) {
-                missing_field(
-                  "base",
                   StorageTypeFieldMissing,
                   location,
                   diagnostics,

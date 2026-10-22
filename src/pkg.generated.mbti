@@ -145,6 +145,7 @@ pub(all) enum DiagnosticCode {
   StorageTypeIdMissing
   StorageTypeIdDuplicate
   StorageTypeFieldMissing
+  StorageTypeShapeInvalid
   StorageTypeEncodingUnsupported
   StorageTypeSizeInvalid
   StorageTypeReferenceMissing

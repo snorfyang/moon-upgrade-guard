@@ -35,7 +35,7 @@ The CLI adds `input: "old"` or `input: "new"` to findings produced by one
 artifact. Comparison findings and command-line argument errors omit `input`.
 When both artifacts lack an ABI, each gets its own attributed finding.
 
-This page lists 41 codes and is generated from `src/diagnostic.mbt` by `scripts/gen_diagnostics_doc.py`. CI regenerates it and fails when the committed copy differs, so a new code cannot ship undocumented.
+This page lists 42 codes and is generated from `src/diagnostic.mbt` by `scripts/gen_diagnostics_doc.py`. CI regenerates it and fails when the committed copy differs, so a new code cannot ship undocumented.
 
 | code | severity | blocks | meaning |
 | --- | --- | --- | --- |
@@ -79,4 +79,5 @@ This page lists 41 codes and is generated from `src/diagnostic.mbt` by `scripts/
 | `storage.type.id.duplicate` | Error | yes | A storage type id is defined more than once. |
 | `storage.type.id.missing` | Error | yes | A storage type is missing its compiler id. |
 | `storage.type.reference.missing` | Error | yes | A storage type references another type id that the layout does not define. |
+| `storage.type.shape.invalid` | Error | yes | A storage type declares both array base and struct members. |
 | `storage.type.size.invalid` | Error | yes | A `numberOfBytes` value is not a decimal integer. |

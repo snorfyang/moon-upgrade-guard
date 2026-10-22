@@ -62,6 +62,11 @@ def main():
         'encoding': 'dynamic_array', 'label': 'uint256[]',
         'numberOfBytes': '32', 'base': 't_uint256',
     }
+    types['t_struct_array'] = {
+        'encoding': 'inplace', 'label': types[struct]['label'] + '[2]',
+        'numberOfBytes': str(int(types[struct]['numberOfBytes']) * 2),
+        'base': struct,
+    }
     mutations = []
     for field in ('label', 'slot', 'offset', 'type'):
         mutations.append((['storage', 0, field], 'storage.entry.field.missing', None))
@@ -69,6 +74,7 @@ def main():
     for type_id, field in (
         (mapping, 'key'), (mapping, 'value'), (struct, 'members'),
         (array, 'base'), ('t_dynamic', 'base'),
+        ('t_struct_array', 'base'),
         ('t_uint256', 'label'), ('t_uint256', 'encoding'),
         ('t_uint256', 'numberOfBytes'),
     ):
@@ -76,6 +82,8 @@ def main():
     for type_id, field in ((mapping, 'key'), (mapping, 'value'), (array, 'base'), ('t_dynamic', 'base')):
         mutations.append((['types', type_id, field], 'storage.type.reference.missing', 't_missing'))
     mutations.extend([
+        (['types', array, 'members'], 'storage.type.shape.invalid', []),
+        (['types', 't_dynamic', 'members'], 'storage.type.shape.invalid', []),
         (['storage', 0, 'type'], 'storage.entry.type.missing', 't_missing'),
         (['types', 't_uint256', 'encoding'], 'storage.type.encoding.unsupported', 'unknown'),
         (['types', struct, 'members'], 'artifact.field.invalid', {}),

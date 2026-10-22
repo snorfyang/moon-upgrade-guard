@@ -90,6 +90,7 @@ LANGUAGES = {
             'storage.type.array-length.invalid': '定长数组的 label 未给出可用的十进制元素个数。',
             'storage.type.encoding.unsupported': '存储类型使用了本版本不支持的编码。',
             'storage.type.field.missing': '存储类型缺少必需字段。',
+            'storage.type.shape.invalid': '存储类型同时声明数组 base 与 struct members，形态冲突。',
             'storage.type.id.duplicate': '同一个存储类型 id 被定义多次。',
             'storage.type.id.missing': '存储类型缺少编译器 id。',
             'storage.type.reference.missing': '存储类型引用的另一个类型 id 在布局中不存在。',
