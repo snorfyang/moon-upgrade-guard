@@ -107,6 +107,8 @@ Hardhat）只写整数；带小数点或指数的数字会被当作不可用的 
 
 存储类型同时声明数组 `base` 和 struct `members` 时，会以 `storage.type.shape.invalid` 拒绝并返回 `2`。struct 数组（含多维数组）仍必须提供外层数组的 `base`，缺失时报 `storage.type.field.missing`，不会被当成 struct 或普通值类型比较。
 
+ABI 的 `receive` 条目必须是 `payable`，`fallback` 必须是 `payable` 或 `nonpayable`。其他组合以 `artifact.field.invalid` 拒绝，位置指向该条目的 `stateMutability`，CLI 返回 `2`；普通 `function` 条目仍支持全部四种 mutability。
+
 诊断经过排序，因此相同输入总是产生完全相同的字节。使用 `--format json` 时，
 stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、`severity`、
 `location`、`message`，以及在适用时给出被比较的 `oldValue`/`newValue`。

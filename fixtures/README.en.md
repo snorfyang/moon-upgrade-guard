@@ -36,6 +36,7 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `abi-function-removed/` | `transfer(address,uint256)` is gone while storage is unchanged | 1 |
 | `abi-fallback-kind/` | the `fallback` handler is replaced by a named `function fallback()` with the same signature | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
+| `abi-handler-mutability/` | the new ABI declares a `nonpayable` receive handler, making the input invalid | 2 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
 | `contract-selector/` | a build info document holding two contracts: `Alpha` is compatible while `Beta` moves a variable, so `--contract` decides the verdict | 2 without a selector, 0 for `Alpha`, 1 for `Beta` |
@@ -64,6 +65,8 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
 
 ## Real artifact matrix
+
+The input-integrity matrix also checks ABI special functions: `receive` accepts only `payable`, and `fallback` accepts only `payable` or `nonpayable`. Across all three wrappers and old-only, new-only, and both-side failures, `check` and `abi` must produce deterministic text/JSON input errors with exit code `2` and the exact `stateMutability` path. Valid controls return `0`.
 
 `scripts/e2e.sh` also invokes `scripts/check_input_integrity.py`, deriving malformed inputs from this repository's Apache-2.0 `real-complex-compatible/old.json`. The matrix covers required variable and struct-member fields, mapping/array references, struct member tables, unknown encodings, and invalid field types. It checks flat, Standard JSON, and Hardhat wrappers, regular and transient layouts, and old-only, new-only, and both-side failures for exit code `2`, diagnostic paths, input attribution, and byte-identical reruns. Complete-layout controls must return `0`. Variants are generated only in temporary directories and need neither a Solidity compiler nor network access.
 

@@ -137,6 +137,11 @@ multidimensional arrays, still require the outer array's `base`; its absence
 produces `storage.type.field.missing` rather than comparing the input as a struct
 or a plain value type.
 
+ABI `receive` entries must be `payable`; `fallback` entries must be `payable` or
+`nonpayable`. Other combinations are rejected with `artifact.field.invalid` at
+the entry's `stateMutability` field and CLI exit code `2`. Ordinary `function`
+entries still support all four mutabilities.
+
 Diagnostics are sorted, so the same input always produces the same bytes. In
 `--format json` the report is an array of findings on stdout, each with a
 stable `code`, a `severity`, a `location`, a `message`, and the compared

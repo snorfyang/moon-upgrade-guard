@@ -102,6 +102,64 @@ test "fallback and receive normalize without parameters" {
 }
 
 ///|
+test "receive rejects nonpayable view and pure mutability" {
+  for mutability in ["nonpayable", "view", "pure"] {
+    inspect(
+      decode_report(
+        "[{\"type\":\"receive\",\"stateMutability\":\"" + mutability + "\"}]",
+      ),
+      content=(
+        #|error[artifact.field.invalid] $.abi[0].stateMutability: receive entry must be payable
+        #|
+      ),
+    )
+  }
+}
+
+///|
+test "fallback rejects view and pure mutability" {
+  for mutability in ["view", "pure"] {
+    inspect(
+      decode_report(
+        "[{\"type\":\"fallback\",\"stateMutability\":\"" + mutability + "\"}]",
+      ),
+      content=(
+        #|error[artifact.field.invalid] $.abi[0].stateMutability: fallback entry must be nonpayable or payable
+        #|
+      ),
+    )
+  }
+}
+
+///|
+test "fallback accepts both payable and nonpayable mutability" {
+  let abi = decode(
+    "[{\"type\":\"fallback\",\"stateMutability\":\"nonpayable\"}]",
+  )
+  assert_eq(
+    abi.functions[0].mutability,
+    @moonupgradeguard.Mutability::NonPayable,
+  )
+}
+
+///|
+test "named functions including receive and fallback retain all mutabilities" {
+  for name in ["receive", "fallback", "f"] {
+    for mutability in ["pure", "view", "nonpayable", "payable"] {
+      let abi = decode(
+        "[{\"type\":\"function\",\"name\":\"" +
+        name +
+        "\",\"inputs\":[],\"outputs\":[],\"stateMutability\":\"" +
+        mutability +
+        "\"}]",
+      )
+      assert_eq(abi.functions[0].kind, @moonupgradeguard.AbiEntryKind::Function)
+      assert_eq(abi.functions[0].name, name)
+    }
+  }
+}
+
+///|
 test "a constructor is not part of the callable interface" {
   let abi = decode(
     "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"owner\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\"}]",

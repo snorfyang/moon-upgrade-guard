@@ -11,6 +11,7 @@
   该文档同时说明这份输出仍是实验性的、可能在不破坏兼容的版本中变化，因此本工具遇到无法识别的形态会显式失败，而不是假定兼容。
 - **ABI**：规范化签名、selector（签名的 Keccak-256 前四字节）、event topic（签名哈希）与 indexed
   参数遵循 [Solidity ABI 规范](https://docs.soliditylang.org/en/latest/abi-spec.html)。
+  `receive` 必须为 `payable`、`fallback` 仅允许 `payable` 或 `nonpayable`，依据 [Solidity 特殊函数规范](https://docs.soliditylang.org/en/latest/contracts.html#special-functions)。
 - **产物形态**：solc Standard JSON 输出的 `contracts.<source>.<contract>` 结构遵循
   [编译器输入输出文档](https://docs.soliditylang.org/en/latest/using-the-compiler.html)；Foundry
   平铺 artifact 与 Hardhat artifact、build info 的字段名分别来自各自的公开文档。

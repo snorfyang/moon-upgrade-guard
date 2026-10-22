@@ -16,8 +16,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def wrap(layout, wrapper, transient):
-    artifact = {'abi': [], 'storageLayout': layout}
+def wrap(layout, wrapper, transient, abi=None):
+    artifact = {'abi': [] if abi is None else abi, 'storageLayout': layout}
     if transient:
         artifact['storageLayout'] = {'storage': [], 'types': {}}
         artifact['transientStorageLayout'] = layout
@@ -27,6 +27,51 @@ def wrap(layout, wrapper, transient):
     if wrapper == 'hardhat':
         return {'output': {'contracts': contracts}}
     return artifact
+
+
+def check_abi_handlers(binary, old_path, new_path):
+    """Validate special-function mutability, including valid controls."""
+    checks = 0
+    for wrapper in ('flat', 'standard', 'hardhat'):
+        root = '$'
+        if wrapper != 'flat':
+            root += '.output' if wrapper == 'hardhat' else ''
+            root += '.contracts["src/ComplexLayout.sol"]["ComplexLayout"]'
+        for kind in ('receive', 'fallback'):
+            for mutability in ('pure', 'view', 'nonpayable', 'payable'):
+                valid = mutability == 'payable' or (kind == 'fallback' and mutability == 'nonpayable')
+                empty = {'storage': [], 'types': {}}
+                artifact = wrap(empty, wrapper, False, [{'type': kind, 'stateMutability': mutability}])
+                control = wrap(empty, wrapper, False)
+                for sides in (('old', 'new'),) if valid else (('old',), ('new',), ('old', 'new')):
+                    old_path.write_text(json.dumps(artifact if 'old' in sides else control))
+                    new_path.write_text(json.dumps(artifact if 'new' in sides else control))
+                    for command in ('check', 'abi'):
+                        for output_format in ('text', 'json'):
+                            args = [str(binary), command, str(old_path), str(new_path), '--format', output_format]
+                            result = subprocess.run(args, capture_output=True, check=False)
+                            repeat = subprocess.run(args, capture_output=True, check=False)
+                            context = (wrapper, kind, mutability, sides, command, output_format)
+                            assert result.returncode == repeat.returncode == (0 if valid else 2), context
+                            assert result.stdout == repeat.stdout, context
+                            if output_format == 'json':
+                                findings = json.loads(result.stdout)
+                                if valid:
+                                    assert findings == [], context
+                                else:
+                                    assert len(findings) == len(sides), context
+                                    assert {item.get('input') for item in findings} == set(sides), context
+                                    for item in findings:
+                                        assert item['code'] == 'artifact.field.invalid', context
+                                        assert item['severity'] == 'error', context
+                                        assert item['location']['path'] == root + '.abi[0].stateMutability', context
+                            elif valid:
+                                assert result.stdout == b'', context
+                            else:
+                                assert b'artifact.field.invalid' in result.stdout, context
+                                assert b'.abi[0].stateMutability' in result.stdout, context
+                            checks += 1
+    return checks
 
 
 def expected_path(path, code, wrapper, transient):
@@ -139,6 +184,7 @@ def main():
                                 location = expected_path(path, code, wrapper, transient)
                                 assert any(item['location']['path'] == location for item in matching), context
                             checks += 1
+        checks += check_abi_handlers(binary, old_path, new_path)
     print(f'input integrity: {checks} checks passed')
 
 

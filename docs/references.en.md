@@ -18,6 +18,7 @@ where a file in this repository came from and under which licence it is used.
 - **ABI**: canonical signatures, selectors (the first four bytes of the Keccak-256
   hash of the signature), event topics (the signature hash), and indexed
   parameters follow the [Solidity ABI specification](https://docs.soliditylang.org/en/latest/abi-spec.html).
+  The requirement that `receive` be `payable`, and `fallback` be either `payable` or `nonpayable`, follows [Solidity's special function rules](https://docs.soliditylang.org/en/latest/contracts.html#special-functions).
 - **Artifact shapes**: the `contracts.<source>.<contract>` structure of solc
   Standard JSON output follows the [compiler input and output documentation](https://docs.soliditylang.org/en/latest/using-the-compiler.html);
   the field names of a flat Foundry artifact, and of a Hardhat artifact and build

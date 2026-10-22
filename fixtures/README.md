@@ -29,6 +29,7 @@
 | `abi-function-removed/` | `transfer(address,uint256)` 被删除，而存储未变 | 1 |
 | `abi-fallback-kind/` | `fallback` 处理器被同签名的具名 `function fallback()` 取代 | 1 |
 | `abi-event-indexed/` | `Transfer` 的 `value` 参数变为 indexed | 1 |
+| `abi-handler-mutability/` | 新 ABI 的 `receive` 声明为 `nonpayable`，属于无效输入 | 2 |
 | `invalid-json/` | `old.json` 被截断 | 2 |
 | `unsupported-artifact/` | `old.json` 是 Hardhat 单合约产物，不含存储布局 | 2 |
 | `contract-selector/` | 一份包含两个合约的 build info：`Alpha` 兼容，而 `Beta` 移动了变量，因此由 `--contract` 决定结论 | 不传选择器为 2，`Alpha` 为 0，`Beta` 为 1 |
@@ -57,6 +58,8 @@
 | `missing-file/` | 故意没有 `new.json`，用于覆盖不可读路径 | 2 |
 
 ## 真实产物矩阵
+
+输入完整性矩阵还检查 ABI 特殊函数：`receive` 仅接受 `payable`，`fallback` 仅接受 `payable` 或 `nonpayable`。三种外层格式在 old/new 单侧及双侧损坏时，`check` 与 `abi` 的 text/JSON 输出都必须稳定返回输入错误 `2`，并准确指向 `stateMutability`；合法组合的控制组返回 `0`。
 
 `scripts/e2e.sh` 还会调用 `scripts/check_input_integrity.py`，从本仓库 Apache-2.0 的 `real-complex-compatible/old.json` 派生损坏输入。矩阵覆盖变量与 struct 成员的必需字段、mapping/数组引用、struct 成员表、未知 encoding 和错误字段类型；逐一检查平铺、Standard JSON、Hardhat 外层格式，以及常规和 transient 布局在 old/new 单侧及双侧损坏时的退出码 `2`、诊断路径、输入来源和重复运行一致性。完整布局的控制组必须返回 `0`。这些变体仅在临时目录生成，不需要 Solidity 编译器或网络。
 
