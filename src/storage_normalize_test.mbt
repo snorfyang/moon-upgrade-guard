@@ -356,6 +356,78 @@ test "elementary enum contract and value type labels remain values" {
 }
 
 ///|
+test "fixed arrays cannot be normalized as structs through injected members" {
+  let raw = raw_layout([], [
+    uint256_type(),
+    {
+      ..raw_type("t_array", "inplace", "uint256[2]", "64"),
+      base: Some("t_uint256"),
+      members: Some([]),
+    },
+  ])
+  let (layout, diagnostics) = normalize(raw)
+  assert_eq(layout.types.length(), 1)
+  assert_eq(diagnostics.length(), 1)
+  inspect(
+    @moonupgradeguard.render_text(diagnostics),
+    content=(
+      #|error[storage.type.shape.invalid] types["t_array"].members: storage type cannot declare both array base and struct members
+      #|
+    ),
+  )
+}
+
+///|
+test "arrays of structs require base rather than members" {
+  for label in ["struct A.S[2]", "struct A.S[2][3]"] {
+    for members in [None, Some([])] {
+      let raw = raw_layout([], [
+        { ..raw_type("t_array", "inplace", label, "64"), members, },
+      ])
+      let (layout, diagnostics) = normalize(raw)
+      assert_eq(layout.types.length(), 0)
+      assert_eq(diagnostics.length(), 1)
+      assert_eq(diagnostics[0].location.path, "types[\"t_array\"].base")
+      assert_eq(
+        diagnostics[0].code,
+        @moonupgradeguard.DiagnosticCode::StorageTypeFieldMissing,
+      )
+    }
+  }
+}
+
+///|
+test "complete nested arrays of structs keep their array shapes" {
+  let raw = raw_layout([raw_entry("values", "0", 0, "t_nested")], [
+    uint256_type(),
+    {
+      ..raw_type("t_struct", "inplace", "struct A.S", "32"),
+      members: Some([raw_entry("value", "0", 0, "t_uint256")]),
+    },
+    {
+      ..raw_type("t_array", "inplace", "struct A.S[2]", "64"),
+      base: Some("t_struct"),
+    },
+    {
+      ..raw_type("t_nested", "inplace", "struct A.S[2][3]", "192"),
+      base: Some("t_array"),
+    },
+  ])
+  let (layout, diagnostics) = normalize(raw)
+  assert_eq(diagnostics.length(), 0)
+  assert_eq(layout.types.length(), 4)
+  assert_eq(layout.entries.length(), 1)
+  assert_eq(
+    type_shape(layout, "t_array"),
+    @moonupgradeguard.TypeShape::StaticArray("t_struct", "2"),
+  )
+  assert_eq(
+    type_shape(layout, "t_nested"),
+    @moonupgradeguard.TypeShape::StaticArray("t_array", "3"),
+  )
+}
+
+///|
 test "mapping and array references require their fields" {
   let missing_key = {
     ..raw_type("t_mapping_key", "mapping", "mapping(uint256 => uint256)", "32"),

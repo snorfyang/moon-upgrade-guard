@@ -131,6 +131,12 @@ comparison found an incompatible change, and `2` means the command or input was
 invalid. A successful report is a preflight result, not proof that an upgrade
 is safe in every respect.
 
+A storage type declaring both array `base` and struct `members` is rejected with
+`storage.type.shape.invalid` and exit code `2`. Arrays of structs, including
+multidimensional arrays, still require the outer array's `base`; its absence
+produces `storage.type.field.missing` rather than comparing the input as a struct
+or a plain value type.
+
 Diagnostics are sorted, so the same input always produces the same bytes. In
 `--format json` the report is an array of findings on stdout, each with a
 stable `code`, a `severity`, a `location`, a `message`, and the compared

@@ -18,7 +18,7 @@
 
 CLI 对单侧输入产生的诊断添加 `input: "old"` 或 `input: "new"`；比较产生的诊断及命令行参数错误不带 `input`。两边都缺 ABI 时分别报告两条带来源的诊断。
 
-本页共 41 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `src/diagnostic.mbt` 生成。CI 会重新生成，并在提交内容与源码不一致时失败，因此新诊断码不可能没有文档。
+本页共 42 个诊断码，由 `scripts/gen_diagnostics_doc.py` 从 `src/diagnostic.mbt` 生成。CI 会重新生成，并在提交内容与源码不一致时失败，因此新诊断码不可能没有文档。
 
 | 诊断码 | 严重度 | 是否阻断 | 含义 |
 | --- | --- | --- | --- |
@@ -62,4 +62,5 @@ CLI 对单侧输入产生的诊断添加 `input: "old"` 或 `input: "new"`；比
 | `storage.type.id.duplicate` | Error | 是 | 同一个存储类型 id 被定义多次。 |
 | `storage.type.id.missing` | Error | 是 | 存储类型缺少编译器 id。 |
 | `storage.type.reference.missing` | Error | 是 | 存储类型引用的另一个类型 id 在布局中不存在。 |
+| `storage.type.shape.invalid` | Error | 是 | 存储类型同时声明数组 base 与 struct members，形态冲突。 |
 | `storage.type.size.invalid` | Error | 是 | `numberOfBytes` 不是十进制整数。 |

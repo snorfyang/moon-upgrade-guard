@@ -57,6 +57,8 @@ pub(all) enum DiagnosticCode {
   StorageTypeIdDuplicate
   /// A storage type is missing a required field.
   StorageTypeFieldMissing
+  /// A storage type declares both array base and struct members.
+  StorageTypeShapeInvalid
   /// A storage type uses an encoding this version does not support.
   StorageTypeEncodingUnsupported
   /// A `numberOfBytes` value is not a decimal integer.
@@ -142,6 +144,7 @@ pub fn DiagnosticCode::name(self : DiagnosticCode) -> String {
     StorageTypeIdMissing => "storage.type.id.missing"
     StorageTypeIdDuplicate => "storage.type.id.duplicate"
     StorageTypeFieldMissing => "storage.type.field.missing"
+    StorageTypeShapeInvalid => "storage.type.shape.invalid"
     StorageTypeEncodingUnsupported => "storage.type.encoding.unsupported"
     StorageTypeSizeInvalid => "storage.type.size.invalid"
     StorageTypeReferenceMissing => "storage.type.reference.missing"
@@ -195,6 +198,7 @@ pub fn DiagnosticCode::severity(self : DiagnosticCode) -> Severity {
     StorageTypeIdMissing => Error
     StorageTypeIdDuplicate => Error
     StorageTypeFieldMissing => Error
+    StorageTypeShapeInvalid => Error
     StorageTypeEncodingUnsupported => Error
     StorageTypeSizeInvalid => Error
     StorageTypeReferenceMissing => Error
