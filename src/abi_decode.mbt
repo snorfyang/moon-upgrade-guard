@@ -372,7 +372,8 @@ fn split_array_suffix(type_name : String) -> (String, String) {
 
 ///|
 /// Whether an array suffix is a sequence of `[length]` groups, where `length`
-/// may be empty for a dynamic array.
+/// may be empty for a dynamic array. Fixed lengths use canonical decimal
+/// spelling, with no leading zeros except the single digit `0`.
 fn valid_array_suffix(suffix : String) -> Bool {
   let chars = suffix.to_array()
   let mut i = 0
@@ -381,8 +382,12 @@ fn valid_array_suffix(suffix : String) -> Bool {
       return false
     }
     i += 1
+    let start = i
     while i < chars.length() && chars[i].is_ascii_digit() {
       i += 1
+    }
+    if i - start > 1 && chars[start] == '0' {
+      return false
     }
     if i >= chars.length() || chars[i] != ']' {
       return false

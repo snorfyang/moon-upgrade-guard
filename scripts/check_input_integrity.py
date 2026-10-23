@@ -75,18 +75,25 @@ def check_abi_handlers(binary, old_path, new_path):
 
 
 def check_abi_widths(binary, old_path, new_path):
-    """Reject noncanonical widths wherever ABI parameters are decoded."""
+    """Reject noncanonical widths and dimensions wherever parameters are decoded."""
     checks = 0
     for wrapper in ('flat', 'standard', 'hardhat'):
         root = '$'
         if wrapper != 'flat':
             root += '.output' if wrapper == 'hardhat' else ''
             root += '.contracts["src/ComplexLayout.sol"]["ComplexLayout"]'
-        for bad_type, good_type in (('uint0256', 'uint256'), ('int08', 'int8'), ('bytes01', 'bytes1')):
+        for bad_type, good_type in (
+            ('uint0256', 'uint256'), ('int08', 'int8'), ('bytes01', 'bytes1'),
+            ('uint256[01]', 'uint256[1]'), ('bytes32[][002]', 'bytes32[][2]'),
+            ('int8[2][00]', 'int8[2][0]'),
+            ('tuple[01][]', 'tuple[1][]'),
+        ):
             for position in ('input', 'output', 'tuple', 'event', 'error'):
                 documents = []
                 for type_name in (good_type, bad_type):
                     param = {'type': type_name}
+                    if type_name.startswith('tuple'):
+                        param['components'] = [{'type': 'uint256'}]
                     entry = {'type': 'function', 'name': 'f', 'inputs': [], 'outputs': [], 'stateMutability': 'view'}
                     location = '.abi[0].inputs[0].type'
                     if position == 'output':
