@@ -148,6 +148,11 @@ Zero-padded names such as `uint0256`, `int08`, and `bytes01` are rejected with
 applies to outputs, arrays, tuple components, events, and custom errors, keeping
 noncanonical names out of selector/topic hashing.
 
+ABI fixed-array dimensions also require canonical decimal spelling:
+`uint256[01]` and `tuple[01][]` are rejected with the same diagnostic code.
+Dynamic `[]`, ABI-permitted `[0]`, and canonical dimensions beyond machine integer
+range remain supported; the checker validates type strings without allocating arrays.
+
 Diagnostics are sorted, so the same input always produces the same bytes. In
 `--format json` the report is an array of findings on stdout, each with a
 stable `code`, a `severity`, a `location`, a `message`, and the compared

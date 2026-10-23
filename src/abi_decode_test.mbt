@@ -215,6 +215,51 @@ test "zero-padded elementary widths are rejected before signature hashing" {
 }
 
 ///|
+test "zero-padded array dimensions are rejected before signature hashing" {
+  for type_name in ["uint256[01]", "bytes32[][002]", "int8[2][00]"] {
+    let (_, diagnostics) = @moonupgradeguard.extract_artifact(
+      abi_artifact(
+        "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"" +
+        type_name +
+        "\"}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+      ),
+    )
+    assert_eq(diagnostics.length(), 1)
+    assert_eq(
+      diagnostics[0].code,
+      @moonupgradeguard.DiagnosticCode::ArtifactFieldInvalid,
+    )
+    assert_eq(diagnostics[0].location.path, "$.abi[0].inputs[0].type")
+  }
+}
+
+///|
+test "tuple arrays reject zero-padded outer dimensions" {
+  inspect(
+    decode_report(
+      "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"tuple[01][]\",\"components\":[{\"type\":\"uint256\"}]}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $.abi[0].inputs[0].type: unsupported array type "tuple[01][]"
+      #|
+    ),
+  )
+}
+
+///|
+test "canonical array dimensions remain lossless including zero and large sizes" {
+  for
+    type_name in ["uint256[]", "uint256[0]", "bytes32[][2]", "int8[2147483648]"] {
+    let abi = decode(
+      "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"" +
+      type_name +
+      "\"}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+    )
+    assert_eq(abi.functions[0].signature, "f(" + type_name + ")")
+  }
+}
+
+///|
 test "canonical elementary width boundaries retain their signatures" {
   for
     type_name in [
