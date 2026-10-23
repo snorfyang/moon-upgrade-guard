@@ -195,6 +195,41 @@ test "a non-canonical type name is rejected" {
 }
 
 ///|
+test "zero-padded elementary widths are rejected before signature hashing" {
+  for
+    type_name in ["uint0256", "int08", "bytes01", "uint0008[]", "bytes032[2][]"] {
+    let (_, diagnostics) = @moonupgradeguard.extract_artifact(
+      abi_artifact(
+        "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"" +
+        type_name +
+        "\"}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+      ),
+    )
+    assert_eq(diagnostics.length(), 1)
+    assert_eq(
+      diagnostics[0].code,
+      @moonupgradeguard.DiagnosticCode::ArtifactFieldInvalid,
+    )
+    assert_eq(diagnostics[0].location.path, "$.abi[0].inputs[0].type")
+  }
+}
+
+///|
+test "canonical elementary width boundaries retain their signatures" {
+  for
+    type_name in [
+      "uint8", "uint256", "int8", "int256", "bytes1", "bytes32", "bytes32[2][]",
+    ] {
+    let abi = decode(
+      "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"" +
+      type_name +
+      "\"}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+    )
+    assert_eq(abi.functions[0].signature, "f(" + type_name + ")")
+  }
+}
+
+///|
 test "an impossible integer width is rejected" {
   inspect(
     decode_report(

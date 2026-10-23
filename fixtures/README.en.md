@@ -37,6 +37,7 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `abi-fallback-kind/` | the `fallback` handler is replaced by a named `function fallback()` with the same signature | 1 |
 | `abi-event-indexed/` | the `value` parameter of `Transfer` becomes indexed | 1 |
 | `abi-handler-mutability/` | the new ABI declares a `nonpayable` receive handler, making the input invalid | 2 |
+| `abi-noncanonical-width/` | both ABIs use noncanonical `uint0256`; identical invalid inputs cannot be reported compatible | 2 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
 | `contract-selector/` | a build info document holding two contracts: `Alpha` is compatible while `Beta` moves a variable, so `--contract` decides the verdict | 2 without a selector, 0 for `Alpha`, 1 for `Beta` |
@@ -65,6 +66,8 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
 
 ## Real artifact matrix
+
+The ABI-width matrix also checks rejection of `uint0256`, `int08`, and `bytes01` in function inputs/outputs, nested tuples, events, and custom errors. All three wrappers and old-only, new-only, and both-side failures must return `2`, with JSON diagnostics pointing to the exact parameter `type`. Canonical-type controls must return `0`. These ABI samples are handwritten test data from this repository (Apache-2.0).
 
 The input-integrity matrix also checks ABI special functions: `receive` accepts only `payable`, and `fallback` accepts only `payable` or `nonpayable`. Across all three wrappers and old-only, new-only, and both-side failures, `check` and `abi` must produce deterministic text/JSON input errors with exit code `2` and the exact `stateMutability` path. Valid controls return `0`.
 

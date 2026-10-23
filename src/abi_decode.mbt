@@ -412,19 +412,25 @@ fn is_elementary_type(name : String) -> Bool {
 
 ///|
 /// Whether the width in a `uintN` or `intN` name is a valid multiple of 8 up
-/// to 256.
+/// to 256, written without leading zeros.
 fn sized_integer(name : String, prefix_length : Int, step : Int) -> Bool {
-  match parse_decimal_int(name[prefix_length:].to_owned()) {
-    Some(size) => size >= step && size <= 256 && size % step == 0
+  let digits = name[prefix_length:].to_owned()
+  match parse_decimal_int(digits) {
+    Some(size) =>
+      size >= step &&
+      size <= 256 &&
+      size % step == 0 &&
+      digits == size.to_string()
     None => false
   }
 }
 
 ///|
-/// Whether the width in a `bytesN` name is between 1 and 32.
+/// Whether the width in a `bytesN` name is between 1 and 32 without leading zeros.
 fn sized_bytes(name : String) -> Bool {
-  match parse_decimal_int(name[5:].to_owned()) {
-    Some(size) => size >= 1 && size <= 32
+  let digits = name[5:].to_owned()
+  match parse_decimal_int(digits) {
+    Some(size) => size >= 1 && size <= 32 && digits == size.to_string()
     None => false
   }
 }
