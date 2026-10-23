@@ -142,6 +142,12 @@ ABI `receive` entries must be `payable`; `fallback` entries must be `payable` or
 the entry's `stateMutability` field and CLI exit code `2`. Ordinary `function`
 entries still support all four mutabilities.
 
+ABI integer and fixed-bytes widths require canonical decimal spelling.
+Zero-padded names such as `uint0256`, `int08`, and `bytes01` are rejected with
+`artifact.field.invalid` at the parameter's `type` and exit code `2`. This also
+applies to outputs, arrays, tuple components, events, and custom errors, keeping
+noncanonical names out of selector/topic hashing.
+
 Diagnostics are sorted, so the same input always produces the same bytes. In
 `--format json` the report is an array of findings on stdout, each with a
 stable `code`, a `severity`, a `location`, a `message`, and the compared

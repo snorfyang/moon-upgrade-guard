@@ -109,6 +109,8 @@ Hardhat）只写整数；带小数点或指数的数字会被当作不可用的 
 
 ABI 的 `receive` 条目必须是 `payable`，`fallback` 必须是 `payable` 或 `nonpayable`。其他组合以 `artifact.field.invalid` 拒绝，位置指向该条目的 `stateMutability`，CLI 返回 `2`；普通 `function` 条目仍支持全部四种 mutability。
 
+ABI 的整数和定长 bytes 位宽必须使用规范十进制写法：`uint0256`、`int08`、`bytes01` 等带前导零的类型名会以 `artifact.field.invalid` 拒绝，定位到参数的 `type`，退出码为 `2`。这一规则同样适用于返回值、数组、tuple 成员、事件和自定义错误，避免用非规范类型名计算 selector/topic。
+
 诊断经过排序，因此相同输入总是产生完全相同的字节。使用 `--format json` 时，
 stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、`severity`、
 `location`、`message`，以及在适用时给出被比较的 `oldValue`/`newValue`。

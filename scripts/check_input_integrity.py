@@ -74,6 +74,56 @@ def check_abi_handlers(binary, old_path, new_path):
     return checks
 
 
+def check_abi_widths(binary, old_path, new_path):
+    """Reject noncanonical widths wherever ABI parameters are decoded."""
+    checks = 0
+    for wrapper in ('flat', 'standard', 'hardhat'):
+        root = '$'
+        if wrapper != 'flat':
+            root += '.output' if wrapper == 'hardhat' else ''
+            root += '.contracts["src/ComplexLayout.sol"]["ComplexLayout"]'
+        for bad_type, good_type in (('uint0256', 'uint256'), ('int08', 'int8'), ('bytes01', 'bytes1')):
+            for position in ('input', 'output', 'tuple', 'event', 'error'):
+                documents = []
+                for type_name in (good_type, bad_type):
+                    param = {'type': type_name}
+                    entry = {'type': 'function', 'name': 'f', 'inputs': [], 'outputs': [], 'stateMutability': 'view'}
+                    location = '.abi[0].inputs[0].type'
+                    if position == 'output':
+                        entry['outputs'] = [param]
+                        location = '.abi[0].outputs[0].type'
+                    elif position == 'tuple':
+                        entry['inputs'] = [{'type': 'tuple[]', 'components': [param]}]
+                        location = '.abi[0].inputs[0].components[0].type'
+                    elif position == 'event':
+                        entry = {'type': 'event', 'name': 'Changed', 'anonymous': False, 'inputs': [{**param, 'indexed': False}]}
+                    elif position == 'error':
+                        entry = {'type': 'error', 'name': 'Bad', 'inputs': [param]}
+                    else:
+                        entry['inputs'] = [param]
+                    documents.append(wrap({'storage': [], 'types': {}}, wrapper, False, [entry]))
+                valid, invalid = documents
+                for sides in ((), ('old',), ('new',), ('old', 'new')):
+                    old_path.write_text(json.dumps(invalid if 'old' in sides else valid))
+                    new_path.write_text(json.dumps(invalid if 'new' in sides else valid))
+                    for command in ('check', 'abi'):
+                        args = [str(binary), command, str(old_path), str(new_path), '--format', 'json']
+                        result = subprocess.run(args, capture_output=True, check=False)
+                        repeat = subprocess.run(args, capture_output=True, check=False)
+                        context = (wrapper, bad_type, position, sides, command)
+                        assert result.returncode == repeat.returncode == (2 if sides else 0), context
+                        assert result.stdout == repeat.stdout, context
+                        findings = json.loads(result.stdout)
+                        assert len(findings) == len(sides), context
+                        assert {item.get('input') for item in findings} == set(sides), context
+                        for item in findings:
+                            assert item['code'] == 'artifact.field.invalid', context
+                            assert item['severity'] == 'error', context
+                            assert item['location']['path'] == root + location, context
+                        checks += 1
+    return checks
+
+
 def expected_path(path, code, wrapper, transient):
     suffix = path[0]
     for key in path[1:]:
@@ -185,6 +235,7 @@ def main():
                                 assert any(item['location']['path'] == location for item in matching), context
                             checks += 1
         checks += check_abi_handlers(binary, old_path, new_path)
+        checks += check_abi_widths(binary, old_path, new_path)
     print(f'input integrity: {checks} checks passed')
 
 
