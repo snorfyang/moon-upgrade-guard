@@ -131,6 +131,55 @@ def check_abi_widths(binary, old_path, new_path):
     return checks
 
 
+def check_abi_components(binary, old_path, new_path):
+    """Reject components attached to non-tuple ABI parameters."""
+    checks = 0
+    for wrapper in ('flat', 'standard', 'hardhat'):
+        root = '$'
+        if wrapper != 'flat':
+            root += '.output' if wrapper == 'hardhat' else ''
+            root += '.contracts["src/ComplexLayout.sol"]["ComplexLayout"]'
+        for position in ('input', 'output', 'event', 'error'):
+            for type_name in ('uint256', 'uint256[]', 'bytes32'):
+                entry = {'type': 'function', 'name': 'f', 'inputs': [], 'outputs': [], 'stateMutability': 'view'}
+                location = '.abi[0].inputs[0].components'
+                param = {'type': type_name, 'components': []}
+                if position == 'output':
+                    entry['outputs'] = [param]
+                    location = '.abi[0].outputs[0].components'
+                elif position == 'event':
+                    entry = {'type': 'event', 'name': 'Changed', 'anonymous': False, 'inputs': [{**param, 'indexed': False}]}
+                    location = '.abi[0].inputs[0].components'
+                elif position == 'error':
+                    entry = {'type': 'error', 'name': 'Bad', 'inputs': [param]}
+                else:
+                    entry['inputs'] = [param]
+                invalid = wrap({'storage': [], 'types': {}}, wrapper, False, [entry])
+                valid = wrap({'storage': [], 'types': {}}, wrapper, False)
+                for sides in (('old',), ('new',), ('old', 'new')):
+                    old_path.write_text(json.dumps(invalid if 'old' in sides else valid))
+                    new_path.write_text(json.dumps(invalid if 'new' in sides else valid))
+                    for command in ('check', 'abi'):
+                        for output_format in ('text', 'json'):
+                            args = [str(binary), command, str(old_path), str(new_path), '--format', output_format]
+                            result = subprocess.run(args, capture_output=True, check=False)
+                            repeat = subprocess.run(args, capture_output=True, check=False)
+                            context = (wrapper, position, type_name, sides, command, output_format)
+                            assert result.returncode == repeat.returncode == 2, context
+                            assert result.stdout == repeat.stdout, context
+                            if output_format == 'json':
+                                findings = json.loads(result.stdout)
+                                assert len(findings) == len(sides), context
+                                assert {item.get('input') for item in findings} == set(sides), context
+                                assert all(item['code'] == 'artifact.field.invalid' for item in findings), context
+                                assert all(item['location']['path'] == root + location for item in findings), context
+                            else:
+                                assert b'artifact.field.invalid' in result.stdout, context
+                                assert location.encode() in result.stdout, context
+                            checks += 1
+    return checks
+
+
 def expected_path(path, code, wrapper, transient):
     suffix = path[0]
     for key in path[1:]:
@@ -243,6 +292,7 @@ def main():
                             checks += 1
         checks += check_abi_handlers(binary, old_path, new_path)
         checks += check_abi_widths(binary, old_path, new_path)
+        checks += check_abi_components(binary, old_path, new_path)
     print(f'input integrity: {checks} checks passed')
 
 

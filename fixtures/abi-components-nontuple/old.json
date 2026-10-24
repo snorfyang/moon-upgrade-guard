@@ -1,0 +1,4 @@
+{
+  "abi": [{"type": "function", "name": "f", "inputs": [{"type": "uint256", "components": []}], "outputs": [], "stateMutability": "view"}],
+  "storageLayout": {"storage": [], "types": {}}
+}
