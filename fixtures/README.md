@@ -32,6 +32,7 @@
 | `abi-handler-mutability/` | 新 ABI 的 `receive` 声明为 `nonpayable`，属于无效输入 | 2 |
 | `abi-noncanonical-width/` | 两侧 ABI 都使用非规范的 `uint0256`，不能因为相同就判定兼容 | 2 |
 | `abi-noncanonical-array/` | 两侧 ABI 都使用非规范维度 `[01]`，不能因为相同就判定兼容 | 2 |
+| `abi-components-nontuple/` | 两侧 ABI 都给 `uint256` 携带了仅 tuple 可用的 `components` | 2 |
 | `invalid-json/` | `old.json` 被截断 | 2 |
 | `unsupported-artifact/` | `old.json` 是 Hardhat 单合约产物，不含存储布局 | 2 |
 | `contract-selector/` | 一份包含两个合约的 build info：`Alpha` 兼容，而 `Beta` 移动了变量，因此由 `--contract` 决定结论 | 不传选择器为 2，`Alpha` 为 0，`Beta` 为 1 |
@@ -60,6 +61,8 @@
 | `missing-file/` | 故意没有 `new.json`，用于覆盖不可读路径 | 2 |
 
 ## 真实产物矩阵
+
+ABI 结构矩阵还检查非 tuple 参数携带 `components` 的错误，包括函数输入/输出、事件和自定义错误；三种外层格式与 old/new 损坏侧都必须定位到 `components` 并返回 `2`，tuple 控制组保持兼容。
 
 同一 ABI 类型矩阵也覆盖前导零数组维度（含多维数组与 tuple 数组）：`uint256[01]`、`bytes32[][002]`、`int8[2][00]` 和 `tuple[01][]`。它们在各参数位置都必须返回输入错误 `2`，对应规范类型的控制组返回 `0`；库测试还保留动态数组、`[0]` 及大于机器整数范围的维度。
 

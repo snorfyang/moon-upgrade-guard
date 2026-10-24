@@ -153,6 +153,10 @@ ABI fixed-array dimensions also require canonical decimal spelling:
 Dynamic `[]`, ABI-permitted `[0]`, and canonical dimensions beyond machine integer
 range remain supported; the checker validates type strings without allocating arrays.
 
+The ABI `components` field is valid only for `tuple` types and their arrays.
+Attaching it to a non-tuple parameter is rejected with `artifact.field.invalid`
+at `components` instead of silently ignored; tuple members remain recursively validated.
+
 Diagnostics are sorted, so the same input always produces the same bytes. In
 `--format json` the report is an array of findings on stdout, each with a
 stable `code`, a `severity`, a `location`, a `message`, and the compared

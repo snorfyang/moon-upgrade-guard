@@ -39,6 +39,7 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `abi-handler-mutability/` | the new ABI declares a `nonpayable` receive handler, making the input invalid | 2 |
 | `abi-noncanonical-width/` | both ABIs use noncanonical `uint0256`; identical invalid inputs cannot be reported compatible | 2 |
 | `abi-noncanonical-array/` | both ABIs use noncanonical dimension `[01]`; identical invalid inputs cannot be reported compatible | 2 |
+| `abi-components-nontuple/` | both ABIs attach the tuple-only `components` field to `uint256` | 2 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
 | `contract-selector/` | a build info document holding two contracts: `Alpha` is compatible while `Beta` moves a variable, so `--contract` decides the verdict | 2 without a selector, 0 for `Alpha`, 1 for `Beta` |
@@ -67,6 +68,8 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
 
 ## Real artifact matrix
+
+The ABI-shape matrix also rejects `components` on non-tuple parameters in function inputs/outputs, events, and custom errors. All three wrappers and old/new damaged sides must point to `components` and return `2`; tuple controls remain compatible.
 
 The same ABI-type matrix covers zero-padded dimensions, including multidimensional and tuple arrays: `uint256[01]`, `bytes32[][002]`, `int8[2][00]`, and `tuple[01][]`. These must return input-error code `2` at every parameter position, while canonical-type controls return `0`. Library tests also preserve dynamic arrays, `[0]`, and dimensions beyond machine integer range.
 

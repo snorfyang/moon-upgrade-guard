@@ -247,6 +247,23 @@ test "tuple arrays reject zero-padded outer dimensions" {
 }
 
 ///|
+test "components are rejected on non-tuple types" {
+  for type_name in ["uint256", "uint256[]", "bytes32"] {
+    inspect(
+      decode_report(
+        "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"" +
+        type_name +
+        "\",\"components\":[]}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+      ),
+      content=(
+        #|error[artifact.field.invalid] $.abi[0].inputs[0].components: components are only valid for tuple types
+        #|
+      ),
+    )
+  }
+}
+
+///|
 test "canonical array dimensions remain lossless including zero and large sizes" {
   for
     type_name in ["uint256[]", "uint256[0]", "bytes32[][2]", "int8[2147483648]"] {

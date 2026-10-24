@@ -352,7 +352,18 @@ fn canonical_type(
       }
     }
   } else if is_elementary_type(base) {
-    Some(base + suffix)
+    match components {
+      None | Some(Null) => Some(base + suffix)
+      Some(_) => {
+        diagnostics.push(
+          invalid_field(
+            path + ".components",
+            "components are only valid for tuple types",
+          ),
+        )
+        None
+      }
+    }
   } else {
     diagnostics.push(
       invalid_field(path + ".type", "unsupported ABI type \"\{type_name}\""),
