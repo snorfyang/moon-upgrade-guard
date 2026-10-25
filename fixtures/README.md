@@ -33,6 +33,7 @@
 | `abi-noncanonical-width/` | 两侧 ABI 都使用非规范的 `uint0256`，不能因为相同就判定兼容 | 2 |
 | `abi-noncanonical-array/` | 两侧 ABI 都使用非规范维度 `[01]`，不能因为相同就判定兼容 | 2 |
 | `abi-components-nontuple/` | 两侧 ABI 都给 `uint256` 携带了仅 tuple 可用的 `components` | 2 |
+| `abi-indexed-nontop-level/` | 两侧 ABI 都在函数参数上携带了仅事件顶层参数可用的 `indexed` | 2 |
 | `invalid-json/` | `old.json` 被截断 | 2 |
 | `unsupported-artifact/` | `old.json` 是 Hardhat 单合约产物，不含存储布局 | 2 |
 | `contract-selector/` | 一份包含两个合约的 build info：`Alpha` 兼容，而 `Beta` 移动了变量，因此由 `--contract` 决定结论 | 不传选择器为 2，`Alpha` 为 0，`Beta` 为 1 |
@@ -61,6 +62,8 @@
 | `missing-file/` | 故意没有 `new.json`，用于覆盖不可读路径 | 2 |
 
 ## 真实产物矩阵
+
+ABI 字段矩阵还检查 `indexed` 出现在函数参数和 tuple 成员中的情况；三种外层格式、old/new 损坏侧以及 text/JSON 输出都必须指向精确的 `indexed` 路径并返回 `2`，事件顶层参数的合法布尔值保持支持。
 
 ABI 结构矩阵还检查非 tuple 参数携带 `components` 的错误，包括函数输入/输出、事件和自定义错误；三种外层格式与 old/new 损坏侧都必须定位到 `components` 并返回 `2`，tuple 控制组保持兼容。
 

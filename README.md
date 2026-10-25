@@ -115,6 +115,8 @@ ABI 定长数组维度也必须使用规范十进制写法：`uint256[01]`、`tu
 
 ABI 的 `components` 字段只适用于 `tuple` 及其数组；非 tuple 参数携带该字段会以 `artifact.field.invalid` 拒绝并指向 `components`，避免忽略损坏 schema。tuple 的嵌套成员仍会递归校验。
 
+ABI 的 `indexed` 字段只适用于事件的顶层参数；函数参数和 tuple 成员携带它会以 `artifact.field.invalid` 拒绝并定位到该字段。事件顶层参数仍按原规则要求布尔值。
+
 诊断经过排序，因此相同输入总是产生完全相同的字节。使用 `--format json` 时，
 stdout 上是诊断项组成的 JSON 数组，每一项带有稳定的 `code`、`severity`、
 `location`、`message`，以及在适用时给出被比较的 `oldValue`/`newValue`。

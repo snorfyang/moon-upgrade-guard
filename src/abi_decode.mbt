@@ -294,6 +294,15 @@ fn decode_param(
       }
     }
   } else {
+    if fields.contains("indexed") {
+      diagnostics.push(
+        invalid_field(
+          path + ".indexed",
+          "indexed is only valid for event parameters",
+        ),
+      )
+      return None
+    }
     false
   }
   Some({ name, type_name: canonical, indexed, })

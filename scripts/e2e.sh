@@ -77,6 +77,8 @@ abi-noncanonical-array|check|json|2|artifact.field.invalid
 abi-noncanonical-array|abi|text|2|artifact.field.invalid
 abi-components-nontuple|check|json|2|artifact.field.invalid
 abi-components-nontuple|abi|text|2|artifact.field.invalid
+abi-indexed-nontop-level|check|json|2|artifact.field.invalid
+abi-indexed-nontop-level|abi|text|2|artifact.field.invalid
 invalid-json|check|json|2|artifact.json.invalid
 unsupported-artifact|check|text|2|artifact.layout.missing
 ambiguous-build-info|check|text|2|artifact.contract.ambiguous

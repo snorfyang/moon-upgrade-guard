@@ -40,6 +40,7 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `abi-noncanonical-width/` | both ABIs use noncanonical `uint0256`; identical invalid inputs cannot be reported compatible | 2 |
 | `abi-noncanonical-array/` | both ABIs use noncanonical dimension `[01]`; identical invalid inputs cannot be reported compatible | 2 |
 | `abi-components-nontuple/` | both ABIs attach the tuple-only `components` field to `uint256` | 2 |
+| `abi-indexed-nontop-level/` | both ABIs attach the event-top-level-only `indexed` field to a function parameter | 2 |
 | `invalid-json/` | `old.json` is truncated | 2 |
 | `unsupported-artifact/` | `old.json` is a Hardhat per-contract artifact, which carries no storage layout | 2 |
 | `contract-selector/` | a build info document holding two contracts: `Alpha` is compatible while `Beta` moves a variable, so `--contract` decides the verdict | 2 without a selector, 0 for `Alpha`, 1 for `Beta` |
@@ -68,6 +69,8 @@ Solidity compiler's `storageLayout` documentation and the ABI specification.
 | `missing-file/` | deliberately has no `new.json`, so the pair exercises an unreadable path | 2 |
 
 ## Real artifact matrix
+
+The ABI-field matrix also checks `indexed` on function parameters and tuple members. All three wrappers, damaged input sides, and text/JSON output must point to the exact `indexed` path and return `2`; valid boolean values on top-level event parameters remain supported.
 
 The ABI-shape matrix also rejects `components` on non-tuple parameters in function inputs/outputs, events, and custom errors. All three wrappers and old/new damaged sides must point to `components` and return `2`; tuple controls remain compatible.
 
