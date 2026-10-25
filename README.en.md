@@ -137,6 +137,10 @@ multidimensional arrays, still require the outer array's `base`; its absence
 produces `storage.type.field.missing` rather than comparing the input as a struct
 or a plain value type.
 
+The ABI `indexed` field is valid only on top-level event parameters. It is
+rejected with `artifact.field.invalid` on function parameters and tuple members,
+while top-level event parameters still require a boolean value.
+
 ABI `receive` entries must be `payable`; `fallback` entries must be `payable` or
 `nonpayable`. Other combinations are rejected with `artifact.field.invalid` at
 the entry's `stateMutability` field and CLI exit code `2`. Ordinary `function`

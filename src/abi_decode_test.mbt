@@ -264,6 +264,37 @@ test "components are rejected on non-tuple types" {
 }
 
 ///|
+test "indexed is rejected outside top-level event parameters" {
+  inspect(
+    decode_report(
+      "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"uint256\",\"indexed\":true}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $.abi[0].inputs[0].indexed: indexed is only valid for event parameters
+      #|
+    ),
+  )
+  inspect(
+    decode_report(
+      "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[{\"type\":\"tuple\",\"components\":[{\"type\":\"uint256\",\"indexed\":false}]}],\"outputs\":[],\"stateMutability\":\"view\"}]",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $.abi[0].inputs[0].components[0].indexed: indexed is only valid for event parameters
+      #|
+    ),
+  )
+  inspect(
+    decode_report(
+      "[{\"type\":\"event\",\"name\":\"E\",\"anonymous\":false,\"inputs\":[{\"type\":\"tuple\",\"components\":[{\"type\":\"uint256\",\"indexed\":false}],\"indexed\":false}]}]",
+    ),
+    content=(
+      #|error[artifact.field.invalid] $.abi[0].inputs[0].components[0].indexed: indexed is only valid for event parameters
+      #|
+    ),
+  )
+}
+
+///|
 test "canonical array dimensions remain lossless including zero and large sizes" {
   for
     type_name in ["uint256[]", "uint256[0]", "bytes32[][2]", "int8[2147483648]"] {

@@ -180,6 +180,46 @@ def check_abi_components(binary, old_path, new_path):
     return checks
 
 
+def check_abi_indexed(binary, old_path, new_path):
+    """Reject indexed outside top-level event parameters."""
+    checks = 0
+    for wrapper in ('flat', 'standard', 'hardhat'):
+        root = '$'
+        if wrapper != 'flat':
+            root += '.output' if wrapper == 'hardhat' else ''
+            root += '.contracts["src/ComplexLayout.sol"]["ComplexLayout"]'
+        cases = [
+            ({'type': 'function', 'name': 'f', 'inputs': [{'type': 'uint256', 'indexed': True}], 'outputs': [], 'stateMutability': 'view'}, '.abi[0].inputs[0].indexed'),
+            ({'type': 'function', 'name': 'f', 'inputs': [{'type': 'tuple', 'components': [{'type': 'uint256', 'indexed': False}]}], 'outputs': [], 'stateMutability': 'view'}, '.abi[0].inputs[0].components[0].indexed'),
+            ({'type': 'event', 'name': 'E', 'anonymous': False, 'inputs': [{'type': 'tuple', 'components': [{'type': 'uint256', 'indexed': False}], 'indexed': False}]}, '.abi[0].inputs[0].components[0].indexed'),
+        ]
+        for entry, location in cases:
+            invalid = wrap({'storage': [], 'types': {}}, wrapper, False, [entry])
+            valid = wrap({'storage': [], 'types': {}}, wrapper, False)
+            for sides in (('old',), ('new',), ('old', 'new')):
+                old_path.write_text(json.dumps(invalid if 'old' in sides else valid))
+                new_path.write_text(json.dumps(invalid if 'new' in sides else valid))
+                for command in ('check', 'abi'):
+                    for output_format in ('text', 'json'):
+                        args = [str(binary), command, str(old_path), str(new_path), '--format', output_format]
+                        result = subprocess.run(args, capture_output=True, check=False)
+                        repeat = subprocess.run(args, capture_output=True, check=False)
+                        context = (wrapper, location, sides, command, output_format)
+                        assert result.returncode == repeat.returncode == 2, context
+                        assert result.stdout == repeat.stdout, context
+                        if output_format == 'json':
+                            findings = json.loads(result.stdout)
+                            assert len(findings) == len(sides), context
+                            assert {item.get('input') for item in findings} == set(sides), context
+                            assert all(item['code'] == 'artifact.field.invalid' for item in findings), context
+                            assert all(item['location']['path'] == root + location for item in findings), context
+                        else:
+                            assert b'artifact.field.invalid' in result.stdout, context
+                            assert location.encode() in result.stdout, context
+                        checks += 1
+    return checks
+
+
 def expected_path(path, code, wrapper, transient):
     suffix = path[0]
     for key in path[1:]:
@@ -293,6 +333,7 @@ def main():
         checks += check_abi_handlers(binary, old_path, new_path)
         checks += check_abi_widths(binary, old_path, new_path)
         checks += check_abi_components(binary, old_path, new_path)
+        checks += check_abi_indexed(binary, old_path, new_path)
     print(f'input integrity: {checks} checks passed')
 
 
