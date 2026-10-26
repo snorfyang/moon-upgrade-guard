@@ -205,8 +205,8 @@ fn ast_has_erc7201_annotation(json : Json) -> Bool {
 /// digits, sign, fraction point, and exponent markers. Tokens inside strings
 /// are skipped, including escaped quotes. The result holds the offset of each
 /// violation in the text and its literal, in document order.
-fn scan_non_integer_numbers(text : String) -> Array[(Int, String)] {
-  let violations : Array[(Int, String)] = []
+fn scan_non_integer_numbers(text : String) -> Array[(Int32, String)] {
+  let violations : Array[(Int32, String)] = []
   let length = text.length()
   let mut in_string = false
   let mut escaped = false
@@ -896,7 +896,7 @@ fn get_string(fields : Map[String, Json], name : String) -> String? {
 
 ///|
 /// Reads an optional integer field, after `check_integer` has accepted it.
-fn get_integer(fields : Map[String, Json], name : String) -> Int? {
+fn get_integer(fields : Map[String, Json], name : String) -> Int32? {
   match fields.get(name) {
     Some(Number(value, ..)) => json_integer(value)
     _ => None
@@ -912,7 +912,7 @@ fn get_integer(fields : Map[String, Json], name : String) -> Int? {
 /// `Double` without loss; anything larger rounds to a value beyond the machine
 /// range and is rejected here, so a fractional literal can never slip through
 /// as a rounded integer.
-fn json_integer(value : Double) -> Int? {
+fn json_integer(value : Double) -> Int32? {
   if value < -2147483648.0 || value > 2147483647.0 {
     None
   } else {

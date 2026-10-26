@@ -28,7 +28,7 @@ pub fn Severity::name(self : Severity) -> String {
 
 ///|
 /// Rank used to order findings that share a location.
-fn Severity::rank(self : Severity) -> Int {
+fn Severity::rank(self : Severity) -> Int32 {
   match self {
     Info => 0
     Warning => 1
@@ -314,7 +314,7 @@ pub fn Diagnostic::new(
 pub impl Compare for Diagnostic with fn compare(
   self : Diagnostic,
   other : Diagnostic,
-) -> Int {
+) -> Int32 {
   let c = compare_optional(self.location.contract, other.location.contract)
   if c != 0 {
     return c
@@ -348,7 +348,7 @@ pub impl Compare for Diagnostic with fn compare(
 
 ///|
 /// Compares two optional strings. An absent value sorts before a present one.
-fn compare_optional(a : String?, b : String?) -> Int {
+fn compare_optional(a : String?, b : String?) -> Int32 {
   match (a, b) {
     (None, None) => 0
     (None, Some(_)) => -1
@@ -359,7 +359,7 @@ fn compare_optional(a : String?, b : String?) -> Int {
 
 ///|
 /// Input findings at the same location list the old side first.
-fn compare_optional_input(a : InputSide?, b : InputSide?) -> Int {
+fn compare_optional_input(a : InputSide?, b : InputSide?) -> Int32 {
   match (a, b) {
     (None, None) => 0
     (None, Some(_)) => -1

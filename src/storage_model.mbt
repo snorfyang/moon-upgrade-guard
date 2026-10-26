@@ -61,7 +61,7 @@ pub fn Slot::to_string(self : Slot) -> String {
 /// shorter value is the smaller one and equal-length values compare digit by
 /// digit. This is deliberately not a lexicographic string order: slot `10` is
 /// greater than slot `9`.
-pub impl Compare for Slot with fn compare(self : Slot, other : Slot) -> Int {
+pub impl Compare for Slot with fn compare(self : Slot, other : Slot) -> Int32 {
   let a = self.digits.char_length()
   let b = other.digits.char_length()
   if a < b {
@@ -112,7 +112,7 @@ pub(all) struct StorageEntry {
   /// Slot where the variable starts.
   slot : Slot
   /// Byte offset inside `slot`.
-  offset : Int
+  offset : Int32
   /// Compiler type id, a key into `StorageLayout.types`.
   type_id : String
 } derive(Eq, @debug.Debug)
@@ -126,7 +126,7 @@ pub(all) struct TypeEntry {
   /// `struct A.S`.
   label : String
   /// Bytes the type occupies, from `numberOfBytes`.
-  byte_size : Int
+  byte_size : Int32
   /// Structural description of the type.
   shape : TypeShape
 } derive(Eq, @debug.Debug)

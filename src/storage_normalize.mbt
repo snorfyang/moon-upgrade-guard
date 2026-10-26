@@ -23,7 +23,7 @@ let max_slot_offset = 31
 /// the returned layout.
 pub fn normalize_layout(
   raw : RawStorageLayout,
-  prefix? : String = "",
+  prefix~ : String = "",
 ) -> (StorageLayout, Array[Diagnostic]) {
   let diagnostics : Array[Diagnostic] = []
   let declared = collect_type_ids(raw.types, prefix, diagnostics)
@@ -563,7 +563,7 @@ fn check_reference(
 /// machine integer. The values this reads are bounded in practice, so `Int` is
 /// exact here even though slot numbers are not. The bound is `2^31 - 1` so that
 /// the result is the same on every supported target.
-fn parse_decimal_int(text : String) -> Int? {
+fn parse_decimal_int(text : String) -> Int32? {
   if text.is_empty() {
     return None
   }

@@ -37,7 +37,7 @@ let property_type_table : Array[@moonupgradeguard.TypeEntry] = [
 
 ///|
 /// A non-negative index for a generated integer.
-fn property_index(value : Int) -> Int {
+fn property_index(value : Int32) -> Int32 {
   let rest = value % property_type_table.length()
   if rest < 0 {
     rest + property_type_table.length()
@@ -48,7 +48,9 @@ fn property_index(value : Int) -> Int {
 
 ///|
 /// Builds a layout with one variable per element, each in its own slot.
-fn property_layout(sizes : Array[Int]) -> @moonupgradeguard.StorageLayout raise {
+fn property_layout(
+  sizes : Array[Int32],
+) -> @moonupgradeguard.StorageLayout raise {
   let entries : Array[@moonupgradeguard.StorageEntry] = []
   for i in 0..<sizes.length() {
     let type_id = property_type_table[property_index(sizes[i])].id
@@ -89,7 +91,7 @@ fn shifted_layout(
 /// The same layout with one more variable after the last one.
 fn appended_layout(
   layout : @moonupgradeguard.StorageLayout,
-  next_slot : Int,
+  next_slot : Int32,
 ) -> @moonupgradeguard.StorageLayout raise {
   let slot = match @moonupgradeguard.Slot::parse(next_slot.to_string()) {
     Some(slot) => slot
@@ -109,7 +111,7 @@ fn appended_layout(
 ///|
 test "a layout compared with itself never blocks" {
   @quickcheck.check(
-    fn(sizes : Array[Int]) -> Bool raise {
+    fn(sizes : Array[Int32]) -> Bool raise {
       let layout = property_layout(sizes)
       !@moonupgradeguard.blocks_upgrade(
         @moonupgradeguard.compare_storage(layout, layout),
@@ -123,7 +125,7 @@ test "a layout compared with itself never blocks" {
 ///|
 test "appending a variable never blocks" {
   @quickcheck.check(
-    fn(sizes : Array[Int]) -> Bool raise {
+    fn(sizes : Array[Int32]) -> Bool raise {
       let layout = property_layout(sizes)
       let appended = appended_layout(layout, sizes.length())
       !@moonupgradeguard.blocks_upgrade(
@@ -138,7 +140,7 @@ test "appending a variable never blocks" {
 ///|
 test "permuting the entry order reports nothing" {
   @quickcheck.check(
-    fn(sizes : Array[Int]) -> Bool raise {
+    fn(sizes : Array[Int32]) -> Bool raise {
       let layout = property_layout(sizes)
       @moonupgradeguard.compare_storage(layout, reversed_layout(layout)).is_empty()
     },
@@ -150,7 +152,7 @@ test "permuting the entry order reports nothing" {
 ///|
 test "a shift is reported whatever the entry order" {
   @quickcheck.check(
-    fn(sizes : Array[Int]) -> Bool raise {
+    fn(sizes : Array[Int32]) -> Bool raise {
       if sizes.is_empty() {
         return true
       }

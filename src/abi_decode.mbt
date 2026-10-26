@@ -438,7 +438,7 @@ fn is_elementary_type(name : String) -> Bool {
 ///|
 /// Whether the width in a `uintN` or `intN` name is a valid multiple of 8 up
 /// to 256, written without leading zeros.
-fn sized_integer(name : String, prefix_length : Int, step : Int) -> Bool {
+fn sized_integer(name : String, prefix_length : Int32, step : Int32) -> Bool {
   let digits = name[prefix_length:].to_owned()
   match parse_decimal_int(digits) {
     Some(size) =>

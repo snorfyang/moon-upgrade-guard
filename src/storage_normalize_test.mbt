@@ -9,7 +9,7 @@
 fn raw_entry(
   label : String,
   slot : String,
-  offset : Int,
+  offset : Int32,
   type_id : String,
 ) -> @moonupgradeguard.RawStorageEntry {
   {

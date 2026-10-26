@@ -16,7 +16,7 @@ pub(all) struct RawStorageEntry {
   /// The `slot` field, a decimal string.
   slot : String?
   /// The `offset` field, bytes inside the slot.
-  offset : Int?
+  offset : Int32?
   /// The `type` field, a key into the layout's type table.
   type_id : String?
 } derive(Eq, @debug.Debug)

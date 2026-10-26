@@ -230,7 +230,7 @@ fn compare_section(
 /// Location of a storage variable inside the `storageLayout` object.
 fn entry_location(
   entry : StorageEntry,
-  index : Int,
+  index : Int32,
   section : String,
 ) -> Location {
   { contract: entry.contract, path: section + "[\{index}]", }
@@ -243,7 +243,7 @@ fn compare_matched(
   new : StorageLayout,
   old_entry : StorageEntry,
   new_entry : StorageEntry,
-  old_index : Int,
+  old_index : Int32,
   section : String,
   diagnostics : Array[Diagnostic],
 ) -> Unit {
@@ -497,7 +497,7 @@ fn encoding_name(label : String) -> String {
 
 ///|
 /// Describes a semantic type for a report, with `depth` left to expand.
-fn describe_type(layout : StorageLayout, id : String, depth : Int) -> String {
+fn describe_type(layout : StorageLayout, id : String, depth : Int32) -> String {
   if depth <= 0 {
     return "..."
   }
@@ -563,7 +563,7 @@ fn is_storage_gap(layout : StorageLayout, entry : StorageEntry) -> Bool {
 ///|
 /// The first byte a variable occupies, or `None` when the position is too large
 /// to index.
-fn entry_begin(entry : StorageEntry) -> Int? {
+fn entry_begin(entry : StorageEntry) -> Int32? {
   match parse_decimal_int(entry.slot.to_string()) {
     Some(slot) =>
       if slot > (max_byte_position - entry.offset) / 32 {
@@ -577,7 +577,7 @@ fn entry_begin(entry : StorageEntry) -> Int? {
 
 ///|
 /// The byte just past a variable, or `None` when it cannot be computed.
-fn entry_end(layout : StorageLayout, entry : StorageEntry) -> Int? {
+fn entry_end(layout : StorageLayout, entry : StorageEntry) -> Int32? {
   match (entry_begin(entry), layout.find_type(entry.type_id)) {
     (Some(begin), Some(type_entry)) =>
       if begin > max_byte_position - type_entry.byte_size {
