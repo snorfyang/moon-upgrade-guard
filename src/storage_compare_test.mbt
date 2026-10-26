@@ -542,7 +542,7 @@ test "a nested member type change names the member that changed" {
 
 ///|
 /// A fixed-size `uint256` array type with `length` slots.
-fn gap_type(id : String, length : Int) -> @moonupgradeguard.RawStorageType {
+fn gap_type(id : String, length : Int32) -> @moonupgradeguard.RawStorageType {
   {
     ..raw_type(id, "inplace", "uint256[\{length}]", (length * 32).to_string()),
     base: Some("t_uint256"),

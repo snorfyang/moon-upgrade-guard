@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Keep release builds aligned with the toolchain version accepted by CI.
+  MOONBIT_INSTALL_VERSION: latest
+  MOONBIT_EXPECTED_VERSION: 0.1.20261023
+
 jobs:
   build:
     strategy:
@@ -32,6 +37,11 @@ jobs:
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: toolchain
+        run: |
+          moon version --all
+          test "$(moon version | sed -n 's/^moon \([^ ]*\).*/\1/p')" = "$MOONBIT_EXPECTED_VERSION"
 
       - name: package registry index
         run: moon update

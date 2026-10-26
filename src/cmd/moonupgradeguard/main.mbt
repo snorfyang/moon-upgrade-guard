@@ -1,7 +1,7 @@
 ///|
 /// Clean process exit for the native backend.
 #cfg(any(target="native", target="llvm"))
-extern "c" fn process_exit(code : Int) = "exit"
+extern "c" fn process_exit(code : Int32) = "exit"
 
 ///|
 priv enum Command {
@@ -28,7 +28,7 @@ priv struct Options {
 ///|
 priv struct CliResult {
   output : String
-  exit_code : Int
+  exit_code : Int32
 }
 
 ///|
@@ -387,7 +387,7 @@ fn has_missing_abi(diagnostics : Array[@guard.Diagnostic]) -> Bool {
 fn finish(
   diagnostics : Array[@guard.Diagnostic],
   format : OutputFormat,
-  exit_code : Int,
+  exit_code : Int32,
 ) -> CliResult {
   let output = match format {
     Text => @guard.render_text(diagnostics)

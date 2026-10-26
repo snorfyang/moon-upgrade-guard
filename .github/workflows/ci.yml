@@ -9,6 +9,13 @@ on:
 permissions:
   contents: read
 
+env:
+  # The download service publishes the current archive under `latest`; the
+  # version assertion below turns an upstream toolchain change into an
+  # explicit CI failure instead of silently changing generated files.
+  MOONBIT_INSTALL_VERSION: latest
+  MOONBIT_EXPECTED_VERSION: 0.1.20261023
+
 jobs:
   check:
     # The module only promises the native target, so CI only checks native.
@@ -22,7 +29,9 @@ jobs:
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
       - name: toolchain
-        run: moon version --all
+        run: |
+          moon version --all
+          test "$(moon version | sed -n 's/^moon \([^ ]*\).*/\1/p')" = "$MOONBIT_EXPECTED_VERSION"
 
       # The registry index does not ship with the toolchain, and the module
       # depends on `moonbitlang/async`, so it has to be fetched before any
@@ -30,10 +39,8 @@ jobs:
       - name: package registry index
         run: moon update
 
-      # The installer tracks the latest MoonBit formatter, which can rewrite
-      # legacy type aliases across the whole repository. Type checking, tests,
-      # and the whitespace check below remain strict without making CI depend
-      # on a rolling formatter's source rewrite policy.
+      - name: format check
+        run: moon fmt --check
 
       - name: type check
         run: moon check --deny-warn
