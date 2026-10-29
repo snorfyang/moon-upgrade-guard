@@ -14,7 +14,7 @@ env:
   # version assertion below turns an upstream toolchain change into an
   # explicit CI failure instead of silently changing generated files.
   MOONBIT_INSTALL_VERSION: latest
-  MOONBIT_EXPECTED_VERSION: 0.1.20261023
+  MOONBIT_EXPECTED_VERSION: 0.1.20261028
 
 jobs:
   check:

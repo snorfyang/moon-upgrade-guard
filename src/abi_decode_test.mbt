@@ -454,3 +454,61 @@ test "event indexed and anonymous fields are required" {
     ),
   )
 }
+
+///|
+test "tuple outputs canonicalize nested arrays" {
+  let abi = decode(
+    "[{\"type\":\"function\",\"name\":\"quote\",\"inputs\":[],\"outputs\":[{" +
+    "\"name\":\"result\",\"type\":\"tuple[]\",\"components\":[{" +
+    "\"name\":\"amounts\",\"type\":\"uint256[2][]\"},{" +
+    "\"name\":\"recipient\",\"type\":\"address\"}]}],\"stateMutability\":\"view\"}]",
+  )
+  assert_eq(abi.functions[0].outputs.length(), 1)
+  assert_eq(abi.functions[0].outputs[0].type_name, "(uint256[2][],address)[]")
+  assert_eq(abi.functions[0].signature, "quote()")
+}
+
+///|
+test "events and errors canonicalize tuple parameters" {
+  let abi = decode(
+    "[{\"type\":\"event\",\"name\":\"Batch\",\"anonymous\":false,\"inputs\":[{" +
+    "\"name\":\"items\",\"type\":\"tuple[2]\",\"indexed\":false,\"components\":[{" +
+    "\"name\":\"id\",\"type\":\"uint256\"}]}]},{" +
+    "\"type\":\"error\",\"name\":\"BadBatch\",\"inputs\":[{" +
+    "\"name\":\"items\",\"type\":\"tuple[]\",\"components\":[{" +
+    "\"name\":\"id\",\"type\":\"uint256\"}]}]}]",
+  )
+  assert_eq(abi.events[0].signature, "Batch((uint256)[2])")
+  assert_eq(abi.errors[0].signature, "BadBatch((uint256)[])")
+  assert_eq(abi.events[0].inputs[0].type_name, "(uint256)[2]")
+  assert_eq(abi.errors[0].inputs[0].type_name, "(uint256)[]")
+}
+
+///|
+test "noncanonical ABI types are rejected in every parameter list" {
+  let cases = [
+    ("outputs", "$.abi[0].outputs[0].type"),
+    ("event", "$.abi[0].inputs[0].type"),
+    ("error", "$.abi[0].inputs[0].type"),
+  ]
+  for (kind, path) in cases {
+    let abi = match kind {
+      "outputs" =>
+        "[{\"type\":\"function\",\"name\":\"f\",\"inputs\":[],\"outputs\":[{" +
+        "\"type\":\"uint0256\"}],\"stateMutability\":\"view\"}]"
+      "event" =>
+        "[{\"type\":\"event\",\"name\":\"E\",\"anonymous\":false,\"inputs\":[{" +
+        "\"type\":\"uint0256\",\"indexed\":false}]}]"
+      _ =>
+        "[{\"type\":\"error\",\"name\":\"E\",\"inputs\":[{" +
+        "\"type\":\"uint0256\"}]}]"
+    }
+    let (_, diagnostics) = @moonupgradeguard.extract_artifact(abi_artifact(abi))
+    assert_eq(diagnostics.length(), 1)
+    assert_eq(
+      diagnostics[0].code,
+      @moonupgradeguard.DiagnosticCode::ArtifactFieldInvalid,
+    )
+    assert_eq(diagnostics[0].location.path, path)
+  }
+}
