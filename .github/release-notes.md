@@ -1,6 +1,16 @@
 MoonUpgradeGuard compares the storage layout and ABI of existing Solidity compiler artifacts before an EVM proxy upgrade. It reports deterministic diagnostics and exit codes for CI. Passing this preflight check does not prove an upgrade safe in every respect.
 
-Changes since v0.2.0:
+Changes since v0.2.1:
+
+- Invalid storage type shapes, including struct metadata without `members`, are
+  rejected with stable diagnostics instead of being treated as value types.
+- ABI validation now rejects noncanonical widths and array dimensions,
+  misplaced `components` and `indexed` fields, and invalid fallback/receive
+  mutability declarations.
+- Regression coverage now includes incomplete schema inputs, nested ABI tuples,
+  real solc/Foundry/Hardhat artifacts, and a 2,580-case input-integrity matrix.
+- CI enforces formatter output and guards the generated package interface against
+  MoonBit toolchain drift.
 
 - ERC-7201 detection now reads contract struct annotations in the compiler AST, avoiding false positives from unrelated ABI or metadata strings. Namespaced storage itself is still not compared.
 - Offline regression fixtures cover real OpenZeppelin ERC20Upgradeable releases: 4.9.3 to 4.9.6 remains compatible, while 4.9.3 to 5.0.0 is blocked. A real 5.0.0 AST fixture verifies explicit refusal of ERC-7201 storage.

@@ -1,4 +1,4 @@
 ///|
 test "version" {
-  inspect(@moonupgradeguard.version, content="0.2.1")
+  inspect(@moonupgradeguard.version, content="0.2.2")
 }
