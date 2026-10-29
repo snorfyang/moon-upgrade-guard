@@ -12,7 +12,7 @@ permissions:
 env:
   # Keep release builds aligned with the toolchain version accepted by CI.
   MOONBIT_INSTALL_VERSION: latest
-  MOONBIT_EXPECTED_VERSION: 0.1.20261023
+  MOONBIT_EXPECTED_VERSION: 0.1.20261028
 
 jobs:
   build:
