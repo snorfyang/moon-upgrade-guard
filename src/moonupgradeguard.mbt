@@ -1,3 +1,3 @@
 ///|
 /// Current library version.
-pub let version : String = "0.2.1"
+pub let version : String = "0.2.2"
