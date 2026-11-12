@@ -4,6 +4,9 @@
 
 # MoonUpgradeGuard
 
+> **This project is archived.** It is no longer maintained or updated. Existing
+> content is provided for reference only.
+
 [![CI](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/ci.yml)
 [![Native release](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/release.yml/badge.svg)](https://github.com/snorfyang/moon-upgrade-guard/actions/workflows/release.yml)
 [![Latest release](https://img.shields.io/github/v/release/snorfyang/moon-upgrade-guard)](https://github.com/snorfyang/moon-upgrade-guard/releases/latest)
